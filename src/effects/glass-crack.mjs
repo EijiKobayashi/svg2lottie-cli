@@ -21,8 +21,8 @@ import { round4 } from '../path-parser.mjs';
  */
 export function applyGlassCrack(layer, options = {}, ctx = {}) {
   const {
-    start = 15,
-    end = 60,
+    start = 30,
+    end = 110,
     impactPoint,
     rays = 8,
     radius = 50,
@@ -31,12 +31,13 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
     shardCount = 8,
   } = options;
 
-  const [ix, iy] = impactPoint || ctx.center || layer.ks?.a?.k || [100, 100];
+  const totalFrames = layer.op || 120;
+  const [ix, iy] = impactPoint || ctx.center || layer.ks?.a?.k || [120, 120];
   const origPos = layer.ks?.p?.k || [ix, iy, 0];
   const px = Array.isArray(origPos) ? origPos[0] : ix;
   const py = Array.isArray(origPos) ? origPos[1] : iy;
 
-  const crackDur = Math.round((end - start) * 0.35);
+  const crackDur = Math.round((end - start) * 0.22);
   const crackEnd = start + crackDur;
 
   // 1. 衝撃の瞬間ジッター振動
@@ -44,11 +45,13 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
     layer.ks.p = {
       a: 1,
       k: [
+        { t: 0, s: [px, py, 0] },
         { t: Math.max(0, start - 1), s: [px, py, 0] },
-        { t: start + 2, s: [px + 5, py - 3, 0] },
-        { t: start + 4, s: [px - 4, py + 4, 0] },
-        { t: start + 6, s: [px + 3, py - 2, 0] },
+        { t: start + 2, s: [px + 6, py - 4, 0] },
+        { t: start + 4, s: [px - 5, py + 5, 0] },
+        { t: start + 6, s: [px + 4, py - 3, 0] },
         { t: crackEnd, s: [px, py, 0] },
+        { t: totalFrames, s: [px, py, 0] },
       ],
     };
   }
@@ -61,6 +64,7 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
         { t: 0, s: [100] },
         { t: crackEnd, s: [100] },
         { t: crackEnd + 2, s: [0] },
+        { t: totalFrames, s: [0] },
       ],
     };
   }
@@ -92,7 +96,7 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
 
   const extraLayers = [];
 
-  // クラックラインレイヤー（破片が飛散する瞬間に消える）
+  // クラックラインレイヤー
   extraLayers.push({
     ddd: 0,
     ind: (layer.ind || 1) + 200,
@@ -103,10 +107,12 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
       o: {
         a: 1,
         k: [
+          { t: 0, s: [0] },
           { t: start, s: [0] },
           { t: start + 2, s: [100] },
           { t: crackEnd + 2, s: [100] },
           { t: crackEnd + 4, s: [0] },
+          { t: totalFrames, s: [0] },
         ],
       },
       r: { a: 0, k: 0 },
@@ -158,7 +164,7 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
       },
     ],
     ip: start,
-    op: crackEnd + 6,
+    op: totalFrames,
     st: 0,
     bm: 0,
   });
@@ -167,17 +173,16 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
   if (shatter) {
     const shatterStart = crackEnd;
     const shatterEnd = end;
-    const shatterDur = Math.max(16, shatterEnd - shatterStart);
+    const shatterDur = Math.max(20, shatterEnd - shatterStart);
 
     for (let i = 0; i < shardCount; i++) {
       const angle = (i / shardCount) * Math.PI * 2 + (i % 2 === 0 ? 0.2 : -0.2);
-      const flyDist = radius * (1.2 + (i % 3) * 0.4);
+      const flyDist = radius * (1.3 + (i % 3) * 0.45);
       const targetX = round4(ix + Math.cos(angle) * flyDist);
-      const targetY = round4(iy + Math.sin(angle) * flyDist + 28); // 重力落下
-      const spinAngle = (i % 2 === 0 ? 1 : -1) * (180 + i * 35);
-      const shardSize = round4(radius * (0.24 + (i % 3) * 0.08));
+      const targetY = round4(iy + Math.sin(angle) * flyDist + 35); // 重力落下
+      const spinAngle = (i % 2 === 0 ? 1 : -1) * (200 + i * 40);
+      const shardSize = round4(radius * (0.26 + (i % 3) * 0.08));
 
-      // 三角形の破片シャード
       const p1 = [0, -shardSize];
       const p2 = [round4(shardSize * 0.8), round4(shardSize * 0.7)];
       const p3 = [round4(-shardSize * 0.7), round4(shardSize * 0.5)];
@@ -192,9 +197,11 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
           o: {
             a: 1,
             k: [
+              { t: 0, s: [0] },
               { t: shatterStart, s: [100] },
-              { t: shatterStart + Math.round(shatterDur * 0.6), s: [90] },
+              { t: shatterStart + Math.round(shatterDur * 0.7), s: [90] },
               { t: shatterEnd, s: [0] },
+              { t: totalFrames, s: [0] },
             ],
           },
           r: {
@@ -216,7 +223,7 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
             a: 1,
             k: [
               { t: shatterStart, s: [100, 100, 100], i: { x: [0.2, 0.2, 0.2], y: [1, 1, 1] }, o: { x: [0.35, 0.35, 0.35], y: [1, 1, 1] } },
-              { t: shatterEnd, s: [40, 40, 100] },
+              { t: shatterEnd, s: [35, 35, 100] },
             ],
           },
         },
@@ -242,8 +249,8 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
               {
                 ty: 'fl',
                 nm: 'Shard Fill',
-                c: { a: 0, k: [0.92, 0.96, 1, 1] },
-                o: { a: 0, k: 85 },
+                c: { a: 0, k: [0.98, 0.75, 0.14, 1] }, // 星のゴールド色
+                o: { a: 0, k: 90 },
                 r: 1,
               },
               {
@@ -251,7 +258,7 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
                 nm: 'Shard Edge',
                 c: { a: 0, k: [1, 1, 1, 1] },
                 o: { a: 0, k: 95 },
-                w: { a: 0, k: 1 },
+                w: { a: 0, k: 1.2 },
                 lc: 2,
                 lj: 2,
               },
@@ -269,7 +276,7 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
           },
         ],
         ip: shatterStart,
-        op: shatterEnd,
+        op: totalFrames,
         st: 0,
         bm: 0,
       });

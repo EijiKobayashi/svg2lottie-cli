@@ -46,7 +46,7 @@ function buildNeonFlickerKeyframes(start = 0, end = 30, totalFrames = 120) {
     { t: t4, s: [30] },
     { t: t5, s: [90] },
     { t: tEnd, s: [100] },
-    // 安定点灯を維持
+    // 安定点灯を最終フレームまで100%維持
     { t: totalFrames, s: [100] },
   ];
 }
@@ -76,39 +76,44 @@ export function applyEchoGlowNeon(layer, options = {}) {
     flicker = false,
     tube = true,
     start = 5,
-    end = 28,
+    end = 32,
   } = options;
 
   const extraLayers = [];
   const neonRgba = hexToLottieColor(color);
   const whiteRgba = [1, 1, 1, 1];
-  const totalFrames = layer.op || 180;
+  const totalFrames = layer.op || 120;
 
-  // 1. ネオン管モード: 塗りつぶしを排除し、鮮やかなネオン管ストロークに変換
+  // 1. ネオン管モード: 鮮やかなネオン管ストローク＋ほんのり発光する薄い塗りを構成
   if (mode === 'neon' || tube) {
     layer.ks.o = { a: 1, k: buildNeonFlickerKeyframes(start, end, totalFrames) };
 
-    // 本体は「鮮やかなネオンカラーの太いストローク管」にする
     for (const grp of layer.shapes || []) {
       const items = grp.it || [];
-      // 既存の塗りを削除
-      grp.it = items.filter((it) => it.ty !== 'fl');
-      // ネオンストロークを追加
-      grp.it.push({
-        ty: 'st',
-        nm: 'Neon Tube Stroke',
-        c: { a: 0, k: neonRgba },
-        o: { a: 0, k: 95 },
-        w: { a: 0, k: 5.5 },
-        lc: 2,
-        lj: 2,
-      });
-      // トランスフォームを末尾に保証
       const tr = items.find((it) => it.ty === 'tr');
-      if (tr) {
-        grp.it = grp.it.filter((it) => it.ty !== 'tr');
-        grp.it.push(tr);
-      }
+      const shList = items.filter((it) => it.ty === 'sh');
+
+      // 内部の薄いネオン発光塗り（不透明度 18%）＋ネオン管ストローク（線幅 5.5px）
+      grp.it = [
+        ...shList,
+        {
+          ty: 'fl',
+          nm: 'Neon Inner Glow Fill',
+          c: { a: 0, k: neonRgba },
+          o: { a: 0, k: 18 },
+          r: 1,
+        },
+        {
+          ty: 'st',
+          nm: 'Neon Tube Stroke',
+          c: { a: 0, k: neonRgba },
+          o: { a: 0, k: 95 },
+          w: { a: 0, k: 5.5 },
+          lc: 2,
+          lj: 2,
+        },
+      ];
+      if (tr) grp.it.push(tr);
     }
 
     // 2. 白熱する純白の芯ストロークレイヤー（White Inner Core）
@@ -116,29 +121,47 @@ export function applyEchoGlowNeon(layer, options = {}) {
     coreLayer.nm = `${layer.nm}-neon-core`;
     coreLayer.ind = (layer.ind || 1) + 80;
     for (const grp of coreLayer.shapes || []) {
-      for (const it of grp.it || []) {
-        if (it.ty === 'st') {
-          it.c = { a: 0, k: whiteRgba };
-          it.w = { a: 0, k: 2.2 };
-          it.o = { a: 0, k: 100 };
-        }
-      }
+      const items = grp.it || [];
+      const tr = items.find((it) => it.ty === 'tr');
+      const shList = items.filter((it) => it.ty === 'sh');
+      grp.it = [
+        ...shList,
+        {
+          ty: 'st',
+          nm: 'White Core Stroke',
+          c: { a: 0, k: whiteRgba },
+          o: { a: 0, k: 100 },
+          w: { a: 0, k: 2.2 },
+          lc: 2,
+          lj: 2,
+        },
+      ];
+      if (tr) grp.it.push(tr);
     }
     extraLayers.push(coreLayer);
 
     // 3. 外側への豊かなブルーム発光レイヤー（Outer Bloom Glow）
     const bloomLayer = structuredClone(layer);
     bloomLayer.nm = `${layer.nm}-neon-bloom`;
-    bloomLayer.ind = (layer.ind || 1) - 1; // 本体の背面に配置
+    bloomLayer.ind = (layer.ind || 1) - 1;
     bloomLayer.ef = [...(bloomLayer.ef || []), makeBlurEffect(blur)];
     for (const grp of bloomLayer.shapes || []) {
-      for (const it of grp.it || []) {
-        if (it.ty === 'st') {
-          it.c = { a: 0, k: neonRgba };
-          it.w = { a: 0, k: 14 };
-          it.o = { a: 0, k: 75 };
-        }
-      }
+      const items = grp.it || [];
+      const tr = items.find((it) => it.ty === 'tr');
+      const shList = items.filter((it) => it.ty === 'sh');
+      grp.it = [
+        ...shList,
+        {
+          ty: 'st',
+          nm: 'Bloom Stroke',
+          c: { a: 0, k: neonRgba },
+          o: { a: 0, k: 80 },
+          w: { a: 0, k: 14 },
+          lc: 2,
+          lj: 2,
+        },
+      ];
+      if (tr) grp.it.push(tr);
     }
     extraLayers.push(bloomLayer);
 

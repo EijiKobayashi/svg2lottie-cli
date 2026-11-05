@@ -32,12 +32,13 @@ GitHub Pages 上で、アスペクト比の異なる3種類の実用的なアニ
 
 | エフェクト名 | 素材形状 | 演出・物理挙動の特徴 | Lottie JSON |
 | :--- | :---: | :--- | :--- |
-| **炎 (`fire`)** | 炎 | **二層メラメラうねり**: 外炎（橙赤）と高熱内炎コア（白黄）の二層構造。有機的ベジェ熱波呼吸とうねり、上昇する火の粉 | [`effect-fire.json`](./docs/dist/effects/effect-fire.json) |
-| **水 (`water`)** | しずく | **落下着水＆波紋ストーリー**: 水滴が空中から重力落下 ➔ 着水瞬間に弾けて水面に同化 ➔ 着水点から同心円の波紋リングが3重拡散 | [`effect-water.json`](./docs/dist/effects/effect-water.json) |
-| **リキッドグラス (`liquid-glass`)** | 四角 | **Apple風立体ガラス＆斜め光沢シマー**: すりガラスプレート＋立体エッジリム＋表面を左上から右下へ斜め45度に横切るグロス屈折光沢 | [`effect-liquid-glass.json`](./docs/dist/effects/effect-liquid-glass.json) |
-| **ガラスひび割れ (`glass-crack`)** | 星 | **クラック ➔ 粉々砕け散り（Shatter）**: 衝撃点から鋭角幾何クラックが走る ➔ 瞬時に多角形破片シャードへ分裂し四方八方へ回転飛散・落下消滅 | [`effect-glass-crack.json`](./docs/dist/effects/effect-glass-crack.json) |
-| **ネオン管＆グロー (`echo-glow-neon`)** | ハート | **中空ガラス管＆点灯フリッカー**: 純白コア芯ストロークと鮮やかネオン管の中空構造。バチバチッと瞬く点灯フリッカーから安定点灯 | [`effect-neon-glow.json`](./docs/dist/effects/effect-neon-glow.json) |
-| **ポップイン (`pop-in`)** | 円 | **カートゥーン調 Squash & Stretch**: タメ（力を溜めて横に潰れる Anticipation） ➔ 飛び出し（縦長に伸びる Stretch） ➔ 着地バウンス | [`effect-pop-bounce.json`](./docs/dist/effects/effect-pop-bounce.json) |
+| **炎 (`fire`)** | 炎 | **点P空間準拠のメラメラ＆ちぎれ**: 熱対流による凹凸の波送り、先端が縦に伸びてくびれちぎれる火の玉（Flame Tear-Off）、高熱白黄コアと外炎の二層燃焼 | [`effect-fire.json`](./docs/dist/effects/effect-fire.json) |
+| **水 (`water`) - 波紋** | しずく | **落下着水＆波紋ストーリー**: 水滴が空中から重力落下 ➔ 着水瞬間に弾けて水面に同化 ➔ 着水点から同心円の波紋リングが3重拡散 | [`effect-water.json`](./docs/dist/effects/effect-water.json) |
+| **水滴落下 (`water` dripping)** | しずく | **滴下・表面張力くびれ＆弾け**: 天井・蛇口から表面張力で徐々に水滴が膨らみ ➔ 縦長にくびれてポタッと滴下 ➔ 加速落下して地面で弾ける | [`effect-water-drop.json`](./docs/dist/effects/effect-water-drop.json) |
+| **リキッドグラス (`liquid-glass`)** | 四角 | **Apple風立体ガラス＆斜め光沢シマー**: 不要な揺れを排除。すりガラスプレート＋立体エッジリム＋表面を左上から右下へ斜め45度にツヤ〜ンと走るシャープな光沢スイープ | [`effect-liquid-glass.json`](./docs/dist/effects/effect-liquid-glass.json) |
+| **ガラスひび割れ (`glass-crack`)** | 星 | **クラック ➔ 粉々砕け散り（Shatter & Scatter）**: 衝撃点から鋭角幾何クラックが走る ➔ 瞬時に8個の多角形破片シャードへ分裂し四方八方へ回転飛散・落下消滅 | [`effect-glass-crack.json`](./docs/dist/effects/effect-glass-crack.json) |
+| **ネオン管＆グロー (`echo-glow-neon`)** | ハート | **中空ガラス管＆常時点灯維持**: 純白コア芯ストロークと鮮やかネオン管の中空構造。バチバチッと瞬く点灯フリッカーから最終フレームまで100%フル点灯維持 | [`effect-neon-glow.json`](./docs/dist/effects/effect-neon-glow.json) |
+| **ポップイン (`pop-in`)** | 円 | **カートゥーン調 Squash & Stretch**: タメ（力を溜めて横に潰れる Anticipation） ➔ 飛び出し（縦長に伸びる Stretch） ➔ ドスンと着地して弾むバウンス（表示維持） | [`effect-pop-bounce.json`](./docs/dist/effects/effect-pop-bounce.json) |
 
 ![svg2lottie-cli Architecture & Stack Diagram](./docs/stack-diagram.svg)
 

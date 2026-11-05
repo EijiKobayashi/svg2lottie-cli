@@ -1,5 +1,5 @@
 /**
- * すりガラス・グラスプレート・Apple風リキッドグラス（立体エッジリム＋斜め光沢シマースイープ）モジュール
+ * すりガラス・グラスプレート・Apple風リキッドグラス（立体エッジリム＋走るグロス光沢シマー）モジュール
  */
 
 import { round4 } from '../path-parser.mjs';
@@ -20,7 +20,7 @@ function collectLayerShapes(layer) {
 }
 
 /**
- * Apple風リキッドグラス（立体エッジリム＋斜め走るグロス光沢シマー＋浮遊フロート）を適用する
+ * Apple風リキッドグラス（立体エッジリム＋斜め走るグロス光沢シマー）を適用する
  * @param {object} layer
  * @param {{
  *   variant?: 'liquid' | 'frosted' | 'plate',
@@ -35,43 +35,34 @@ export function applyLiquidGlass(layer, options = {}, ctx = {}) {
   const {
     variant = 'liquid',
     blur = 16,
-    tintOpacity = 22,
-    start = 10,
-    end = 110,
+    tintOpacity = 28,
+    start = 15,
+    end = 105,
   } = options;
 
-  const [cx, cy] = ctx.center || layer.ks?.a?.k || [100, 100];
-  const w = ctx.width || 200;
-  const h = ctx.height || 200;
+  const totalFrames = layer.op || 120;
+  const [cx, cy] = ctx.center || layer.ks?.a?.k || [120, 120];
+  const w = ctx.width || 240;
+  const h = ctx.height || 240;
 
-  // 1. 本体レイヤーを半透明のすりガラスフロスト調に設定
+  // 1. 本体レイヤーを半透明のすりガラスフロスト調に設定（上下揺れは削除し、ガラスの厚みと透明感を表現）
   for (const grp of layer.shapes || []) {
     for (const it of grp.it || []) {
       if (it.ty === 'fl') {
+        it.c = { a: 0, k: [0.65, 0.45, 0.95, 1] }; // 綺麗なアメジスト・グラス
         it.o = { a: 0, k: tintOpacity };
       }
     }
   }
 
-  // 2. 空中浮遊（Float Animation）
-  const dur = Math.max(20, end - start);
-  const origPos = layer.ks?.p?.k || [cx, cy, 0];
-  const px = Array.isArray(origPos) ? origPos[0] : cx;
-  const py = Array.isArray(origPos) ? origPos[1] : cy;
-
-  const easeFloat = { x: [0.37, 0.37, 0.37], y: [1, 1, 1] };
-  layer.ks.p = {
-    a: 1,
-    k: [
-      { t: start, s: [px, py, 0], i: easeFloat, o: easeFloat },
-      { t: Math.round(start + dur * 0.45), s: [px, py - 4, 0], i: easeFloat, o: easeFloat },
-      { t: end, s: [px, py, 0] },
-    ],
-  };
+  // 位置は中央で静止、不透明度は100%維持
+  layer.ks.p = { a: 0, k: [cx, cy, 0] };
+  layer.ks.o = { a: 0, k: 100 };
+  layer.ks.s = { a: 0, k: [100, 100, 100] };
 
   const extraLayers = [];
 
-  // 3. 立体ガラスエッジ（純白の繊細なスペキュラ枠線ストローク）
+  // 2. 立体ガラスエッジ（純白の光るエッジリム境界線ストローク）
   const contourShapes = collectLayerShapes(layer);
   if (contourShapes.length > 0) {
     const rimShapes = contourShapes.slice(0, 4).map((sh, idx) => ({
@@ -86,7 +77,13 @@ export function applyLiquidGlass(layer, options = {}, ctx = {}) {
       ty: 4,
       nm: `${layer.nm}-glass-specular-rim`,
       sr: 1,
-      ks: structuredClone(layer.ks),
+      ks: {
+        o: { a: 0, k: 100 },
+        r: { a: 0, k: 0 },
+        p: { a: 0, k: [cx, cy, 0] },
+        a: { a: 0, k: [cx, cy, 0] },
+        s: { a: 0, k: [100, 100, 100] },
+      },
       ao: 0,
       shapes: [
         {
@@ -98,15 +95,8 @@ export function applyLiquidGlass(layer, options = {}, ctx = {}) {
               ty: 'st',
               nm: 'Specular Edge Stroke',
               c: { a: 0, k: [1, 1, 1, 1] },
-              o: {
-                a: 1,
-                k: [
-                  { t: start, s: [45] },
-                  { t: Math.round(start + dur * 0.5), s: [85] },
-                  { t: end, s: [45] },
-                ],
-              },
-              w: { a: 0, k: 1.8 },
+              o: { a: 0, k: 85 },
+              w: { a: 0, k: 2.2 },
               lc: 2,
               lj: 2,
             },
@@ -123,16 +113,16 @@ export function applyLiquidGlass(layer, options = {}, ctx = {}) {
           ],
         },
       ],
-      ip: layer.ip || 0,
-      op: layer.op || 180,
+      ip: 0,
+      op: totalFrames,
       st: 0,
       bm: 0,
     });
   }
 
-  // 4. ガラス表面を斜めにサッと横切る美しいグロス光沢シマー帯（Diagonal Gloss Sweep）
-  const sweepDur = Math.round(dur * 0.45);
-  const sweepStart = Math.round(start + dur * 0.2);
+  // 3. ガラス表面を斜めにサッと横切る美しいグロス光沢シマー帯（Gloss Specular Sweep）
+  const sweepDur = Math.round((end - start) * 0.5);
+  const sweepStart = start;
   const sweepEnd = sweepStart + sweepDur;
 
   extraLayers.push({
@@ -145,39 +135,28 @@ export function applyLiquidGlass(layer, options = {}, ctx = {}) {
       o: {
         a: 1,
         k: [
+          { t: 0, s: [0] },
           { t: sweepStart - 2, s: [0] },
-          { t: sweepStart + 5, s: [65] },
-          { t: sweepEnd - 5, s: [65] },
+          { t: sweepStart + 4, s: [80] },
+          { t: sweepEnd - 4, s: [80] },
           { t: sweepEnd, s: [0] },
+          { t: totalFrames, s: [0] },
         ],
       },
-      r: { a: 0, k: -35 }, // 斜め35度のハイライト帯
+      r: { a: 0, k: -35 }, // 斜め35度の光沢
       p: {
         a: 1,
         k: [
-          { t: sweepStart, s: [cx - w * 0.6, cy - h * 0.5, 0], i: { x: 0.22, y: 1 }, o: { x: 0.36, y: 1 } },
-          { t: sweepEnd, s: [cx + w * 0.6, cy + h * 0.5, 0] },
+          { t: 0, s: [cx - w * 0.55, cy - h * 0.55, 0] },
+          { t: sweepStart, s: [cx - w * 0.55, cy - h * 0.55, 0], i: { x: 0.18, y: 1 }, o: { x: 0.32, y: 1 } },
+          { t: sweepEnd, s: [cx + w * 0.55, cy + h * 0.55, 0] },
+          { t: totalFrames, s: [cx + w * 0.55, cy + h * 0.55, 0] },
         ],
       },
       a: { a: 0, k: [0, 0, 0] },
       s: { a: 0, k: [100, 100, 100] },
     },
     ao: 0,
-    ef: [
-      {
-        ty: 29,
-        nm: 'Gloss Blur',
-        np: 3,
-        mn: 'ADBE Gaussian Blur 2',
-        ix: 1,
-        en: 1,
-        ef: [
-          { ty: 0, nm: 'Blurriness', mn: 'ADBE Gaussian Blur 2-0001', ix: 1, v: { a: 0, k: blur * 0.6 } },
-          { ty: 7, nm: 'Blur Dimensions', mn: 'ADBE Gaussian Blur 2-0002', ix: 2, v: { a: 0, k: 1 } },
-          { ty: 7, nm: 'Repeat Edge Pixels', mn: 'ADBE Gaussian Blur 2-0003', ix: 3, v: { a: 0, k: 0 } },
-        ],
-      },
-    ],
     shapes: [
       {
         ty: 'gr',
@@ -187,14 +166,14 @@ export function applyLiquidGlass(layer, options = {}, ctx = {}) {
             ty: 'rc',
             nm: 'Gloss Rect',
             p: { a: 0, k: [0, 0] },
-            s: { a: 0, k: [Math.round(w * 0.25), Math.round(h * 1.4)] },
-            r: { a: 0, k: 4 },
+            s: { a: 0, k: [32, Math.round(h * 1.5)] }, // シャープな光沢帯
+            r: { a: 0, k: 3 },
           },
           {
             ty: 'fl',
             nm: 'Gloss Fill',
             c: { a: 0, k: [1, 1, 1, 1] },
-            o: { a: 0, k: 80 },
+            o: { a: 0, k: 85 },
             r: 1,
           },
           {
@@ -210,8 +189,8 @@ export function applyLiquidGlass(layer, options = {}, ctx = {}) {
         ],
       },
     ],
-    ip: sweepStart - 2,
-    op: sweepEnd,
+    ip: 0,
+    op: totalFrames,
     st: 0,
     bm: 0,
   });
