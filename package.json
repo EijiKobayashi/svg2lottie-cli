@@ -1,0 +1,29 @@
+{
+  "name": "svg2lottie-cli",
+  "version": "1.0.0",
+  "description": "あらゆるSVG素材と文字コンテ(shooting-script.md) / Storyboard JSONから汎用的なLottieアニメーションを構築・検収・修正指示するCLIツール",
+  "type": "module",
+  "bin": {
+    "svg2lottie": "./src/cli.mjs",
+    "svg2lottie-cli": "./src/cli.mjs"
+  },
+  "exports": {
+    "./path-parser": "./src/path-parser.mjs",
+    "./svg-extractor": "./src/svg-extractor.mjs",
+    "./shooting-script": "./src/shooting-script.mjs",
+    "./effects": "./src/effects/index.mjs",
+    "./lottie-builder": "./src/lottie-builder.mjs",
+    "./preview-server": "./src/preview-server.mjs"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "init": "node src/cli.mjs init",
+    "init-project": "node src/cli.mjs init",
+    "build": "node src/cli.mjs build",
+    "preview": "node src/cli.mjs preview"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "MIT"
+}
