@@ -193,6 +193,27 @@ test('water: 水滴の空中落下➔着水消失➔波紋リング拡散のス�
   assert.equal(result.extraLayers.length, 3, '着水点から波紋リングが3つ生成される');
 });
 
+test('water: mode=dripping 水滴が膨らみ表面張力でくびれてポタッと滴下・着水するアニメーション', () => {
+  const layer = {
+    nm: 'dripping-drop',
+    ip: 0,
+    op: 120,
+    ks: {
+      p: { a: 0, k: [100, 30, 0] },
+      s: { a: 0, k: [100, 100, 100] },
+      o: { a: 0, k: 100 },
+    },
+  };
+  const result = EFFECT_REGISTRY.water(
+    layer,
+    { mode: 'dripping', start: 10, end: 70 },
+    { center: [100, 30], width: 200, height: 200 }
+  );
+  assert.equal(result.layer.ks.s.a, 1, '膨らみとくびれスケールアニメーションが付与される');
+  assert.equal(result.layer.ks.p.a, 1, '滴下・落下位置アニメーションが付与される');
+  assert.ok(result.extraLayers.length >= 1, '着水後の波紋またはスプラッシュレイヤーが生成される');
+});
+
 test('glass-crack: 衝撃点クラック後に破片シャードが四方へ砕け散る（Shatter）', () => {
   const layer = {
     nm: 'glass',

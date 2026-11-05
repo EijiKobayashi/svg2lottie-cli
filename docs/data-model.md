@@ -161,7 +161,7 @@ Webサイトや検収スタジオ上で、ユーザーのマウス操作・タ�
 | `"liquid-glass"` | `liquid-glass.mjs` | `variant?: "frosted" \| "plate" \| "liquid"`, `blur?: 20`, `tintOpacity?: 22`, `specularWidth?: 1.5`, `refraction?: 12` |
 | `"glass-crack"` | `glass-crack.mjs` | `start`, `end`, `impactPoint?: [cx, cy]`, `rays?: 8`, `rings?: 3`, `shatter?: true` |
 | `"fire"` | `fire.mjs` | `start`, `end`, `intensity?: 1.0`, `coreColor?: "#fff3b0"`, `flameColor?: "#ff5400"`, `emberCount?: 24` |
-| `"water"` | `water.mjs` | `mode?: "ripple" \| "wave" \| "splash"`, `start`, `end`, `rings?: 3`, `amplitude?: 12`, `color?: "#38bdf8"` |
+| `"water"` | `water.mjs` | `mode?: "ripple" \| "wave" \| "splash" \| "dripping"`, `start`, `end`, `rings?: 3`, `amplitude?: 12`, `color?: "#38bdf8"` |
 | `"snowfall-loop"` | `snowfall-loop.mjs` | `start?: 0`, `end?: durationFrames`, `distance?: canvasHeight`, `drift?: 24`, `copies?: 2`, `opacity?: 85` |
 | `"powder-scatter"` | `powder-scatter.mjs` | ルート `powderEnding` またはレイヤー単位で頂点サンプリング粒子飛散を生成 |
 

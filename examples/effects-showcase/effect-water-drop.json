@@ -1,0 +1,24 @@
+{
+  "name": "effect-water-drop",
+  "width": 240,
+  "height": 240,
+  "fps": 60,
+  "durationFrames": 120,
+  "loop": true,
+  "layers": [
+    {
+      "id": "main-shape",
+      "svg": "examples/shapes/drop.svg",
+      "effects": [
+        {
+          "type": "water",
+          "mode": "dripping",
+          "start": 5,
+          "end": 90,
+          "fallDistance": 85,
+          "color": "#38bdf8"
+        }
+      ]
+    }
+  ]
+}

@@ -115,7 +115,7 @@ npx svg2lottie-cli preview [--dir <dir>] [--port <port>]
 | | `liquid-glass.mjs` | `applyLiquidGlass(layer, options, ctx)` | すりガラス・グラスプレート・Apple的リキッドグラス（フロストブラー＋スペキュラリム＋屈折シマー） |
 | ⑤ **物理・自然・破壊** | `glass-crack.mjs` | `applyGlassCrack(layer, options, ctx)` | 衝撃点からの放射状ひび割れライン（Trim Paths）＋破片シャード飛散レイヤー生成 |
 | | `fire.mjs` | `applyFire(layer, options, ctx)` | コア〜外炎の温度グラデーション揺らぎ＋上昇火の粉（エンバー）パーティクル生成 |
-| | `water.mjs` | `applyWater(layer, options, ctx)` | 水面リップル波紋リング拡大・流体ウェーブ・水滴スプラッシュレイヤー生成 |
+| | `water.mjs` | `applyWater(layer, options, ctx)` | 水面リップル波紋リング拡大（`mode: 'ripple'`）および天井・蛇口からの水滴滴下・弾け（`mode: 'dripping'`）、スプラッシュレイヤー生成 |
 | | `powder-scatter.mjs` | `applyPowderScatter(baseLottie, options)` | 頂点サンプリングから微細粒子レイヤー群を生成し、本体と同期して枠内飛散＆完全透過させる |
 
 ---

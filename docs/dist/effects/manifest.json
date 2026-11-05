@@ -1,9 +1,9 @@
 [
   {
     "name": "effect-fire",
-    "title": "炎エフェクト (外炎・内炎二層メラメラうねり)",
+    "title": "炎エフェクト (点P空間準拠: 凹凸の波送り・先端ちぎれ・二層燃焼)",
     "category": "物理・自然現象",
-    "description": "外炎と高熱内炎コアの二層構造。ベジェ波形モーフィングによる立ち昇る炎の舌のうねり、有機的メラメラ感、ちぎれて舞い上がる火の粉パーティクル",
+    "description": "点P空間アニメーション基礎準拠。熱対流による凹凸の波送り、先端が縦に伸びてくびれちぎれる火の玉（Flame Tear-Off）、高熱白黄コアと外炎の二層燃焼",
     "svg": "examples/shapes/flame.svg",
     "width": 240,
     "height": 240,
@@ -24,9 +24,9 @@
   },
   {
     "name": "effect-water",
-    "title": "水エフェクト (ポチャン落下着水＆波紋拡散)",
+    "title": "水エフェクト (着水波紋拡散ストーリー)",
     "category": "物理・自然現象",
-    "description": "空中から重力加速で水滴が落下 ➔ 着水瞬間に弾けて水面に同化 ➔ 着水点から同心円の波紋リングが外側へサーッと3重拡散する明確なストーリー",
+    "description": "空中から水滴が重力落下 ➔ 着水瞬間に弾けて同化 ➔ 着水点から同心円の波紋リングが外側へサーッと3重拡散する明確なストーリー",
     "svg": "examples/shapes/drop.svg",
     "width": 240,
     "height": 240,
@@ -40,6 +40,27 @@
         "end": 120,
         "rings": 3,
         "fallDistance": 80,
+        "color": "#38bdf8"
+      }
+    ]
+  },
+  {
+    "name": "effect-water-drop",
+    "title": "水滴落下エフェクト (滴下・表面張力くびれ＆弾け)",
+    "category": "物理・自然現象",
+    "description": "天井や蛇口から表面張力で徐々に水滴が膨らみ ➔ 自身の重みで縦長にくびれてポタッと滴下 ➔ 重力加速で落下し着水スプラッシュと波紋を残して弾ける",
+    "svg": "examples/shapes/drop.svg",
+    "width": 240,
+    "height": 240,
+    "fps": 60,
+    "durationFrames": 120,
+    "effects": [
+      {
+        "type": "water",
+        "mode": "dripping",
+        "start": 5,
+        "end": 90,
+        "fallDistance": 85,
         "color": "#38bdf8"
       }
     ]

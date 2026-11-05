@@ -1,11 +1,16 @@
 /**
- * 炎エフェクト（外炎・内炎コアの二層メラメラうねり＋有機的熱波呼吸＋上昇火の粉）モジュール
+ * 炎エフェクト（点P空間アニメーション基礎準拠: 凹凸の波送り ＋ 先端の縦伸び・ちぎれ ＋ 二層メラメラ燃焼）モジュール
+ * 参考: https://blog.tenp-kukan.com/9474/
  */
 
 import { hexToLottieColor, round4 } from '../path-parser.mjs';
 
 /**
- * 本物の炎のようなメラメラ感を生成する（外炎＋高熱内炎コア＋火の粉）
+ * 点P空間「火のアニメーション基礎」理論に準拠した本物の炎エフェクトを適用する
+ * 1. 下から上へ凹凸の波を送る（Wave propagation）
+ * 2. 先端が縦に伸びてくびれ、ちぎれて独立した火の玉になる（Flame tear-off）
+ * 3. 外炎（橙赤）と高熱内炎コア（白黄）の二層温度燃焼
+ *
  * @param {object} layer
  * @param {{
  *   start?: number,
@@ -21,71 +26,78 @@ import { hexToLottieColor, round4 } from '../path-parser.mjs';
 export function applyFire(layer, options = {}, ctx = {}) {
   const {
     start = 0,
-    end = 180,
+    end = 120,
     flameColor = '#ea580c',
     coreColor = '#fef08a',
-    emberCount = 8,
-    intensity = 1.0,
+    emberCount = 6,
+    intensity = 1.2,
     innerCore = true,
   } = options;
 
-  const [cx, cy] = ctx.center || layer.ks?.a?.k || [100, 100];
-  const w = ctx.width || 200;
-  const h = ctx.height || 200;
+  const totalFrames = layer.op || 120;
+  const [cx, cy] = ctx.center || layer.ks?.a?.k || [120, 120];
+  const w = ctx.width || 240;
+  const h = ctx.height || 240;
 
   const flameRgba = hexToLottieColor(flameColor);
   const coreRgba = hexToLottieColor(coreColor);
 
-  // 1. 外炎（本体レイヤー）：メラメラうねるスケール・スキュー・位置キーフレーム
-  const dur = Math.max(20, end - start);
-  const cycles = Math.max(4, Math.round(dur / 18));
-  const step = Math.round(dur / (cycles * 2));
+  // 1. 本体の「凹凸の波送り」（下から上へ熱対流が抜けていく周期的な縦伸び・くびれ・左右S字うねり）
+  const dur = Math.max(24, end - start);
+  const waveCycles = 4;
+  const step = Math.round(dur / (waveCycles * 2));
 
   const scaleKfs = [];
   const skewKfs = [];
   const posKfs = [];
   const easeInOut = { x: [0.33, 0.33, 0.33], y: [1, 1, 1] };
-  const origPos = layer.ks?.p?.k || [cx, cy, 0];
-  const px = Array.isArray(origPos) ? origPos[0] : cx;
-  const py = Array.isArray(origPos) ? origPos[1] : cy;
 
-  for (let i = 0; i <= cycles * 2; i++) {
+  for (let i = 0; i <= waveCycles * 2; i++) {
     const t = Math.min(end, start + i * step);
-    const isPeak = i % 2 === 1;
-    // メラメラ伸び縮み
-    const sx = isPeak ? 92 - 4 * intensity : 104 + 3 * intensity;
-    const sy = isPeak ? 108 + 5 * intensity : 96 - 3 * intensity;
-    // 左右のうねり（スキュー）
-    const sk = (i % 4 === 1 ? 4.5 : i % 4 === 3 ? -4.5 : 0) * intensity;
-    // 上下微小浮動
-    const dy = isPeak ? -2.5 * intensity : 1.5 * intensity;
+    const isStretch = i % 2 === 1;
+
+    // 縦にグッと伸びる時（Stretch: X縮み、Y伸び）、先端がくびれる
+    const sx = isStretch ? 90 - 4 * intensity : 105 + 3 * intensity;
+    const sy = isStretch ? 112 + 6 * intensity : 94 - 4 * intensity;
+
+    // 左右への有機的なS字の波送り（スキュー）
+    const sk = (i % 4 === 1 ? 5 : i % 4 === 3 ? -5 : 0) * intensity;
+
+    // 上へ昇っていく熱対流の微小リフト
+    const dy = isStretch ? -4 * intensity : 2 * intensity;
 
     scaleKfs.push({ t, s: [round4(sx), round4(sy), 100], i: easeInOut, o: easeInOut });
     skewKfs.push({ t, s: [round4(sk)], i: { x: [0.33], y: [1] }, o: { x: [0.33], y: [1] } });
-    posKfs.push({ t, s: [round4(px), round4(py + dy), 0], i: easeInOut, o: easeInOut });
+    posKfs.push({ t, s: [round4(cx), round4(cy + dy), 0], i: easeInOut, o: easeInOut });
   }
 
-  delete scaleKfs[scaleKfs.length - 1].i;
-  delete scaleKfs[scaleKfs.length - 1].o;
-  delete skewKfs[skewKfs.length - 1].i;
-  delete skewKfs[skewKfs.length - 1].o;
-  delete posKfs[posKfs.length - 1].i;
-  delete posKfs[posKfs.length - 1].o;
+  // 最終フレームまでループ接続を保証
+  if (scaleKfs[scaleKfs.length - 1].t < totalFrames) {
+    scaleKfs.push({ t: totalFrames, s: scaleKfs[0].s });
+    skewKfs.push({ t: totalFrames, s: skewKfs[0].s });
+    posKfs.push({ t: totalFrames, s: posKfs[0].s });
+  }
+  delete scaleKfs[scaleKfs.length - 2].i;
+  delete scaleKfs[scaleKfs.length - 2].o;
+  delete skewKfs[skewKfs.length - 2].i;
+  delete skewKfs[skewKfs.length - 2].o;
+  delete posKfs[posKfs.length - 2].i;
+  delete posKfs[posKfs.length - 2].o;
 
   layer.ks.s = { a: 1, k: scaleKfs };
   layer.ks.sk = { a: 1, k: skewKfs };
   layer.ks.sa = { a: 0, k: 0 };
   layer.ks.p = { a: 1, k: posKfs };
+  layer.ks.o = { a: 0, k: 100 };
 
   const extraLayers = [];
 
-  // 2. 高熱内炎コアレイヤー（Inner Core）: 70%サイズで白黄色、異なる位相でメラメラ蠢く
+  // 2. 高熱内炎コア（Inner Core）: 白黄色で外炎の中心で燃え盛る二層構造
   if (innerCore) {
     const coreLayer = structuredClone(layer);
     coreLayer.nm = `${layer.nm}-flame-core`;
     coreLayer.ind = (layer.ind || 1) + 50;
 
-    // コアの色を coreColor（白黄）に差し替え
     for (const grp of coreLayer.shapes || []) {
       for (const it of grp.it || []) {
         if (it.ty === 'fl' && it.c) {
@@ -94,29 +106,125 @@ export function applyFire(layer, options = {}, ctx = {}) {
       }
     }
 
-    // 内炎コア用の逆位相スケール（外炎とズラすことで有機的なメラメラ炎に見える）
+    // 内炎コアは外炎の65%サイズで、波を逆位相で送る（二重のうねり）
     const coreScaleKfs = scaleKfs.map((k, idx) => ({
       t: k.t,
-      s: [round4(k.s[0] * 0.72 * (idx % 2 === 0 ? 1.06 : 0.94)), round4(k.s[1] * 0.72 * (idx % 2 === 0 ? 0.95 : 1.05)), 100],
+      s: [
+        round4(k.s[0] * 0.65 * (idx % 2 === 0 ? 1.08 : 0.92)),
+        round4(k.s[1] * 0.65 * (idx % 2 === 0 ? 0.92 : 1.08)),
+        100,
+      ],
       ...(k.i ? { i: k.i, o: k.o } : {}),
     }));
     coreLayer.ks.s = { a: 1, k: coreScaleKfs };
     extraLayers.push(coreLayer);
   }
 
-  // 3. 立ち昇る火の粉（Ember）パーティクル
-  const spreadX = Math.max(16, w * 0.2);
-  const riseDist = Math.max(30, h * 0.32);
+  // 3. 点P空間の真髄「先端がちぎれて独立した火の玉になる」（Flame Tear-Off）
+  // 炎の先端からくびれて分離し、上へシュッと加速して消滅する火の玉を2周期生成
+  const tearCycles = 2;
+  const tearInterval = Math.round(dur / tearCycles);
+
+  for (let c = 0; c < tearCycles; c++) {
+    const tearStart = start + 18 + c * tearInterval;
+    const tearPinch = tearStart + 10; // くびれ・分離の瞬間
+    const tearEnd = tearStart + 28;   // 上空で消滅
+
+    extraLayers.push({
+      ddd: 0,
+      ind: (layer.ind || 1) + 150 + c,
+      ty: 4,
+      nm: `${layer.nm}-flame-tear-${c + 1}`,
+      sr: 1,
+      ks: {
+        o: {
+          a: 1,
+          k: [
+            { t: 0, s: [0] },
+            { t: tearStart, s: [0] },
+            { t: tearPinch, s: [100] },
+            { t: tearEnd, s: [0] },
+            { t: totalFrames, s: [0] },
+          ],
+        },
+        r: { a: 0, k: 0 },
+        p: {
+          a: 1,
+          k: [
+            { t: tearStart, s: [cx, cy - 32, 0], i: { x: 0.42, y: 0 }, o: { x: 0.58, y: 1 } },
+            { t: tearPinch, s: [cx + (c % 2 === 0 ? 4 : -4), cy - 52, 0], i: { x: 0.22, y: 1 }, o: { x: 0.36, y: 1 } },
+            { t: tearEnd, s: [cx + (c % 2 === 0 ? 8 : -8), cy - 85, 0] },
+          ],
+        },
+        a: { a: 0, k: [0, 0, 0] },
+        s: {
+          a: 1,
+          k: [
+            // ちぎれる直前は縦に引き伸ばされ、ちぎれた後は丸くなって縮小消滅
+            { t: tearStart, s: [35, 90, 100], i: easeInOut, o: easeInOut },
+            { t: tearPinch, s: [55, 65, 100], i: easeInOut, o: easeInOut },
+            { t: tearEnd, s: [15, 15, 100] },
+          ],
+        },
+      },
+      ao: 0,
+      shapes: [
+        {
+          ty: 'gr',
+          nm: 'Tear Shape',
+          it: [
+            {
+              ty: 'el',
+              nm: 'Tear Ellipse',
+              p: { a: 0, k: [0, 0] },
+              s: { a: 0, k: [18, 24] },
+            },
+            {
+              ty: 'fl',
+              nm: 'Tear Fill',
+              c: {
+                a: 1,
+                k: [
+                  { t: tearStart, s: coreRgba },
+                  { t: tearEnd, s: flameRgba },
+                ],
+              },
+              o: { a: 0, k: 95 },
+              r: 1,
+            },
+            {
+              ty: 'tr',
+              p: { a: 0, k: [0, 0] },
+              a: { a: 0, k: [0, 0] },
+              s: { a: 0, k: [100, 100] },
+              r: { a: 0, k: 0 },
+              o: { a: 0, k: 100 },
+              sk: { a: 0, k: 0 },
+              sa: { a: 0, k: 0 },
+            },
+          ],
+        },
+      ],
+      ip: tearStart,
+      op: totalFrames,
+      st: 0,
+      bm: 0,
+    });
+  }
+
+  // 4. 上昇する火の粉（Ember）パーティクル
+  const spreadX = Math.max(16, w * 0.18);
+  const riseDist = Math.max(30, h * 0.35);
   const dotSize = round4(Math.max(3.5, Math.min(w, h) * 0.026));
 
   for (let i = 0; i < emberCount; i++) {
     const norm = (i / Math.max(1, emberCount - 1)) - 0.5;
     const offsetX = round4(norm * spreadX);
-    const swayX = round4((i % 2 === 0 ? 1 : -1) * spreadX * 0.4);
+    const swayX = round4((i % 2 === 0 ? 1 : -1) * spreadX * 0.45);
     const riseY = round4(riseDist * (0.8 + (i % 3) * 0.3));
-    const emberStart = start + i * 8;
+    const emberStart = start + i * 10;
     const emberMid = Math.round(emberStart + 22);
-    const emberEnd = Math.min(end, emberStart + 52);
+    const emberEnd = Math.min(end, emberStart + 50);
 
     extraLayers.push({
       ddd: 0,
@@ -128,16 +236,18 @@ export function applyFire(layer, options = {}, ctx = {}) {
         o: {
           a: 1,
           k: [
+            { t: 0, s: [0] },
             { t: emberStart, s: [0], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
-            { t: emberStart + 8, s: [95], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
+            { t: emberStart + 6, s: [95], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
             { t: emberEnd, s: [0] },
+            { t: totalFrames, s: [0] },
           ],
         },
         r: { a: 0, k: 0 },
         p: {
           a: 1,
           k: [
-            { t: emberStart, s: [cx + offsetX, cy + 10, 0], i: { x: 0.42, y: 0 }, o: { x: 0.58, y: 1 } },
+            { t: emberStart, s: [cx + offsetX, cy + 5, 0], i: { x: 0.42, y: 0 }, o: { x: 0.58, y: 1 } },
             { t: emberMid, s: [cx + offsetX + swayX, round4(cy - riseY * 0.5), 0], i: { x: 0.22, y: 1 }, o: { x: 0.36, y: 1 } },
             { t: emberEnd, s: [cx + offsetX - swayX * 0.5, round4(cy - riseY), 0] },
           ],
@@ -147,7 +257,7 @@ export function applyFire(layer, options = {}, ctx = {}) {
           a: 1,
           k: [
             { t: emberStart, s: [40, 40, 100], i: easeInOut, o: easeInOut },
-            { t: emberMid, s: [130, 130, 100], i: easeInOut, o: easeInOut },
+            { t: emberMid, s: [120, 120, 100], i: easeInOut, o: easeInOut },
             { t: emberEnd, s: [10, 10, 100] },
           ],
         },
@@ -191,7 +301,7 @@ export function applyFire(layer, options = {}, ctx = {}) {
         },
       ],
       ip: emberStart,
-      op: emberEnd,
+      op: totalFrames,
       st: 0,
       bm: 0,
     });
