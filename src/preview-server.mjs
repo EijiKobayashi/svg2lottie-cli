@@ -13,6 +13,7 @@ const SECURITY_HEADERS = Object.freeze({
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'no-referrer',
+  'Cache-Control': 'no-cache, no-store, must-revalidate',
 });
 
 function buildPreviewStudioHtml() {

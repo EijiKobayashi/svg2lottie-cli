@@ -44,3 +44,4 @@ for (const item of manifest) {
 }
 
 console.log('All effects rebuilt successfully!');
+

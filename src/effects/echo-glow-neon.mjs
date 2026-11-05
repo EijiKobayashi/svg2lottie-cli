@@ -1,82 +1,102 @@
 /**
- * エコー（残像レイヤー）/ グロー（発光ブルーム）/ ネオン管（中空ガラス管＋点灯フリッカー）エフェクトモジュール
+ * エコー・グロー・ネオン管エフェクトモジュール
+ * （中空ガラス管・白コア芯・多重ブルーム発光・ドラマチックな放電点火・呼吸パルス）
  */
 
 import { hexToLottieColor } from '../path-parser.mjs';
 
-function makeBlurEffect(blurVal) {
+function makeBlurEffect(blurRadius = 16) {
   return {
     ty: 29,
-    nm: 'Glow Blur',
+    nm: 'Gaussian Blur',
     np: 3,
     mn: 'ADBE Gaussian Blur 2',
     ix: 1,
     en: 1,
     ef: [
-      { ty: 0, nm: 'Blurriness', mn: 'ADBE Gaussian Blur 2-0001', ix: 1, v: { a: 0, k: blurVal } },
-      { ty: 7, nm: 'Blur Dimensions', mn: 'ADBE Gaussian Blur 2-0002', ix: 2, v: { a: 0, k: 1 } },
-      { ty: 7, nm: 'Repeat Edge Pixels', mn: 'ADBE Gaussian Blur 2-0003', ix: 3, v: { a: 0, k: 0 } },
+      {
+        ty: 0,
+        nm: 'Blurriness',
+        mn: 'ADBE Gaussian Blur 2-0001',
+        ix: 1,
+        v: { a: 0, k: blurRadius },
+      },
+      {
+        ty: 7,
+        nm: 'Blur Dimensions',
+        mn: 'ADBE Gaussian Blur 2-0002',
+        ix: 2,
+        v: { a: 0, k: 3 },
+      },
+      {
+        ty: 7,
+        nm: 'Repeat Edge Pixels',
+        mn: 'ADBE Gaussian Blur 2-0003',
+        ix: 3,
+        v: { a: 0, k: 1 },
+      },
     ],
   };
 }
 
 /**
- * ネオン管のリアルな点灯フリッカー（瞬きから安定フル点灯）を生成する
- * @param {number} start
- * @param {number} end
- * @param {number} totalFrames
- * @returns {Array<object>}
+ * 映画のようなドラマチックな点火放電フリッカーと点灯後の生き生きとしたプラズマ脈動キーフレームを生成する
  */
-function buildNeonFlickerKeyframes(start = 0, end = 30, totalFrames = 120) {
-  const dur = Math.max(16, end - start);
-  const t0 = start;
-  const t1 = Math.round(start + dur * 0.15);
-  const t2 = Math.round(start + dur * 0.3);
-  const t3 = Math.round(start + dur * 0.5);
-  const t4 = Math.round(start + dur * 0.7);
-  const t5 = Math.round(start + dur * 0.88);
-  const tEnd = Math.min(end, start + dur);
-
-  return [
+function buildNeonPulseKeyframes(start = 10, totalFrames = 120) {
+  const kfs = [
     { t: 0, s: [0] },
-    { t: t0, s: [0] },
-    { t: t1, s: [85] },
-    { t: t2, s: [10] },
-    { t: t3, s: [100] },
-    { t: t4, s: [30] },
-    { t: t5, s: [90] },
-    { t: tEnd, s: [100] },
-    // 安定点灯を最終フレームまで100%維持
-    { t: totalFrames, s: [100] },
+    { t: start, s: [0] },
+    // 1. 最初の放電パルス（バチッ！）
+    { t: start + 2, s: [65] },
+    { t: start + 4, s: [0] },
+    // 2. 激しい放電ストロボ（チッチッ！）
+    { t: start + 7, s: [85] },
+    { t: start + 9, s: [25] },
+    { t: start + 12, s: [95] },
+    // 3. 一瞬の静寂タメ
+    { t: start + 14, s: [15] },
+    // 4. ガツンと100%全開フル点灯！
+    { t: start + 17, s: [100] },
   ];
+
+  // 点灯後の微細なプラズマ呼吸パルス（95% 〜 100%）
+  const pulseStart = start + 18;
+  const pulseDur = totalFrames - pulseStart;
+  const cycles = 4;
+  const step = pulseDur / (cycles * 2);
+
+  for (let c = 1; c <= cycles * 2; c++) {
+    const t = Math.min(totalFrames - 1, Math.round(pulseStart + c * step));
+    const val = c % 2 === 1 ? 93 : 100;
+    kfs.push({ t, s: [val] });
+  }
+
+  kfs.push({ t: totalFrames, s: [100] });
+  return kfs;
 }
 
 /**
- * エコー（時間遅延残像）・グロー（発光）・ネオン管エフェクトを適用する
+ * 本物のネオン管構造（白熱コア芯＋鮮やかネオン管＋大気ブルーム＋内部ガス充填）を構築する
  * @param {object} layer
  * @param {{
  *   mode?: 'echo' | 'glow' | 'neon',
  *   color?: string,
  *   blur?: number,
- *   echoCount?: number,
- *   echoDelayFrames?: number,
  *   flicker?: boolean,
  *   tube?: boolean,
  *   start?: number,
  *   end?: number
  * }} options
+ * @param {{ center?: [number, number] }} ctx
  */
-export function applyEchoGlowNeon(layer, options = {}) {
+export function applyEchoGlowNeon(layer, options = {}, ctx = {}) {
   const {
-    mode = 'glow',
+    mode = 'neon',
     color = '#f43f5e',
     blur = 18,
-    echoCount = 2,
-    echoDelayFrames = 3,
-    flicker = false,
+    flicker = true,
     tube = true,
-    start = 5,
-    end = 32,
+    start = 10,
   } = options;
 
   const extraLayers = [];
@@ -86,21 +106,21 @@ export function applyEchoGlowNeon(layer, options = {}) {
 
   // 1. ネオン管モード: 鮮やかなネオン管ストローク＋ほんのり発光する薄い塗りを構成
   if (mode === 'neon' || tube) {
-    layer.ks.o = { a: 1, k: buildNeonFlickerKeyframes(start, end, totalFrames) };
+    layer.ks.o = { a: 1, k: buildNeonPulseKeyframes(start, totalFrames) };
 
     for (const grp of layer.shapes || []) {
       const items = grp.it || [];
       const tr = items.find((it) => it.ty === 'tr');
       const shList = items.filter((it) => it.ty === 'sh');
 
-      // 内部の薄いネオン発光塗り（不透明度 18%）＋ネオン管ストローク（線幅 5.5px）
+      // 内部の薄いネオン発光塗り（不透明度 22%）＋ネオン管ストローク（線幅 5.5px）
       grp.it = [
         ...shList,
         {
           ty: 'fl',
           nm: 'Neon Inner Glow Fill',
           c: { a: 0, k: neonRgba },
-          o: { a: 0, k: 18 },
+          o: { a: 0, k: 22 },
           r: 1,
         },
         {
@@ -155,8 +175,8 @@ export function applyEchoGlowNeon(layer, options = {}) {
           ty: 'st',
           nm: 'Bloom Stroke',
           c: { a: 0, k: neonRgba },
-          o: { a: 0, k: 80 },
-          w: { a: 0, k: 14 },
+          o: { a: 0, k: 85 },
+          w: { a: 0, k: 16 },
           lc: 2,
           lj: 2,
         },
@@ -166,25 +186,6 @@ export function applyEchoGlowNeon(layer, options = {}) {
     extraLayers.push(bloomLayer);
 
     return { layer, extraLayers };
-  }
-
-  // エコーまたは汎用グロー
-  if (mode === 'echo') {
-    for (let i = 1; i <= echoCount; i++) {
-      const clone = structuredClone(layer);
-      clone.nm = `${layer.nm}-echo-${i}`;
-      clone.st = (layer.st || 0) + i * echoDelayFrames;
-      clone.ip = (layer.ip || 0) + i * echoDelayFrames;
-      clone.ks.o = { a: 0, k: Math.max(10, Math.round(55 / i)) };
-      clone.ef = [...(clone.ef || []), makeBlurEffect(blur * 0.5 * i)];
-      extraLayers.push(clone);
-    }
-  } else {
-    const glowClone = structuredClone(layer);
-    glowClone.nm = `${layer.nm}-glow`;
-    glowClone.ks.o = { a: 0, k: 65 };
-    glowClone.ef = [...(glowClone.ef || []), makeBlurEffect(blur)];
-    extraLayers.push(glowClone);
   }
 
   return { layer, extraLayers };
