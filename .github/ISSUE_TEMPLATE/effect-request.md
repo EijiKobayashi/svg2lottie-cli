@@ -25,7 +25,7 @@ labels: ["enhancement", "effect"]
 }
 ```
 
-> **現在標準搭載されている17種のエフェクトモジュール** （`src/effects/`）:
+> **現在標準搭載されている17種のエフェクトモジュール**（`src/effects/`）:
 > `cross-dissolve`, `bleed-fade`, `wipe`, `slide-push-pull`, `pop-in`, `trim-stroke`, `zoom-slide-spin`, `transform`, `speed-control`, `color-grade`, `mask`, `ultra-key`, `echo-glow-neon`, `liquid-glass`, `glass-crack`, `fire`, `water`, `powder-scatter`
 
 ### 期待するLottie出力仕様（キーフレーム・エフェクト）

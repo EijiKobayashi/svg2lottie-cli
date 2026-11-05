@@ -23,11 +23,27 @@ flowchart LR
 
 アニメーション制作の起点となる Markdown 台本モデルです。`src/shooting-script.mjs` でパース・検証・生成を行います。
 
-### Markdown 構造とパース後データ (`ParsedShootingScript`)
+### Markdown 初期入力欄テンプレートとパース後データ (`ParsedShootingScript`)
+
+```markdown
+# 文字コンテ (sample-animation)
+
+## キャンバスサイズ・基本設定（初期入力欄）
+- 横幅 (width): 520px
+- 縦幅 (height): 140px
+- フレームレート (fps): 60fps
+- 総フレーム数 (durationFrames): 560f
+- ベースカラー (color): #264f74
+```
 
 ```json
 {
   "title": "アニメーションタイトル",
+  "width": 520,
+  "height": 140,
+  "fps": 60,
+  "durationFrames": 560,
+  "color": "#264f74",
   "keywords": [
     "滲んだようなフェードアウト",
     "透過",
@@ -101,7 +117,7 @@ erDiagram
 | `inFrame` | `number` | - | レイヤー出現フレーム `ip`（デフォルト: `0`） |
 | `outFrame` | `number` | - | レイヤー消滅フレーム `op`（デフォルト: `durationFrames`） |
 | `initialOpacity` | `number` | - | `fadeIn` 前の待機時不透明度 `0〜100`（デフォルト: `fadeIn` がある場合は `0`、なければ `100`） |
-| `effects` | `EffectConfig[]` | - | **統一モジュラーエフェクト配列** （下記17種の `{ "type": "...", ... }` を順番に合成適用） |
+| `effects` | `EffectConfig[]` | - | **統一モジュラーエフェクト配列**（下記17種の `{ "type": "...", ... }` を順番に合成適用） |
 | `move` | `MoveEffect` | - | ショートハンド: `slide-push-pull.mjs` による移動展開設定 |
 | `fadeIn` / `fadeOut` | `FadeEffect` | - | ショートハンド: `bleed-fade.mjs` によるフェードイン／アウト設定 |
 | `trimStroke` | `TrimStrokeEffect` | 条件付 | ショートハンド: `trim-stroke.mjs` による頂点・線幅・Trim Paths 設定 |
@@ -167,5 +183,5 @@ erDiagram
 
 ## 4. 中間モデル (`LottieShape`) & 出力モデル (`LottieAnimation`)
 
-| **統括** | `LottieShape` | `{ c: boolean, v: [number, number][], i: [number, number][], o: [number, number][] }` |
-| **出力** | `LottieAnimation` | `{ v: "5.12.2", fr, ip: 0, op, w, h, nm, ddd: 0, loop, assets: [], layers, markers }` |
+- **中間シェイプ** （`LottieShape`）: `{ c: boolean, v: [number, number][], i: [number, number][], o: [number, number][] }`
+- **最終アニメーション** （`LottieAnimation`）: `{ v: "5.12.2", fr, ip: 0, op, w, h, nm, ddd: 0, loop, assets: [], layers, markers }`
