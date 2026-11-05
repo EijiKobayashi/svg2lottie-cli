@@ -31,3 +31,4 @@ export function applySpeedControl(layer, options = {}) {
   }
   return { layer, extraLayers: [] };
 }
+

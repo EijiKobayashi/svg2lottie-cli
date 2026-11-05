@@ -34,3 +34,4 @@ test('computeShapesCenter: 頂点群のバウンディングボックス中心�
   assert.deepEqual(computeShapesCenter(shapes), [70, 70]);
   assert.deepEqual(computeShapesCenter([], 260, 70), [260, 70]);
 });
+

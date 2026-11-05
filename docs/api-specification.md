@@ -129,3 +129,6 @@ npx svg2lottie-cli preview [--dir <dir>] [--port <port>]
 | `GET` | `/dist/<name>.json` | `200 application/json` | 生成された Lottie JSON ファイル |
 | `GET` | `/../...` (ディレクトリ外) | `403 text/plain` | パストラバーサル攻撃をブロック (`Forbidden`) |
 | `GET` | 存在しないパス | `404 text/plain` | `Not Found` |
+# 降雪ループエフェクト
+
+`effects` に `{ "type": "snowfall-loop" }` を指定すると、対象レイヤーを縦方向にタイル複製して循環させます。`start` / `end` はループ区間、`distance` は落下距離、`drift` は左右の揺れ幅、`copies` はタイル数、`opacity` は雪の不透明度です。ループ用Storyboardでは `end` を `durationFrames` と一致させます。

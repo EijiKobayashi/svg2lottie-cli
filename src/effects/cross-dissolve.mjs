@@ -32,3 +32,4 @@ export function applyCrossDissolve(layer, options = {}) {
   layer.ks.o = { a: 1, k: kfs };
   return { layer, extraLayers: [] };
 }
+

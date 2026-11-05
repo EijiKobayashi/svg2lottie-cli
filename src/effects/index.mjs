@@ -19,6 +19,7 @@ import { applyLiquidGlass } from './liquid-glass.mjs';
 import { applyGlassCrack } from './glass-crack.mjs';
 import { applyFire } from './fire.mjs';
 import { applyWater } from './water.mjs';
+import { applySnowfallLoop } from './snowfall-loop.mjs';
 import { applyPowderScatter } from './powder-scatter.mjs';
 
 export const EFFECT_REGISTRY = Object.freeze({
@@ -39,6 +40,7 @@ export const EFFECT_REGISTRY = Object.freeze({
   'glass-crack': applyGlassCrack,
   fire: applyFire,
   water: applyWater,
+  'snowfall-loop': applySnowfallLoop,
   'powder-scatter': applyPowderScatter,
 });
 

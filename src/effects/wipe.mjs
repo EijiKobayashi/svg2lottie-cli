@@ -80,3 +80,4 @@ export function applyWipe(layer, options = {}, ctx = {}) {
   layer.masksProperties = [...(layer.masksProperties || []), mask];
   return { layer, extraLayers: [] };
 }
+

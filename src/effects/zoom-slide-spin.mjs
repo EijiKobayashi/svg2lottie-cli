@@ -59,3 +59,4 @@ export function applyZoomSlideSpin(layer, options = {}, ctx = {}) {
 
   return { layer, extraLayers: [] };
 }
+

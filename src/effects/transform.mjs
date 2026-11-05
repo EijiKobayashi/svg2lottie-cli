@@ -35,3 +35,4 @@ export function applyTransform(layer, options = {}) {
   }
   return { layer, extraLayers: [] };
 }
+

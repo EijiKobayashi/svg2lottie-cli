@@ -120,3 +120,4 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
 
   return { layer, extraLayers: [crackLayer] };
 }
+

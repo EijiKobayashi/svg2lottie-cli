@@ -93,8 +93,8 @@ erDiagram
 | フィールド | 型 | 必須 | デフォルト値 | 説明 |
 |---|---|---|---|---|
 | `name` | `string` | ✅ | `"animation"` | アニメーション名（出力ファイル名 `{name}.json` のベース） |
-| `width` | `number` | ✅ | `520` | キャンバス幅（px / 正の数値） |
-| `height` | `number` | ✅ | `140` | キャンバス高さ（px / 正の数値） |
+| `width` | `number` | ✅ | `520` | 出力キャンバス幅（px / 元SVGの `viewBox` が `3000px` 等の場合もこのサイズへ自動縮小スケーリング） |
+| `height` | `number` | ✅ | `140` | 出力キャンバス高さ（px / 元SVGの `viewBox` からこのサイズへ自動縮小スケーリング） |
 | `fps` | `number` | - | `60` | フレームレート（1〜120） |
 | `durationFrames` | `number` | ✅ | `560` | 総フレーム数（`op`） |
 | `loop` | `boolean` | - | `false` | ループ再生フラグ |
@@ -112,7 +112,11 @@ erDiagram
 | `type` | `"shape" \| "stroke"` | - | デフォルトは `"shape"`。枠線一筆書き時は `"stroke"` |
 | `svg` | `string` | 条件付 | 読み込むSVGファイルの相対パス（`type: "shape"` 時必須） |
 | `targetId` | `string` | - | SVG内の抽出対象 `<g id="...">` または `<path id="...">`（省略時は全 `<path>`） |
-| `color` | `string` | - | レイヤー個別の色（省略時はルートの `color` を継承） |
+| `pathRange` | `[number, number]` | - | IDを持たないイラストSVGから抽出する `<path>` インデックス範囲 `[startIdx, endIdx]`（両端含む） |
+| `pathIndices` | `number[]` | - | 抽出する `<path>` インデックス配列 |
+| `keepWhitePaths` | `boolean` | - | `true` の場合、イラスト内部の白色パーツ（`#fff` の波しぶきやハイライト等）も除外せず保持 |
+| `preserveColors` | `boolean` | - | `true`（または `color` 省略時）の場合、SVG内の各 `<path>` 固有の `fill` 色や `<linearGradient>` 色を個別保持 |
+| `color` | `string` | - | レイヤー単色オーバーライド（指定時は全パスをこの色で統一） |
 | `clipMask` | `boolean` | - | `true` の場合、第1パスを加算マスク（`mode: 'a'`）にし、ガウスブラーのはみ出しを防止 |
 | `inFrame` | `number` | - | レイヤー出現フレーム `ip`（デフォルト: `0`） |
 | `outFrame` | `number` | - | レイヤー消滅フレーム `op`（デフォルト: `durationFrames`） |
@@ -145,6 +149,7 @@ erDiagram
 | `"glass-crack"` | `glass-crack.mjs` | `start`, `end`, `impactPoint?: [cx, cy]`, `rays?: 8`, `rings?: 3`, `shatter?: true` |
 | `"fire"` | `fire.mjs` | `start`, `end`, `intensity?: 1.0`, `coreColor?: "#fff3b0"`, `flameColor?: "#ff5400"`, `emberCount?: 24` |
 | `"water"` | `water.mjs` | `mode?: "ripple" \| "wave" \| "splash"`, `start`, `end`, `rings?: 3`, `amplitude?: 12`, `color?: "#38bdf8"` |
+| `"snowfall-loop"` | `snowfall-loop.mjs` | `start?: 0`, `end?: durationFrames`, `distance?: canvasHeight`, `drift?: 24`, `copies?: 2`, `opacity?: 85` |
 | `"powder-scatter"` | `powder-scatter.mjs` | ルート `powderEnding` またはレイヤー単位で頂点サンプリング粒子飛散を生成 |
 
 #### 代表的な設定例（JSON）

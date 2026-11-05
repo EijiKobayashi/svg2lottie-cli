@@ -1,0 +1,79 @@
+{
+  "name": "tropical-vibes-wide",
+  "width": 800,
+  "height": 325,
+  "fps": 60,
+  "durationFrames": 200,
+  "loop": true,
+  "color": "#27aae1",
+  "shootingScript": "shooting-script-wide-tropical.md",
+  "markers": [
+    { "cm": "scene0 (Aqua Splash & Sand)", "tm": 0, "dr": 60 },
+    { "cm": "scene1 (Waves & Droplet Cascade)", "tm": 60, "dr": 80 },
+    { "cm": "scene2 (Full Tropical Vibes)", "tm": 140, "dr": 60 }
+  ],
+  "layers": [
+    {
+      "id": "aqua-splash-bg",
+      "svg": "svg/tropical-colorful-summer-beach-vibes.svg",
+      "pathRange": [0, 0],
+      "preserveColors": true,
+      "fadeIn": { "start": 0, "end": 42, "blur": 16, "scaleFrom": 70 },
+      "effects": [
+        { "type": "pop-in", "start": 0, "end": 46, "fromScale": 70, "overshootScale": 105, "undershootScale": 99 }
+      ]
+    },
+    {
+      "id": "pastel-sand-bg",
+      "svg": "svg/tropical-colorful-summer-beach-vibes.svg",
+      "pathRange": [1, 1],
+      "preserveColors": true,
+      "fadeIn": { "start": 8, "end": 52, "blur": 14, "scaleFrom": 80 },
+      "effects": [
+        { "type": "slide-push-pull", "mode": "pull", "dx": -45, "dy": 0, "start": 8, "end": 55, "overshoot": 5 }
+      ]
+    },
+    {
+      "id": "ocean-waves",
+      "svg": "svg/tropical-colorful-summer-beach-vibes.svg",
+      "pathRange": [72, 75],
+      "preserveColors": true,
+      "fadeIn": { "start": 16, "end": 62, "blur": 10, "scaleFrom": 90 },
+      "stagger": {
+        "start": 18,
+        "delayFrames": 4,
+        "durationFrames": 32,
+        "fromScale": 40,
+        "overshootScale": 108
+      }
+    },
+    {
+      "id": "tropical-droplets",
+      "svg": "svg/tropical-colorful-summer-beach-vibes.svg",
+      "pathRange": [2, 65],
+      "preserveColors": true,
+      "fadeIn": { "start": 26, "end": 60, "blur": 6, "scaleFrom": 95 },
+      "stagger": {
+        "start": 28,
+        "delayFrames": 0.8,
+        "durationFrames": 24,
+        "fromScale": 0,
+        "overshootScale": 120
+      }
+    },
+    {
+      "id": "colorful-beach-vibes",
+      "svg": "svg/tropical-colorful-summer-beach-vibes.svg",
+      "pathRange": [66, 71],
+      "preserveColors": true,
+      "fadeIn": { "start": 24, "end": 60, "blur": 12, "scaleFrom": 90 },
+      "stagger": {
+        "start": 26,
+        "delayFrames": 5,
+        "durationFrames": 35,
+        "fromScale": 0,
+        "overshootScale": 115
+      }
+    }
+  ]
+}

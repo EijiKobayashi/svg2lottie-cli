@@ -1,0 +1,86 @@
+{
+  "name": "sample-animation",
+  "width": 520,
+  "height": 140,
+  "fps": 60,
+  "durationFrames": 180,
+  "loop": false,
+  "color": "#264f74",
+  "shootingScript": "shooting-script.md",
+  "markers": [
+    {
+      "cm": "scene0",
+      "tm": 0,
+      "dr": 90
+    }
+  ],
+  "layers": [
+    {
+      "id": "main-icon",
+      "svg": "svg/scene0.svg",
+      "targetId": "main-icon",
+      "clipMask": true,
+      "fadeIn": {
+        "start": 20,
+        "end": 70,
+        "blur": 24,
+        "scaleFrom": 0
+      },
+      "effects": [
+        {
+          "type": "pop-in",
+          "start": 20,
+          "end": 65,
+          "overshootScale": 108
+        },
+        {
+          "type": "liquid-glass",
+          "variant": "liquid",
+          "blur": 16,
+          "tintOpacity": 20
+        }
+      ]
+    },
+    {
+      "id": "frame-line",
+      "type": "stroke",
+      "trimStroke": {
+        "vertices": [
+          [
+            470,
+            20
+          ],
+          [
+            50,
+            20
+          ],
+          [
+            50,
+            120
+          ],
+          [
+            470,
+            120
+          ]
+        ],
+        "closed": true,
+        "strokeWidth": 4,
+        "start": 0,
+        "end": 60
+      }
+    }
+  ],
+  "powderEnding": {
+    "enabled": true,
+    "targetLayerIds": [
+      "main-icon",
+      "frame-line"
+    ],
+    "appearFrame": 118,
+    "fadeStartFrame": 120,
+    "fadeEndFrame": 165,
+    "totalFrames": 180,
+    "particleCount": 180,
+    "loop": true
+  }
+}

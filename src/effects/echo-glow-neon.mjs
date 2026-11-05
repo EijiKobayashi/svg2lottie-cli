@@ -72,3 +72,4 @@ export function applyEchoGlowNeon(layer, options = {}) {
 
   return { layer, extraLayers };
 }
+

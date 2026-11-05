@@ -1,0 +1,62 @@
+{
+  "name": "beach-island-square",
+  "width": 600,
+  "height": 600,
+  "fps": 60,
+  "durationFrames": 200,
+  "loop": true,
+  "color": "#fdb419",
+  "shootingScript": "shooting-script-square-beach.md",
+  "markers": [
+    { "cm": "scene0 (Sunset Horizon)", "tm": 0, "dr": 60 },
+    { "cm": "scene1 (Ocean & Palms Cascade)", "tm": 60, "dr": 80 },
+    { "cm": "scene2 (Full Island Glow)", "tm": 140, "dr": 60 }
+  ],
+  "layers": [
+    {
+      "id": "sunset-halo",
+      "svg": "svg/beach-island-landscape-logo-beach.svg",
+      "pathRange": [0, 0],
+      "preserveColors": true,
+      "fadeIn": { "start": 0, "end": 45, "blur": 16, "scaleFrom": 40 },
+      "effects": [
+        { "type": "pop-in", "start": 0, "end": 48, "fromScale": 40, "overshootScale": 106, "undershootScale": 99 }
+      ]
+    },
+    {
+      "id": "golden-sun-rays",
+      "svg": "svg/beach-island-landscape-logo-beach.svg",
+      "pathRange": [1, 1],
+      "preserveColors": true,
+      "fadeIn": { "start": 10, "end": 55, "blur": 14, "scaleFrom": 60 },
+      "effects": [
+        { "type": "pop-in", "start": 10, "end": 58, "fromScale": 60, "overshootScale": 108, "undershootScale": 98 }
+      ]
+    },
+    {
+      "id": "ocean-and-island",
+      "svg": "svg/beach-island-landscape-logo-beach.svg",
+      "pathRange": [2, 2],
+      "preserveColors": true,
+      "fadeIn": { "start": 25, "end": 75, "blur": 12, "scaleFrom": 90 },
+      "effects": [
+        { "type": "slide-push-pull", "mode": "pull", "dx": 0, "dy": 45, "start": 25, "end": 75, "overshoot": 6 }
+      ]
+    },
+    {
+      "id": "palm-and-wave-foam",
+      "svg": "svg/beach-island-landscape-logo-beach.svg",
+      "pathRange": [3, 21],
+      "keepWhitePaths": true,
+      "color": "#ffffff",
+      "fadeIn": { "start": 40, "end": 75, "blur": 8, "scaleFrom": 95 },
+      "stagger": {
+        "start": 42,
+        "delayFrames": 2.2,
+        "durationFrames": 30,
+        "fromScale": 0,
+        "overshootScale": 115
+      }
+    }
+  ]
+}

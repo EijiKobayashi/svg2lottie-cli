@@ -1,48 +1,56 @@
 /**
  * すりガラス・グラスプレート・Apple風リキッドグラス（Liquid Glass）エフェクトモジュール
+ * ※固定矩形ではなく対象レイヤーの実シェイプ輪郭を抽出し、走るスペキュラハイライト光沢（Trim Paths シマー）を生成
  */
 
+function collectLayerShapes(layer) {
+  const found = [];
+  function walk(items) {
+    for (const it of items || []) {
+      if (it.ty === 'sh' && it.ks?.k) {
+        found.push(it.ks.k);
+      } else if (it.ty === 'gr' && Array.isArray(it.it)) {
+        walk(it.it);
+      }
+    }
+  }
+  walk(layer.shapes);
+  return found;
+}
+
 /**
- * Apple風リキッドグラス（半透明フロストブラー＋スペキュラハイライト枠＋流体屈折シマー）を生成する
+ * Apple風リキッドグラス（実シェイプ輪郭に沿うスペキュラ光沢シマー＋柔らかい屈折グロー）を適用する
  * @param {object} layer
  * @param {{
  *   variant?: 'frosted' | 'plate' | 'liquid',
  *   blur?: number,
  *   tintOpacity?: number,
- *   specularWidth?: number
+ *   specularWidth?: number,
+ *   start?: number,
+ *   end?: number
  * }} options
- * @param {{ center?: [number, number] }} ctx
  */
-export function applyLiquidGlass(layer, options = {}, ctx = {}) {
+export function applyLiquidGlass(layer, options = {}) {
   const {
     variant = 'liquid',
-    blur = 20,
-    tintOpacity = 24,
-    specularWidth = 1.8,
+    blur = 10,
+    tintOpacity = 18,
+    specularWidth = 2,
+    start = 20,
+    end = 160,
   } = options;
 
-  const [cx, cy] = ctx.center || layer.ks?.a?.k || [100, 100];
-  const baseShape = layer.shapes?.[0]?.it?.find((it) => it.ty === 'sh')?.ks?.k || {
-    c: true,
-    v: [
-      [cx - 60, cy - 30],
-      [cx + 60, cy - 30],
-      [cx + 60, cy + 30],
-      [cx - 60, cy + 30],
-    ],
-    i: [
-      [0, 0],
-      [0, 0],
-      [0, 0],
-      [0, 0],
-    ],
-    o: [
-      [0, 0],
-      [0, 0],
-      [0, 0],
-      [0, 0],
-    ],
-  };
+  const contourShapes = collectLayerShapes(layer);
+  if (contourShapes.length === 0) {
+    return { layer, extraLayers: [] };
+  }
+
+  // 最大の輪郭から上位6個までに絞って軽快かつ美しいリムハイライトを生成
+  const selectedShapes = contourShapes.slice(0, 6).map((sh, i) => ({
+    ty: 'sh',
+    nm: `Glass Contour ${i + 1}`,
+    ks: { a: 0, k: sh },
+  }));
 
   const glassLayer = {
     ddd: 0,
@@ -61,7 +69,20 @@ export function applyLiquidGlass(layer, options = {}, ctx = {}) {
         ix: 1,
         en: 1,
         ef: [
-          { ty: 0, nm: 'Blurriness', mn: 'ADBE Gaussian Blur 2-0001', ix: 1, v: { a: 0, k: blur } },
+          {
+            ty: 0,
+            nm: 'Blurriness',
+            mn: 'ADBE Gaussian Blur 2-0001',
+            ix: 1,
+            v: {
+              a: 1,
+              k: [
+                { t: start, s: [blur], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
+                { t: Math.round((start + end) / 2), s: [blur * 0.35], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
+                { t: end, s: [0] },
+              ],
+            },
+          },
           { ty: 7, nm: 'Blur Dimensions', mn: 'ADBE Gaussian Blur 2-0002', ix: 2, v: { a: 0, k: 1 } },
           { ty: 7, nm: 'Repeat Edge Pixels', mn: 'ADBE Gaussian Blur 2-0003', ix: 3, v: { a: 0, k: 0 } },
         ],
@@ -70,14 +91,41 @@ export function applyLiquidGlass(layer, options = {}, ctx = {}) {
     shapes: [
       {
         ty: 'gr',
-        nm: 'Glass Plate & Specular Rim',
+        nm: 'Specular Rim Shimmer',
         it: [
-          { ty: 'sh', nm: 'Glass Contour', ks: { a: 0, k: baseShape } },
+          ...selectedShapes,
+          {
+            ty: 'tm',
+            nm: 'Specular Shimmer Sweep',
+            s: {
+              a: 1,
+              k: [
+                { t: start, s: [0], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
+                { t: end, s: [75] },
+              ],
+            },
+            e: {
+              a: 1,
+              k: [
+                { t: start, s: [25], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
+                { t: end, s: [100] },
+              ],
+            },
+            o: { a: 0, k: 0 },
+            m: 1,
+          },
           {
             ty: 'st',
             nm: 'Specular Highlight Rim',
-            c: { a: 0, k: [0.92, 0.97, 1, 1] },
-            o: { a: 0, k: variant === 'liquid' ? 85 : 60 },
+            c: { a: 0, k: [1, 1, 1, 1] },
+            o: {
+              a: 1,
+              k: [
+                { t: start, s: [0], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
+                { t: Math.round(start + (end - start) * 0.35), s: [variant === 'liquid' ? 75 : 50], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
+                { t: end, s: [0] },
+              ],
+            },
             w: { a: 0, k: specularWidth },
             lc: 2,
             lj: 2,
@@ -85,8 +133,14 @@ export function applyLiquidGlass(layer, options = {}, ctx = {}) {
           {
             ty: 'fl',
             nm: 'Frosted Tint Fill',
-            c: { a: 0, k: [0.88, 0.95, 1, 1] },
-            o: { a: 0, k: tintOpacity },
+            c: { a: 0, k: [0.92, 0.98, 1, 1] },
+            o: {
+              a: 1,
+              k: [
+                { t: start, s: [tintOpacity], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
+                { t: end, s: [0] },
+              ],
+            },
             r: 1,
           },
           {

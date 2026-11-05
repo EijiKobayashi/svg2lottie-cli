@@ -19,13 +19,13 @@ flowchart LR
 
 ## 対応ユースケース（ロゴだけじゃない！）
 
-| 用途 | 作れるアニメーション例 |
-|---|---|
-| **UIアイコン・マイクロインタラクション** | 一筆書き（`trim-stroke`）、弾むポップイン（`pop-in`）、ワイプ切替（`wipe`）、クロスディゾルブ（`cross-dissolve`） |
-| **Apple風UI・すりガラス・ネオン演出** | すりガラス／グラスプレート／リキッドグラス（`liquid-glass`）、残像エコー・発光グロー・ネオン管（`echo-glow-neon`） |
-| **ヒーローイラスト・キャラクター演出** | Push/Pullスライド（`slide-push-pull`）、ズーム・スピン（`zoom-slide-spin`）、滲むフェード（`bleed-fade`）、カラーグレーディング（`color-grade`） |
-| **物理・自然現象・ゲーム演出** | 粉飛散（`powder-scatter`）、ガラスひび割れ（`glass-crack`）、揺らめく炎（`fire`）、水紋リップル・水しぶき（`water`） |
-| **素材クレンジング・速度制御** | グリーンスクリーン等の特定色自動透過（`ultra-key`）、倍速・スローモーション調整（`speed-control`） |
+| 用途                                     | 作れるアニメーション例                                                                                                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **UIアイコン・マイクロインタラクション** | 一筆書き（`trim-stroke`）、弾むポップイン（`pop-in`）、ワイプ切替（`wipe`）、クロスディゾルブ（`cross-dissolve`）                                |
+| **Apple風UI・すりガラス・ネオン演出**    | すりガラス／グラスプレート／リキッドグラス（`liquid-glass`）、残像エコー・発光グロー・ネオン管（`echo-glow-neon`）                               |
+| **ヒーローイラスト・キャラクター演出**   | Push/Pullスライド（`slide-push-pull`）、ズーム・スピン（`zoom-slide-spin`）、滲むフェード（`bleed-fade`）、カラーグレーディング（`color-grade`） |
+| **物理・自然現象・ゲーム演出**           | 降雪ループ（`snowfall-loop`）、粉飛散（`powder-scatter`）、ガラスひび割れ（`glass-crack`）、揺らめく炎（`fire`）、水紋リップル・水しぶき（`water`） |
+| **素材クレンジング・速度制御**           | グリーンスクリーン等の特定色自動透過（`ultra-key`）、倍速・スローモーション調整（`speed-control`）                                               |
 
 ---
 
@@ -41,7 +41,7 @@ flowchart LR
    - **モーション・変形・速度系**: `zoom-slide-spin`（ズーム・スライド・スピン）、`transform`（汎用トランスフォーム・スキュー歪み）、`speed-control`（倍速・スローモーション）
    - **マスク・カラー・キーイング系**: `mask`（加算・減算・反転・ぼかしマスク）、`color-grade`（カラーコレクション・グレーディング）、`ultra-key`（Ultraキー／指定色クロマキー透過）
    - **光学・Apple風グラス系**: `echo-glow-neon`（エコー／グロー／ネオン）、`liquid-glass`（すりガラス・グラスプレート・Apple風リキッドグラス）
-   - **物理・自然現象系**: `powder-scatter`（粉飛散パーティクル）、`glass-crack`（ガラスひび割れ）、`fire`（炎エフェクト）、`water`（水・波紋エフェクト）
+   - **物理・自然現象系**: `snowfall-loop`（継ぎ目のない降雪ループ）、`powder-scatter`（粉飛散パーティクル）、`glass-crack`（ガラスひび割れ）、`fire`（炎エフェクト）、`water`（水・波紋エフェクト）
 4. 🛡️ **セキュア第一**（外部依存ゼロ）:
    - Node.js 標準モジュールのみで動作。サプライチェーン攻撃リスクゼロ、パストラバーサル防止、SVG無害化検査を標準搭載。
 5. ♿ **a11y第二**（アクセシビリティ完全対応）:
@@ -68,6 +68,7 @@ yarn dlx svg2lottie-cli init
 ```
 
 実行すると以下の3ファイルが生成されます：
+
 - `shooting-script.md` — 人間が書き、AIに指示を出すための **文字コンテ**
 - `storyboard.json` — エフェクトとフレーム配分を定義する **設計図**
 - `svg/scene0.svg` — サンプルのSVG素材
@@ -77,6 +78,12 @@ yarn dlx svg2lottie-cli init
 ```bash
 npx svg2lottie-cli build --config storyboard.json --out dist
 # または: npm run build / pnpm build / yarn build
+```
+
+クリスマスデモは次のコマンドで生成できます。夜空と家を段階表示し、`MERRY` / `CHRISTMAS` をグロー付きで登場させ、雪をシームレスに循環させます。
+
+```bash
+node ./src/cli.mjs build --config examples/demo/storyboard-merry-christmas.json --out examples/demo/dist
 ```
 
 ### 3. 検収プレビュー＆AI修正指示スタジオを起動する（最重要！）
@@ -113,6 +120,7 @@ sequenceDiagram
 
 ```markdown
 ### 修正指示 (scene2 / 148f付近)
+
 - **対象ファイル**: `logo-animation.json`
 - **対象シーン・フレーム**: `scene2` (`148f` / 全560f)
 - **対象レイヤーID**: `o`
@@ -171,9 +179,9 @@ svg2lottie-cli/
 
 ## コマンド早見表
 
-| やりたいこと | `npx` | `npm` | `pnpm` | `yarn` |
-|---|---|---|---|---|
-| **雛形を作る** | `npx svg2lottie-cli init` | `npm run init` | `pnpm init-project` | `yarn init-project` |
-| **ビルドする** | `npx svg2lottie-cli build` | `npm run build` | `pnpm build` | `yarn build` |
-| **検収プレビュー** | `npx svg2lottie-cli preview` | `npm run preview` | `pnpm preview` | `yarn preview` |
-| **テスト実行** | `node --test` | `npm test` | `pnpm test` | `yarn test` |
+| やりたいこと       | `npx`                        | `npm`             | `pnpm`              | `yarn`              |
+| ------------------ | ---------------------------- | ----------------- | ------------------- | ------------------- |
+| **雛形を作る**     | `npx svg2lottie-cli init`    | `npm run init`    | `pnpm init-project` | `yarn init-project` |
+| **ビルドする**     | `npx svg2lottie-cli build`   | `npm run build`   | `pnpm build`        | `yarn build`        |
+| **検収プレビュー** | `npx svg2lottie-cli preview` | `npm run preview` | `pnpm preview`      | `yarn preview`      |
+| **テスト実行**     | `node --test`                | `npm test`        | `pnpm test`         | `yarn test`         |

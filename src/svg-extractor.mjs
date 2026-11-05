@@ -1,5 +1,5 @@
 /**
- * セキュアSVG検証・viewBox取得・ID別Path抽出モジュール
+ * セキュアSVG検証・viewBox取得・ID/インデックス別Path＆マルチカラー抽出モジュール
  */
 
 const MAX_SVG_BYTES = 10 * 1024 * 1024; // 10MB
@@ -33,20 +33,64 @@ function isWhiteBackgroundPath(pathTag) {
   return rawFill === '#fff' || rawFill === '#ffffff' || rawFill === 'white';
 }
 
-function extractPathTagsWithMeta(fragment) {
+function extractGradientMap(svgText) {
+  const map = new Map();
+  const gradRe = /<(?:linearGradient|radialGradient)\b[^>]*\bid\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/(?:linearGradient|radialGradient)>/gi;
+  for (const m of svgText.matchAll(gradRe)) {
+    const gradId = m[1];
+    const body = m[2];
+    const stops = [...body.matchAll(/\bstop-color\s*[:=]\s*["']?([^;"'\s>]+)/gi)].map(
+      (s) => s[1]
+    );
+    if (stops.length > 0) {
+      map.set(gradId, stops[stops.length - 1]);
+    }
+  }
+  return map;
+}
+
+function resolveFillColor(rawFill, gradMap) {
+  if (!rawFill) return null;
+  const trimmed = rawFill.trim();
+  const urlMatch = trimmed.match(/^url\(\s*#([^)\s]+)\s*\)$/i);
+  if (urlMatch && gradMap.has(urlMatch[1])) {
+    return gradMap.get(urlMatch[1]);
+  }
+  return trimmed;
+}
+
+function extractPathTagsWithMeta(fragment, gradMap, options = {}) {
+  const { keepWhitePaths = false, pathRange, pathIndices } = options;
   const results = [];
   const pathRe = /<path\b[^>]*>/gi;
+  let rawIdx = 0;
+
   for (const match of fragment.matchAll(pathRe)) {
+    const currentIdx = rawIdx++;
+    if (Array.isArray(pathRange) && pathRange.length === 2) {
+      if (currentIdx < pathRange[0] || currentIdx > pathRange[1]) continue;
+    }
+    if (Array.isArray(pathIndices) && !pathIndices.includes(currentIdx)) {
+      continue;
+    }
+
     const tag = match[0];
-    if (isWhiteBackgroundPath(tag)) continue;
+    if (!keepWhitePaths && isWhiteBackgroundPath(tag)) continue;
     const dMatch = tag.match(/\bd\s*=\s*["']([^"']+)["']/i);
     if (!dMatch) continue;
     const fillMatch = tag.match(/\bfill\s*=\s*["']([^"']+)["']/i);
+    const styleFillMatch = tag.match(/fill\s*:\s*([^;"']+)/i);
     const idMatch = tag.match(/\bid\s*=\s*["']([^"']+)["']/i);
+    const resolvedFill = resolveFillColor(
+      fillMatch?.[1] || styleFillMatch?.[1] || null,
+      gradMap
+    );
+
     results.push({
+      index: currentIdx,
       id: idMatch?.[1] || '',
       d: dMatch[1],
-      fill: fillMatch?.[1] || null,
+      fill: resolvedFill,
     });
   }
   return results;
@@ -55,7 +99,6 @@ function extractPathTagsWithMeta(fragment) {
 function extractTargetFragment(svgText, targetId) {
   if (!targetId) return svgText;
   const escapedId = targetId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // 1. <g id="targetId"> ... </g>
   const gRe = new RegExp(
     `<g\\b[^>]*\\bid\\s*=\\s*["']${escapedId}["'][^>]*>([\\s\\S]*?)<\\/g>`,
     'i'
@@ -64,7 +107,6 @@ function extractTargetFragment(svgText, targetId) {
   if (gMatch) {
     return gMatch[1];
   }
-  // 2. <path id="targetId" ...>
   const pathRe = new RegExp(
     `<path\\b[^>]*\\bid\\s*=\\s*["']${escapedId}["'][^>]*>`,
     'i'
@@ -77,15 +119,17 @@ function extractTargetFragment(svgText, targetId) {
 }
 
 /**
- * 安全性を検証した上で、指定IDまたは全体から <path> の d 属性と色メタ情報を抽出する
+ * 安全性を検証した上で、指定IDまたはインデックス範囲から <path> の d 属性と色メタ情報を抽出する
  * @param {string} svgText
  * @param {string} [targetId]
- * @returns {Array<{ id: string, d: string, fill: string | null }>}
+ * @param {{ keepWhitePaths?: boolean, pathRange?: [number, number], pathIndices?: number[] }} [options]
+ * @returns {Array<{ index: number, id: string, d: string, fill: string | null }>}
  */
-export function extractPathsWithMeta(svgText, targetId) {
+export function extractPathsWithMeta(svgText, targetId, options = {}) {
   validateSafeSvg(svgText);
+  const gradMap = extractGradientMap(svgText);
   const fragment = extractTargetFragment(svgText, targetId);
-  return extractPathTagsWithMeta(fragment);
+  return extractPathTagsWithMeta(fragment, gradMap, options);
 }
 
 /**

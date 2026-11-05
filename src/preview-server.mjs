@@ -1,5 +1,6 @@
 /**
- * 検収プレビュー＆AI修正指示生成スタジオ付きローカルHTTPサーバー（127.0.0.1限定・CSP・a11y完全対応）
+ * 検収プレビュー＆AI修正指示生成スタジオ付きローカルHTTPサーバー
+ * （正方形 1:1 / 横長ワイド対応 Auto-Fit・ズーム・十字/三分割ガイド・レイヤー別ON/OFF・127.0.0.1限定・CSP・a11y完全対応）
  */
 
 import http from 'node:http';
@@ -20,7 +21,7 @@ function buildPreviewStudioHtml() {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>svg2lottie-cli — 検収プレビュー＆AI修正指示スタジオ</title>
+  <title>svg2lottie-cli — 高精度検収プレビュー＆AI修正指示スタジオ</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js" crossorigin="anonymous"></script>
   <style>
     :root {
@@ -29,13 +30,13 @@ function buildPreviewStudioHtml() {
       --text: #0f172a;
       --sub: #475569;
       --border: #cbd5e1;
-      --accent: #1d4ed8;
+      --accent: #0284c7;
       --accent-fg: #ffffff;
       --checker-a: #e2e8f0;
       --checker-b: #f8fafc;
     }
     body.dark {
-      --bg: #0f172a;
+      --bg: #0b1120;
       --card: #1e293b;
       --text: #f8fafc;
       --sub: #cbd5e1;
@@ -48,14 +49,14 @@ function buildPreviewStudioHtml() {
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      padding: 20px;
+      padding: 18px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.5;
+      line-height: 1.45;
     }
     header, main {
-      max-width: 1120px;
+      max-width: 1280px;
       margin: 0 auto;
     }
     header {
@@ -64,15 +65,16 @@ function buildPreviewStudioHtml() {
       align-items: center;
       flex-wrap: wrap;
       gap: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
-    h1 { font-size: 1.25rem; margin: 0; }
+    h1 { font-size: 1.2rem; margin: 0; }
     .panel {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 16px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
     }
     .toolbar {
       display: flex;
@@ -82,11 +84,12 @@ function buildPreviewStudioHtml() {
     }
     button, select, input, textarea {
       font: inherit;
+      font-size: 0.88rem;
       color: var(--text);
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 6px 12px;
+      padding: 6px 11px;
     }
     button { cursor: pointer; font-weight: 600; }
     button.primary {
@@ -94,17 +97,39 @@ function buildPreviewStudioHtml() {
       color: var(--accent-fg);
       border-color: var(--accent);
     }
+    button.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35);
+    }
     button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible {
       outline: 3px solid var(--accent);
       outline-offset: 2px;
     }
-    .stage-wrap {
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+    body.dark .badge {
+      background: #0c4a6e;
+      color: #7dd3fc;
+    }
+    .stage-viewport {
+      position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 220px;
+      min-height: 360px;
+      max-height: 620px;
+      overflow: auto;
       border-radius: 10px;
-      border: 1px dashed var(--border);
+      border: 1px solid var(--border);
+      padding: 20px;
+      margin: 12px 0;
       background-image:
         linear-gradient(45deg, var(--checker-a) 25%, transparent 25%),
         linear-gradient(-45deg, var(--checker-a) 25%, transparent 25%),
@@ -112,35 +137,96 @@ function buildPreviewStudioHtml() {
         linear-gradient(-45deg, transparent 75%, var(--checker-a) 75%);
       background-size: 20px 20px;
       background-position: 0 0, 0 10px, 10px -10px, -10px 0;
-      padding: 20px;
-      margin: 12px 0;
+    }
+    .stage-viewport.bg-dark { background: #0f172a; }
+    .stage-viewport.bg-white { background: #ffffff; }
+    .stage-viewport.bg-ocean { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); }
+    .canvas-box {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: width 0.15s, height 0.15s;
+    }
+    #lottie-stage {
+      width: 100%;
+      height: 100%;
     }
     body.invert #lottie-stage {
       filter: invert(1) brightness(2);
     }
+    /* 精密検収ガイドオーバーレイ（センター十字・三分割グリッド・セーフ枠） */
+    .guide-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: none;
+      border: 1.5px solid rgba(244, 63, 94, 0.8);
+    }
+    .guide-overlay.visible {
+      display: block;
+      background-image:
+        linear-gradient(to right, rgba(56, 189, 248, 0.35) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(56, 189, 248, 0.35) 1px, transparent 1px);
+      background-size: 33.333% 33.333%;
+    }
+    .guide-overlay::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      border-left: 1px dashed rgba(244, 63, 94, 0.85);
+    }
+    .guide-overlay::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      border-top: 1px dashed rgba(244, 63, 94, 0.85);
+    }
     .meta-bar {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       flex-wrap: wrap;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: var(--sub);
       gap: 8px;
     }
+    .layer-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .layer-chip {
+      font-size: 0.78rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+    .layer-chip.muted {
+      opacity: 0.45;
+      text-decoration: line-through;
+    }
     .grid-2 {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 14px;
     }
     label {
       display: block;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 700;
       margin-bottom: 4px;
     }
     textarea { width: 100%; min-height: 110px; }
     .sr-status {
       display: inline-block;
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       font-weight: 600;
       color: var(--accent);
     }
@@ -149,12 +235,28 @@ function buildPreviewStudioHtml() {
 <body>
   <header>
     <div>
-      <h1>🔍 svg2lottie-cli — 検収プレビュー＆AI修正指示スタジオ</h1>
+      <h1>🔍 svg2lottie-cli — 高精度検収プレビュー＆AI修正指示スタジオ</h1>
       <output id="a11y-status" class="sr-status" aria-live="polite">スタジオ準備完了</output>
     </div>
     <div class="toolbar">
-      <label for="file-select">対象JSON:</label>
+      <label for="file-select" style="margin:0">対象JSON:</label>
       <select id="file-select" aria-label="検収対象のLottie JSONファイル選択"></select>
+      <label for="zoom-select" style="margin:0">表示倍率:</label>
+      <select id="zoom-select" aria-label="ステージ表示倍率切替">
+        <option value="fit" selected>Auto-Fit (自動最適)</option>
+        <option value="0.5">50%</option>
+        <option value="0.75">75%</option>
+        <option value="1">100%</option>
+        <option value="1.5">150%</option>
+      </select>
+      <label for="bg-select" style="margin:0">背景:</label>
+      <select id="bg-select" aria-label="検収ステージ背景切替">
+        <option value="checker" selected>透過チェッカー</option>
+        <option value="bg-dark">ダーク (#0f172a / 白要素検収用)</option>
+        <option value="bg-ocean">オーシャン濃紺</option>
+        <option value="bg-white">純白 (#ffffff)</option>
+      </select>
+      <button type="button" id="btn-guide" aria-label="センター十字・三分割ガイド枠切替">📐 ガイド枠</button>
       <button type="button" id="btn-dark" aria-label="ダークモード切替">🌙 Dark</button>
       <button type="button" id="btn-invert" aria-label="Day and Night 色反転切替">🔄 Day&amp;Night反転</button>
     </div>
@@ -163,19 +265,27 @@ function buildPreviewStudioHtml() {
   <main>
     <section class="panel" aria-label="アニメーション再生・コマ送り検収パネル">
       <div class="meta-bar">
-        <span id="meta-info">サイズ: - × - px | フレーム: 0 / 0f</span>
-        <span id="scene-info">現在シーン: scene0</span>
+        <div>
+          <span id="aspect-badge" class="badge">比率判定中</span>
+          <span id="meta-info" style="margin-left:6px">サイズ: - × - px | フレーム: 0 / 0f (0.00s)</span>
+        </div>
+        <span id="scene-info" style="font-weight:700">現在シーン: scene0</span>
       </div>
-      <div class="stage-wrap">
-        <div id="lottie-stage" role="img" aria-label="Lottieアニメーション描画ステージ"></div>
+
+      <div class="stage-viewport" id="stage-viewport">
+        <div class="canvas-box" id="canvas-box">
+          <div id="lottie-stage" role="img" aria-label="Lottieアニメーション描画ステージ"></div>
+          <div id="guide-overlay" class="guide-overlay" aria-hidden="true"></div>
+        </div>
       </div>
+
       <div class="toolbar">
         <button type="button" id="btn-play" class="primary" aria-label="再生または一時停止 (Space)">⏯ 再生 / 停止</button>
         <button type="button" id="btn-prev" aria-label="1フレーム戻る (左矢印)">◀ 1f</button>
         <button type="button" id="btn-next" aria-label="1フレーム進む (右矢印)">1f ▶</button>
-        <label for="seek-bar">シーク:</label>
+        <label for="seek-bar" style="margin:0">シーク:</label>
         <input type="range" id="seek-bar" min="0" max="100" value="0" style="flex:1" aria-label="フレームシークバー" />
-        <label for="speed-select">速度:</label>
+        <label for="speed-select" style="margin:0">速度:</label>
         <select id="speed-select" aria-label="再生速度切替">
           <option value="0.25">0.25x</option>
           <option value="0.5">0.5x</option>
@@ -185,10 +295,11 @@ function buildPreviewStudioHtml() {
         </select>
       </div>
       <div class="toolbar" id="marker-buttons" style="margin-top:10px" aria-label="シーンジャンプボタン群"></div>
+      <div class="layer-chips" id="layer-chips" aria-label="レイヤー別表示切替および選択バー"></div>
     </section>
 
     <section class="panel" aria-label="AI修正指示および文字コンテ初期サイズ生成パネル">
-      <h2 style="font-size:1.05rem;margin-top:0">📝 AI修正指示 / GitHub Issue ジェネレーター（文字コンテ縦横サイズ欄対応）</h2>
+      <h2 style="font-size:1.02rem;margin-top:0">📝 AI修正指示 / GitHub Issue ジェネレーター（文字コンテ縦横サイズ欄対応）</h2>
       <div class="grid-2">
         <div>
           <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -201,10 +312,10 @@ function buildPreviewStudioHtml() {
               <input type="number" id="canvas-h" value="140" style="width:100%" />
             </div>
           </div>
-          <label for="layer-select">修正対象レイヤーID</label>
+          <label for="layer-select">修正対象レイヤーID（上のレイヤーチップをクリックでも選択可）</label>
           <select id="layer-select" style="width:100%;margin-bottom:8px" aria-label="修正対象レイヤーID"></select>
           <label for="rev-memo">現象と修正指示メモ</label>
-          <textarea id="rev-memo" placeholder="例: 動き出しを10フレーム早める / Liquid Glassのブラーを強める"></textarea>
+          <textarea id="rev-memo" placeholder="例: 太陽(sun-core)のポップインを10フレーム早める / 波(turquoise-waves)のワイプをゆっくりにする"></textarea>
           <button type="button" id="btn-copy" class="primary" style="margin-top:8px" aria-label="AI修正指示Markdownをクリップボードにコピー">📋 構造化修正指示をコピー</button>
         </div>
         <div>
@@ -218,11 +329,18 @@ function buildPreviewStudioHtml() {
   <script>
     const statusEl = document.getElementById('a11y-status');
     const fileSelect = document.getElementById('file-select');
+    const zoomSelect = document.getElementById('zoom-select');
+    const bgSelect = document.getElementById('bg-select');
+    const viewportEl = document.getElementById('stage-viewport');
+    const canvasBox = document.getElementById('canvas-box');
     const stageEl = document.getElementById('lottie-stage');
+    const guideOverlay = document.getElementById('guide-overlay');
+    const aspectBadge = document.getElementById('aspect-badge');
     const seekBar = document.getElementById('seek-bar');
     const metaInfo = document.getElementById('meta-info');
     const sceneInfo = document.getElementById('scene-info');
     const layerSelect = document.getElementById('layer-select');
+    const layerChips = document.getElementById('layer-chips');
     const canvasW = document.getElementById('canvas-w');
     const canvasH = document.getElementById('canvas-h');
     const revMemo = document.getElementById('rev-memo');
@@ -237,6 +355,29 @@ function buildPreviewStudioHtml() {
 
     function announce(msg) {
       statusEl.textContent = msg;
+    }
+
+    function classifyAspect(w, h) {
+      const ratio = w / (h || 1);
+      if (Math.abs(ratio - 1) <= 0.08) return '📐 正方形 (1:1)';
+      if (ratio > 1.08) return '🖼️ 横長ワイド (' + ratio.toFixed(2) + ':1)';
+      return '📱 縦長 (' + ratio.toFixed(2) + ':1)';
+    }
+
+    function applyStageSizing() {
+      if (!animData) return;
+      const w = animData.w || 520;
+      const h = animData.h || 140;
+      aspectBadge.textContent = classifyAspect(w, h);
+
+      const maxW = Math.min(window.innerWidth - 96, 1140);
+      const maxH = 440;
+      const fitScale = Math.min(maxW / w, maxH / h);
+      const mode = zoomSelect.value;
+      const factor = mode === 'fit' ? fitScale : fitScale * Number(mode);
+
+      canvasBox.style.width = Math.max(120, Math.round(w * factor)) + 'px';
+      canvasBox.style.height = Math.max(80, Math.round(h * factor)) + 'px';
     }
 
     function currentSceneName(frame) {
@@ -260,7 +401,7 @@ function buildPreviewStudioHtml() {
         '### アニメーション修正指示 (' + sc + ' / ' + f + 'f付近)',
         '',
         '- **対象ファイル**: \`' + currentFile + '\`',
-        '- **キャンバスサイズ**: 横幅 \`' + w + 'px\` × 縦幅 \`' + h + 'px\`',
+        '- **キャンバスサイズ**: 横幅 \`' + w + 'px\` × 縦幅 \`' + h + 'px\` (' + classifyAspect(Number(w), Number(h)) + ')',
         '- **対象シーン・フレーム**: \`' + sc + '\` (\`' + f + 'f\` / 全\`' + total + 'f\`)',
         '- **対象レイヤーID**: \`' + lid + '\`',
         '- **現象と修正内容**:',
@@ -278,25 +419,44 @@ function buildPreviewStudioHtml() {
       const res = await fetch('/dist/' + encodeURIComponent(file));
       animData = await res.json();
       if (anim) anim.destroy();
-      stageEl.style.width = (animData.w || 520) + 'px';
-      stageEl.style.height = (animData.h || 140) + 'px';
       canvasW.value = animData.w || 520;
       canvasH.value = animData.h || 140;
       seekBar.max = Math.max(1, (animData.op || 100) - 1);
+      applyStageSizing();
 
       layerSelect.innerHTML = '<option value="全体">全体</option>';
-      (animData.layers || []).forEach((l) => {
+      layerChips.innerHTML = '<span style="font-size:0.78rem;color:var(--sub);align-self:center">レイヤー検収(クリックで対象選択 / 👁️表示切替):</span>';
+
+      (animData.layers || []).forEach((l, idx) => {
         const opt = document.createElement('option');
         opt.value = l.nm;
         opt.textContent = l.nm;
         layerSelect.appendChild(opt);
+
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'layer-chip';
+        chip.textContent = '👁️ ' + l.nm;
+        chip.addEventListener('click', () => {
+          layerSelect.value = l.nm;
+          const svgGroups = stageEl.querySelectorAll('svg > g > g');
+          const targetG = svgGroups[svgGroups.length - 1 - idx];
+          if (targetG) {
+            const hidden = targetG.style.display === 'none';
+            targetG.style.display = hidden ? '' : 'none';
+            chip.classList.toggle('muted', !hidden);
+          }
+          updateRevisionMarkdown();
+          announce('レイヤー ' + l.nm + ' を選択');
+        });
+        layerChips.appendChild(chip);
       });
 
       markerBar.innerHTML = '';
       (animData.markers || []).forEach((m) => {
         const b = document.createElement('button');
         b.type = 'button';
-        b.textContent = m.cm + ' (' + m.tm + 'f)';
+        b.textContent = '📍 ' + m.cm + ' (' + m.tm + 'f)';
         b.addEventListener('click', () => {
           anim.goToAndStop(m.tm, true);
           isPlaying = false;
@@ -316,8 +476,11 @@ function buildPreviewStudioHtml() {
         isPlaying = !reducedMotion;
         anim.addEventListener('enterFrame', () => {
           const f = Math.round(anim.currentFrame);
+          const fps = animData.fr || 60;
+          const sec = (f / fps).toFixed(2);
           seekBar.value = f;
-          metaInfo.textContent = 'サイズ: ' + animData.w + ' × ' + animData.h + ' px | フレーム: ' + f + ' / ' + animData.op + 'f';
+          metaInfo.textContent =
+            'サイズ: ' + animData.w + ' × ' + animData.h + ' px | フレーム: ' + f + ' / ' + animData.op + 'f (' + sec + 's)';
           sceneInfo.textContent = '現在シーン: ' + currentSceneName(f);
           updateRevisionMarkdown();
         });
@@ -326,6 +489,16 @@ function buildPreviewStudioHtml() {
       announce(file + ' を読み込みました');
     }
 
+    zoomSelect.addEventListener('change', applyStageSizing);
+    window.addEventListener('resize', applyStageSizing);
+    bgSelect.addEventListener('change', () => {
+      viewportEl.className = 'stage-viewport ' + (bgSelect.value === 'checker' ? '' : bgSelect.value);
+    });
+    document.getElementById('btn-guide').addEventListener('click', (e) => {
+      guideOverlay.classList.toggle('visible');
+      e.currentTarget.classList.toggle('active');
+      announce('検収ガイド枠を切替');
+    });
     document.getElementById('btn-play').addEventListener('click', () => {
       if (!anim) return;
       if (isPlaying) { anim.pause(); isPlaying = false; announce('一時停止'); }
@@ -395,13 +568,21 @@ function isSubPath(baseDir, targetPath) {
   return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
 }
 
+function resolveDistDirs(rootDir) {
+  return [
+    path.join(rootDir, 'dist'),
+    path.join(rootDir, 'examples', 'demo', 'dist'),
+    path.join(rootDir, 'demo', 'dist'),
+  ];
+}
+
 /**
  * 検収プレビュー＆AI修正指示スタジオのリクエストハンドラを生成する
  * @param {{ rootDir?: string }} [options]
  */
 export function createPreviewRequestHandler(options = {}) {
   const rootDir = path.resolve(options.rootDir || process.cwd());
-  const distDir = path.join(rootDir, 'dist');
+  const distDirs = resolveDistDirs(rootDir);
 
   return (req, res) => {
     for (const [k, v] of Object.entries(SECURITY_HEADERS)) {
@@ -437,16 +618,30 @@ export function createPreviewRequestHandler(options = {}) {
     }
 
     if (decodedPathname === '/api/animations') {
-      let files = [];
-      if (fs.existsSync(distDir)) {
-        files = fs
-          .readdirSync(distDir)
-          .filter((f) => f.endsWith('.json'))
-          .sort();
+      const fileSet = new Set();
+      for (const d of distDirs) {
+        if (fs.existsSync(d)) {
+          for (const f of fs.readdirSync(d)) {
+            if (f.endsWith('.json')) fileSet.add(f);
+          }
+        }
       }
+      const files = [...fileSet].sort();
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ files }));
       return;
+    }
+
+    if (decodedPathname.startsWith('/dist/')) {
+      const fileName = path.basename(decodedPathname);
+      for (const d of distDirs) {
+        const candidate = path.join(d, fileName);
+        if (isSubPath(rootDir, candidate) && fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(fs.readFileSync(candidate));
+          return;
+        }
+      }
     }
 
     const candidatePath = path.resolve(rootDir, '.' + decodedPathname);

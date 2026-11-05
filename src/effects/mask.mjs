@@ -55,3 +55,4 @@ export function applyMask(layer, options = {}, ctx = {}) {
   layer.masksProperties = [...(layer.masksProperties || []), maskObj];
   return { layer, extraLayers: [] };
 }
+

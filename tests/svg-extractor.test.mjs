@@ -54,3 +54,4 @@ test('extractViewBox: viewBoxまたはwidth/heightから寸法を取得する', 
     height: 200,
   });
 });
+

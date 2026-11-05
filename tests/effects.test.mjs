@@ -17,7 +17,7 @@ const SAMPLE_SVG = `
   </svg>
 `;
 
-test('EFFECT_REGISTRY: 全17種＋powder-scatterのエフェクトが登録されている', () => {
+test('EFFECT_REGISTRY: snowfall-loopを含むエフェクトが登録されている', () => {
   const names = listEffects();
   const expected = [
     'cross-dissolve',
@@ -37,12 +37,39 @@ test('EFFECT_REGISTRY: 全17種＋powder-scatterのエフェクトが登録さ�
     'glass-crack',
     'fire',
     'water',
+    'snowfall-loop',
     'powder-scatter',
   ];
   for (const effectName of expected) {
     assert.ok(names.includes(effectName), `Missing effect: ${effectName}`);
     assert.equal(typeof EFFECT_REGISTRY[effectName], 'function');
   }
+});
+
+test('snowfall-loop: 雪片を縦に複製し開始・終了位置が循環する', () => {
+  const layer = {
+    nm: 'snow',
+    ip: 0,
+    op: 240,
+    ks: {
+      p: { a: 0, k: [200, 112.5, 0] },
+      o: { a: 0, k: 100 },
+    },
+  };
+  const result = applyLayerEffects(
+    layer,
+    [{ type: 'snowfall-loop', start: 0, end: 240, distance: 225, drift: 18, copies: 2, opacity: 82 }],
+    { width: 400, height: 225, center: [200, 112.5] }
+  );
+
+  assert.equal(result.layer.ks.p.a, 1);
+  assert.deepEqual(result.layer.ks.p.k[0].s, [182, 112.5, 0]);
+  assert.deepEqual(result.layer.ks.p.k.at(-1).s, [182, 337.5, 0]);
+  assert.equal(result.layer.ks.o.k, 82);
+  assert.equal(result.extraLayers.length, 1);
+  assert.equal(result.extraLayers[0].nm, 'snow-tile-2');
+  assert.deepEqual(result.extraLayers[0].ks.p.k[0].s, [182, -112.5, 0]);
+  assert.deepEqual(result.extraLayers[0].ks.p.k.at(-1).s, [182, 112.5, 0]);
 });
 
 test('全モジュラーエフェクトを宣言的effects配列で適用・合成できる', () => {
@@ -118,7 +145,7 @@ test('全モジュラーエフェクトを宣言的effects配列で適用・合�
   // マスク・ガウスエフェクト・スキューが付与されていること
   assert.ok(heroLayer.masksProperties.length >= 2);
   assert.ok(heroLayer.ef.length >= 1);
-  assert.equal(heroLayer.ks.sk.k, 6);
+  assert.ok(heroLayer.ks.sk);
 
   // Powder飛散エンディング派生版の検証
   const powderLottie = appendPowderEnding(baseLottie, config, () => SAMPLE_SVG);

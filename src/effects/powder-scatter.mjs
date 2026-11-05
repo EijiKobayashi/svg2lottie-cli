@@ -1,30 +1,34 @@
 /**
- * 粉飛散パーティクルエフェクト（Powder Ending）モジュール
+ * 粉飛散パーティクルエフェクト（Powder Ending — マルチカラー頂点サンプリング＆放射飛散）モジュール
  */
 
 import { round4 } from '../path-parser.mjs';
 import { buildBleedFadeProps } from './bleed-fade.mjs';
 
-function collectSamplePointsFromLayer(layer) {
-  const points = [];
-  for (const group of layer.shapes || []) {
-    for (const item of group.it || []) {
-      if (item.ty === 'sh' && item.ks?.k?.v) {
-        const verts = item.ks.k.v;
-        for (let i = 0; i < verts.length; i++) {
-          const [x1, y1] = verts[i];
-          const [x2, y2] = verts[(i + 1) % verts.length];
-          points.push([x1, y1]);
-          points.push([(x1 + x2) / 2, (y1 + y2) / 2]);
-        }
-      }
+function collectColoredPointsFromItems(items, currentRgba, outPoints) {
+  let activeColor = currentRgba;
+  for (const item of items || []) {
+    if (item.ty === 'fl' && item.c?.a === 0 && Array.isArray(item.c.k)) {
+      activeColor = item.c.k;
     }
   }
-  return points;
+  for (const item of items || []) {
+    if (item.ty === 'sh' && item.ks?.k?.v) {
+      const verts = item.ks.k.v;
+      for (let i = 0; i < verts.length; i++) {
+        const [x1, y1] = verts[i];
+        const [x2, y2] = verts[(i + 1) % verts.length];
+        outPoints.push({ x: x1, y: y1, color: activeColor });
+        outPoints.push({ x: (x1 + x2) / 2, y: (y1 + y2) / 2, color: activeColor });
+      }
+    } else if (item.ty === 'gr' && Array.isArray(item.it)) {
+      collectColoredPointsFromItems(item.it, activeColor, outPoints);
+    }
+  }
 }
 
 /**
- * ベースLottieアニメーションに対し、指定レイヤー群と同期して飛散・消滅する粉パーティクルを追加する
+ * ベースLottieアニメーションに対し、指定レイヤー群の頂点・色をサンプリングして放射飛散・消滅する粉パーティクルを追加する
  * @param {object} baseLottie
  * @param {{
  *   targetLayerIds?: string[],
@@ -40,10 +44,10 @@ function collectSamplePointsFromLayer(layer) {
 export function applyPowderScatter(baseLottie, options = {}) {
   const {
     targetLayerIds = [],
-    appearFrame = 628,
-    fadeStartFrame = 630,
-    fadeEndFrame = 690,
-    totalFrames = 720,
+    appearFrame = 178,
+    fadeStartFrame = 180,
+    fadeEndFrame = 228,
+    totalFrames = 240,
     particleCount = 240,
     loop = true,
     colorRgba = [0.149, 0.3098, 0.4549, 1],
@@ -57,12 +61,12 @@ export function applyPowderScatter(baseLottie, options = {}) {
     targetLayerIds.length > 0 ? targetLayerIds.includes(l.nm) : true
   );
 
-  const rawPoints = [];
+  const sampledPoints = [];
   for (const tl of targetLayers) {
     tl.op = totalFrames;
     const syncFade = buildBleedFadeProps({
       initialOpacity: 100,
-      fadeOut: { start: fadeStartFrame, end: fadeEndFrame, blur: 16, scaleTo: 100 },
+      fadeOut: { start: fadeStartFrame, end: fadeEndFrame, blur: 18, scaleTo: 103 },
     });
     if (tl.ks.o?.a === 1 && Array.isArray(tl.ks.o.k)) {
       tl.ks.o.k.push(
@@ -77,32 +81,40 @@ export function applyPowderScatter(baseLottie, options = {}) {
     } else {
       tl.ks.o = syncFade.opacity;
     }
-    rawPoints.push(...collectSamplePointsFromLayer(tl));
+    tl.ef = [...(tl.ef || []), ...syncFade.effects];
+    collectColoredPointsFromItems(tl.shapes, colorRgba, sampledPoints);
   }
 
-  if (rawPoints.length === 0) {
-    rawPoints.push([clone.w / 2, clone.h / 2]);
+  if (sampledPoints.length === 0) {
+    sampledPoints.push({ x: clone.w / 2, y: clone.h / 2, color: colorRgba });
   }
 
   const cx = clone.w / 2;
   const cy = clone.h / 2;
-  const groupCount = Math.min(24, Math.max(4, Math.ceil(particleCount / 30)));
+  const maxTravel = Math.min(clone.w, clone.h) * 0.14;
+  const groupCount = Math.min(28, Math.max(8, Math.ceil(particleCount / 24)));
   const perGroup = Math.max(1, Math.ceil(particleCount / groupCount));
+  const baseDotRadius = Math.max(2.2, Math.min(clone.w, clone.h) * 0.006);
 
   const particleLayers = [];
   for (let g = 0; g < groupCount; g++) {
-    const angle = (g / groupCount) * Math.PI * 2;
-    const dist = 16 + (g % 5) * 7;
+    const angle = (g / groupCount) * Math.PI * 2 + (g % 3) * 0.15;
+    const dist = maxTravel * (0.45 + (g % 5) * 0.14);
     const dx = round4(Math.cos(angle) * dist);
-    const dy = round4(Math.sin(angle) * dist);
+    const dy = round4(Math.sin(angle) * dist - dist * 0.18); // 軽い上昇気流
 
     const ellipses = [];
+    let groupColor = colorRgba;
+
     for (let p = 0; p < perGroup; p++) {
-      const idx = (g * perGroup + p) % rawPoints.length;
-      const [px, py] = rawPoints[idx];
-      const jitterX = round4(px + Math.sin(g * 17 + p * 7) * 2.5);
-      const jitterY = round4(py + Math.cos(g * 13 + p * 11) * 2.5);
-      const size = round4(1.4 + ((g + p) % 3) * 0.6);
+      const idx = Math.floor(((g * perGroup + p) * 13) % sampledPoints.length);
+      const pt = sampledPoints[idx];
+      if (p === 0 && pt.color) {
+        groupColor = pt.color;
+      }
+      const jitterX = round4(pt.x + Math.sin(g * 17 + p * 7) * 4);
+      const jitterY = round4(pt.y + Math.cos(g * 13 + p * 11) * 4);
+      const size = round4(baseDotRadius * (0.7 + ((g + p) % 4) * 0.35));
       ellipses.push({
         ty: 'el',
         nm: `Dot ${p + 1}`,
@@ -122,7 +134,7 @@ export function applyPowderScatter(baseLottie, options = {}) {
           a: 1,
           k: [
             { t: appearFrame, s: [0], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
-            { t: fadeStartFrame, s: [90], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
+            { t: fadeStartFrame + 4, s: [92], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
             { t: fadeEndFrame, s: [0] },
           ],
         },
@@ -130,19 +142,26 @@ export function applyPowderScatter(baseLottie, options = {}) {
         p: {
           a: 1,
           k: [
-            { t: fadeStartFrame, s: [cx, cy, 0], i: { x: 0.22, y: 1 }, o: { x: 0.36, y: 1 } },
+            { t: fadeStartFrame, s: [cx, cy, 0], i: { x: 0.16, y: 1 }, o: { x: 0.36, y: 1 } },
             {
               t: fadeEndFrame,
-              s: [
-                Math.min(clone.w - 4, Math.max(4, cx + dx)),
-                Math.min(clone.h - 4, Math.max(4, cy + dy)),
-                0,
-              ],
+              s: [round4(cx + dx), round4(cy + dy), 0],
             },
           ],
         },
         a: { a: 0, k: [cx, cy, 0] },
-        s: { a: 0, k: [100, 100, 100] },
+        s: {
+          a: 1,
+          k: [
+            {
+              t: fadeStartFrame,
+              s: [100, 100, 100],
+              i: { x: [0.22, 0.22, 0.22], y: [1, 1, 1] },
+              o: { x: [0.36, 0.36, 0.36], y: [1, 1, 1] },
+            },
+            { t: fadeEndFrame, s: [65, 65, 100] },
+          ],
+        },
       },
       ao: 0,
       shapes: [
@@ -154,7 +173,7 @@ export function applyPowderScatter(baseLottie, options = {}) {
             {
               ty: 'fl',
               nm: 'Powder Fill',
-              c: { a: 0, k: colorRgba },
+              c: { a: 0, k: groupColor },
               o: { a: 0, k: 100 },
               r: 1,
             },

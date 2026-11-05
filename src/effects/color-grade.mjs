@@ -38,3 +38,4 @@ export function applyColorGrade(layer, options = {}) {
   }
   return { layer, extraLayers: [] };
 }
+

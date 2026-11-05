@@ -73,29 +73,13 @@ function createDefaultStoryboardJson(dims = {}) {
         fadeIn: { start: 20, end: 70, blur: 24, scaleFrom: 0 },
         effects: [
           { type: 'pop-in', start: 20, end: 65, overshootScale: 108 },
-          { type: 'liquid-glass', variant: 'liquid', blur: 16, tintOpacity: 20 },
+          { type: 'liquid-glass', variant: 'liquid', blur: 10, tintOpacity: 16 },
         ],
-      },
-      {
-        id: 'frame-line',
-        type: 'stroke',
-        trimStroke: {
-          vertices: [
-            [470, 20],
-            [50, 20],
-            [50, 120],
-            [470, 120],
-          ],
-          closed: true,
-          strokeWidth: 4,
-          start: 0,
-          end: 60,
-        },
       },
     ],
     powderEnding: {
       enabled: true,
-      targetLayerIds: ['main-icon', 'frame-line'],
+      targetLayerIds: ['main-icon'],
       appearFrame: 118,
       fadeStartFrame: 120,
       fadeEndFrame: 165,
@@ -219,3 +203,4 @@ if (isDirectRun) {
     process.exit(1);
   });
 }
+

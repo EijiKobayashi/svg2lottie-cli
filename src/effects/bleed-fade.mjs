@@ -184,3 +184,4 @@ export function applyBleedFade(layer, options = {}) {
   }
   return { layer, extraLayers: [] };
 }
+

@@ -342,6 +342,24 @@ export function parseSvgPathToLottieShapes(d) {
 }
 
 /**
+ * 形状配列を [scaleX, scaleY] 倍にスケーリングする（巨大SVGの適正サイズ縮小用）
+ * @param {Array<{ c: boolean, v: [number, number][], i: [number, number][], o: [number, number][] }>} shapes
+ * @param {number} scaleX
+ * @param {number} scaleY
+ */
+export function scaleLottieShapes(shapes, scaleX = 1, scaleY = scaleX) {
+  if (Math.abs(scaleX - 1) < 1e-6 && Math.abs(scaleY - 1) < 1e-6) {
+    return shapes;
+  }
+  return shapes.map((s) => ({
+    c: s.c,
+    v: s.v.map(([x, y]) => [round4(x * scaleX), round4(y * scaleY)]),
+    i: s.i.map(([x, y]) => [round4(x * scaleX), round4(y * scaleY)]),
+    o: s.o.map(([x, y]) => [round4(x * scaleX), round4(y * scaleY)]),
+  }));
+}
+
+/**
  * 形状配列のバウンディングボックス中心 [cx, cy] を算出する
  * @param {Array<{ v: [number, number][] }>} shapes
  * @param {number} [fallbackX=260]
@@ -367,3 +385,4 @@ export function computeShapesCenter(shapes, fallbackX = 260, fallbackY = 70) {
   }
   return [round4((minX + maxX) / 2), round4((minY + maxY) / 2)];
 }
+
