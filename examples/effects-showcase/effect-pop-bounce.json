@@ -12,11 +12,10 @@
       "effects": [
         {
           "type": "pop-in",
+          "cartoon": true,
           "start": 10,
-          "end": 58,
-          "fromScale": 0,
-          "overshootScale": 120,
-          "undershootScale": 92
+          "end": 54,
+          "jumpHeight": 18
         }
       ]
     }

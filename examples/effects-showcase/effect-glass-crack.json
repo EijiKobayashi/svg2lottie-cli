@@ -13,10 +13,12 @@
         {
           "type": "glass-crack",
           "start": 15,
-          "end": 45,
+          "end": 65,
           "rays": 8,
-          "radius": 46,
-          "shake": true
+          "radius": 48,
+          "shake": true,
+          "shatter": true,
+          "shardCount": 8
         }
       ]
     }

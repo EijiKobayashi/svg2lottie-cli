@@ -13,9 +13,8 @@
         {
           "type": "liquid-glass",
           "variant": "liquid",
-          "blur": 14,
-          "tintOpacity": 28,
-          "specularWidth": 2.5,
+          "blur": 16,
+          "tintOpacity": 25,
           "start": 10,
           "end": 110
         }

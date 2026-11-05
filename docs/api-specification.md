@@ -130,6 +130,18 @@ npx svg2lottie-cli preview [--dir <dir>] [--port <port>]
 | `GET` | `/dist/<name>.json` | `200 application/json` | 生成された Lottie JSON ファイル |
 | `GET` | `/../...` (ディレクトリ外) | `403 text/plain` | パストラバーサル攻撃をブロック (`Forbidden`) |
 | `GET` | 存在しないパス | `404 text/plain` | `Not Found` |
+---
+
+## 5. インタラクション＆HTML埋め込み API (`src/interaction.mjs`)
+
+Webサイトや検収スタジオでホバー・クリック連携を安全に動作させるヘルパー群です。
+
+| 関数名 | 引数 | 戻り値 | 説明 |
+|---|---|---|---|
+| `validateInteractionUrl(url)` | `url: string` | `string` | `https://`, `http://`, 許可された相対パスを検証。`javascript:` や `data:` は例外をスロー |
+| `normalizeInteractionConfig(config)` | `config: object` | `InteractionConfig` | `hover`, `click`, `seekFrame`, `url`, `target` の型と値を検証・正規化 |
+| `buildEmbedSnippet(options)` | `options: object` | `string` | Webサイトに貼り付けるだけで動くセキュアな HTML/JS スニペットコードを生成 |
+
 # 降雪ループエフェクト
 
 `effects` に `{ "type": "snowfall-loop" }` を指定すると、対象レイヤーを縦方向にタイル複製して循環させます。`start` / `end` はループ区間、`distance` は落下距離、`drift` は左右の揺れ幅、`copies` はタイル数、`opacity` は雪の不透明度です。ループ用Storyboardでは `end` を `durationFrames` と一致させます。

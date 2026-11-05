@@ -275,11 +275,12 @@
       <text x="62" y="45" class="font-mono node-sub">127.0.0.1:4322 (CSP保護)</text>
       <line x1="14" y1="62" x2="230" y2="62" stroke="#e2e8f0" />
       <text x="16" y="82" class="font-sans node-sub">✅ 1fコマ送り・シーク・速度切替</text>
-      <text x="16" y="102" class="font-sans node-sub">✅ シーンジャンプ (markers連動)</text>
-      <text x="16" y="122" class="font-sans node-sub">✅ Dark Mode / Day&amp;Night反転</text>
-      <text x="16" y="142" class="font-sans node-sub">✅ キーボード操作 (Space/←/→)</text>
-      <text x="16" y="162" class="font-sans node-sub">✅ aria-live / Reduced Motion</text>
-      <text x="16" y="182" class="font-mono" font-size="10" fill="#0f766e">preview-server.mjs + Lottie-Web</text>
+      <text x="16" y="100" class="font-sans node-sub">✅ ホバー/クリック/Embedコード</text>
+      <text x="16" y="118" class="font-sans node-sub">✅ シーンジャンプ (markers連動)</text>
+      <text x="16" y="136" class="font-sans node-sub">✅ Dark Mode / Day&amp;Night反転</text>
+      <text x="16" y="154" class="font-sans node-sub">✅ キーボード操作 (Space/←/→)</text>
+      <text x="16" y="172" class="font-sans node-sub">✅ aria-live / Reduced Motion</text>
+      <text x="16" y="188" class="font-mono" font-size="9.5" fill="#0f766e">preview-server.mjs + Lottie-Web</text>
     </g>
 
     <!-- AI Revision & GitHub Issue Generator -->
