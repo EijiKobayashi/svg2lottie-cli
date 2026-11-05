@@ -1,0 +1,25 @@
+{
+  "name": "effect-liquid-glass",
+  "width": 240,
+  "height": 240,
+  "fps": 60,
+  "durationFrames": 120,
+  "loop": true,
+  "layers": [
+    {
+      "id": "main-shape",
+      "svg": "examples/shapes/cube.svg",
+      "effects": [
+        {
+          "type": "liquid-glass",
+          "variant": "liquid",
+          "blur": 14,
+          "tintOpacity": 28,
+          "specularWidth": 2.5,
+          "start": 10,
+          "end": 110
+        }
+      ]
+    }
+  ]
+}

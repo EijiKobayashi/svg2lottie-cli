@@ -153,3 +153,58 @@ test('全モジュラーエフェクトを宣言的effects配列で適用・合�
   const particleLayers = powderLottie.layers.filter((l) => l.nm.startsWith('powder-'));
   assert.ok(particleLayers.length > 0);
 });
+
+test('fire: 本体の熱波スケール・スキュー揺らぎと火の粉レイヤーを生成する', () => {
+  const layer = {
+    nm: 'flame',
+    ip: 0,
+    op: 180,
+    ks: {
+      p: { a: 0, k: [100, 100, 0] },
+      s: { a: 0, k: [100, 100, 100] },
+      o: { a: 0, k: 100 },
+    },
+  };
+  const result = EFFECT_REGISTRY.fire(layer, { start: 10, end: 120, emberCount: 6 }, { center: [100, 100], width: 200, height: 200 });
+  assert.equal(result.layer.ks.s.a, 1, '本体に熱波スケール揺らぎアニメーションが付与される');
+  assert.ok(result.layer.ks.s.k.length >= 4, '複数の熱波キーフレームが存在する');
+  assert.equal(result.extraLayers.length, 6, '指定数の火の粉レイヤーが生成される');
+});
+
+test('water: 本体の表面張力プルプル弾性スケールと波紋リングを生成する', () => {
+  const layer = {
+    nm: 'drop',
+    ip: 0,
+    op: 180,
+    ks: {
+      p: { a: 0, k: [100, 100, 0] },
+      s: { a: 0, k: [100, 100, 100] },
+      o: { a: 0, k: 100 },
+    },
+  };
+  const result = EFFECT_REGISTRY.water(layer, { mode: 'ripple', start: 10, end: 120, rings: 3 }, { center: [100, 100], width: 200, height: 200 });
+  assert.equal(result.layer.ks.s.a, 1, '本体に表面張力プルプルスケールが付与される');
+  // XとYが逆位相でバウンドしていること（液体感）
+  const kf = result.layer.ks.s.k.find((k) => k.s && k.s[0] !== k.s[1]);
+  assert.ok(kf, 'X軸とY軸が非対称に変形して流体感を表現している');
+  assert.equal(result.extraLayers.length, 3, '波紋リングレイヤーが3つ生成される');
+});
+
+test('echo-glow-neon: ネオン管フリッカー点滅とブルーム光彩を生成する', () => {
+  const layer = {
+    nm: 'sign',
+    ip: 0,
+    op: 180,
+    ks: {
+      p: { a: 0, k: [100, 100, 0] },
+      o: { a: 0, k: 100 },
+    },
+    shapes: [
+      { ty: 'sh', nm: 'contour', ks: { a: 0, k: { c: true, v: [[0, 0]], i: [[0, 0]], o: [[0, 0]] } } },
+    ],
+  };
+  const result = EFFECT_REGISTRY['echo-glow-neon'](layer, { mode: 'neon', flicker: true, start: 0, end: 40 });
+  assert.equal(result.layer.ks.o.a, 1, 'ネオン点灯フリッカー不透明度が付与される');
+  assert.ok(result.extraLayers.length >= 1, 'グローブルームレイヤーが生成される');
+});
+

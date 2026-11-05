@@ -1,0 +1,25 @@
+{
+  "name": "effect-neon-glow",
+  "width": 240,
+  "height": 240,
+  "fps": 60,
+  "durationFrames": 120,
+  "loop": true,
+  "layers": [
+    {
+      "id": "main-shape",
+      "svg": "examples/shapes/heart.svg",
+      "effects": [
+        {
+          "type": "echo-glow-neon",
+          "mode": "neon",
+          "flicker": true,
+          "blur": 16,
+          "color": "#f43f5e",
+          "start": 0,
+          "end": 40
+        }
+      ]
+    }
+  ]
+}

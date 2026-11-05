@@ -1,0 +1,132 @@
+[
+  {
+    "name": "effect-fire",
+    "title": "炎エフェクト (Fire & Ember)",
+    "category": "物理・自然現象",
+    "description": "本体の熱波呼吸スケール・スキュー揺らぎと、立ち昇る火の粉パーティクル",
+    "svg": "examples/shapes/flame.svg",
+    "width": 240,
+    "height": 240,
+    "fps": 60,
+    "durationFrames": 120,
+    "effects": [
+      {
+        "type": "fire",
+        "start": 0,
+        "end": 120,
+        "flameColor": "#ea580c",
+        "coreColor": "#fef08a",
+        "emberCount": 8,
+        "intensity": 1.2
+      }
+    ]
+  },
+  {
+    "name": "effect-water",
+    "title": "水エフェクト (Water & Ripple)",
+    "category": "物理・自然現象",
+    "description": "表面張力によるプルプル弾性振動（X/Y逆位相バウンス）と楕円波紋リング拡散",
+    "svg": "examples/shapes/drop.svg",
+    "width": 240,
+    "height": 240,
+    "fps": 60,
+    "durationFrames": 120,
+    "effects": [
+      {
+        "type": "water",
+        "mode": "ripple",
+        "start": 0,
+        "end": 120,
+        "rings": 3,
+        "amplitude": 16,
+        "color": "#38bdf8"
+      }
+    ]
+  },
+  {
+    "name": "effect-liquid-glass",
+    "title": "リキッドグラス (Apple風 Liquid Glass)",
+    "category": "光学・質感",
+    "description": "実オブジェクト輪郭に沿って走るスペキュラ光沢シマーとフロスト半透明感",
+    "svg": "examples/shapes/cube.svg",
+    "width": 240,
+    "height": 240,
+    "fps": 60,
+    "durationFrames": 120,
+    "effects": [
+      {
+        "type": "liquid-glass",
+        "variant": "liquid",
+        "blur": 14,
+        "tintOpacity": 28,
+        "specularWidth": 2.5,
+        "start": 10,
+        "end": 110
+      }
+    ]
+  },
+  {
+    "name": "effect-glass-crack",
+    "title": "ガラスひび割れ (Glass Crack & Jitter)",
+    "category": "物理・破壊",
+    "description": "衝撃点からの幾何クラックライン伝播と、割れた瞬間のリアルな衝撃振動ジッター",
+    "svg": "examples/shapes/star.svg",
+    "width": 240,
+    "height": 240,
+    "fps": 60,
+    "durationFrames": 120,
+    "effects": [
+      {
+        "type": "glass-crack",
+        "start": 15,
+        "end": 45,
+        "rays": 8,
+        "radius": 46,
+        "shake": true
+      }
+    ]
+  },
+  {
+    "name": "effect-neon-glow",
+    "title": "ネオン＆グロー (Neon Tube & Glow)",
+    "category": "光学・演出",
+    "description": "バチバチッと点滅して点灯するネオン管フリッカーと多重ブルーム発光",
+    "svg": "examples/shapes/heart.svg",
+    "width": 240,
+    "height": 240,
+    "fps": 60,
+    "durationFrames": 120,
+    "effects": [
+      {
+        "type": "echo-glow-neon",
+        "mode": "neon",
+        "flicker": true,
+        "blur": 16,
+        "color": "#f43f5e",
+        "start": 0,
+        "end": 40
+      }
+    ]
+  },
+  {
+    "name": "effect-pop-bounce",
+    "title": "ポップイン (Elastic Spring Bounce)",
+    "category": "トランジション・出現",
+    "description": "4段階スプリング弾性物理（0% ➔ 120% ➔ 92% ➔ 100%）による弾むポップ出現",
+    "svg": "examples/shapes/circle.svg",
+    "width": 240,
+    "height": 240,
+    "fps": 60,
+    "durationFrames": 120,
+    "effects": [
+      {
+        "type": "pop-in",
+        "start": 10,
+        "end": 58,
+        "fromScale": 0,
+        "overshootScale": 120,
+        "undershootScale": 92
+      }
+    ]
+  }
+]

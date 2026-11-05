@@ -1,0 +1,25 @@
+{
+  "name": "effect-fire",
+  "width": 240,
+  "height": 240,
+  "fps": 60,
+  "durationFrames": 120,
+  "loop": true,
+  "layers": [
+    {
+      "id": "main-shape",
+      "svg": "examples/shapes/flame.svg",
+      "effects": [
+        {
+          "type": "fire",
+          "start": 0,
+          "end": 120,
+          "flameColor": "#ea580c",
+          "coreColor": "#fef08a",
+          "emberCount": 8,
+          "intensity": 1.2
+        }
+      ]
+    }
+  ]
+}
