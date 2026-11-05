@@ -1,0 +1,24 @@
+{
+  "name": "effect-glass-crack",
+  "width": 240,
+  "height": 240,
+  "fps": 60,
+  "durationFrames": 120,
+  "loop": true,
+  "layers": [
+    {
+      "id": "main-shape",
+      "svg": "examples/shapes/star.svg",
+      "effects": [
+        {
+          "type": "glass-crack",
+          "start": 15,
+          "end": 45,
+          "rays": 8,
+          "radius": 46,
+          "shake": true
+        }
+      ]
+    }
+  ]
+}

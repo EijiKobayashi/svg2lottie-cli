@@ -617,6 +617,26 @@ export function createPreviewRequestHandler(options = {}) {
       return;
     }
 
+    if (decodedPathname === '/effects' || decodedPathname === '/effects.html') {
+      const effectsHtmlPath = path.join(rootDir, 'docs/effects.html');
+      if (fs.existsSync(effectsHtmlPath)) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(fs.readFileSync(effectsHtmlPath));
+        return;
+      }
+    }
+
+    if (decodedPathname.startsWith('/dist/effects/')) {
+      const effectFileName = path.basename(decodedPathname);
+      const candidate = path.join(rootDir, 'docs/dist/effects', effectFileName);
+      if (isSubPath(rootDir, candidate) && fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        const cType = effectFileName.endsWith('.json') ? 'application/json; charset=utf-8' : 'text/plain; charset=utf-8';
+        res.writeHead(200, { 'Content-Type': cType });
+        res.end(fs.readFileSync(candidate));
+        return;
+      }
+    }
+
     if (decodedPathname === '/api/animations') {
       const fileSet = new Set();
       for (const d of distDirs) {

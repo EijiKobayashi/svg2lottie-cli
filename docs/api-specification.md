@@ -125,6 +125,7 @@ npx svg2lottie-cli preview [--dir <dir>] [--port <port>]
 | メソッド | パス | レスポンス | 説明 |
 |---|---|---|---|
 | `GET` | `/` または `/preview/index.html` | `200 text/html; charset=utf-8` | 検収プレビュー＆AI修正指示スタジオ HTML |
+| `GET` | `/effects` または `/effects.html` | `200 text/html; charset=utf-8` | エフェクト専用カタログ・ショールーム HTML（全キラーエフェクト一覧） |
 | `GET` | `/api/animations` | `200 application/json` | `dist/` 内の `.json` ファイル一覧 `{ "files": ["..."] }` |
 | `GET` | `/dist/<name>.json` | `200 application/json` | 生成された Lottie JSON ファイル |
 | `GET` | `/../...` (ディレクトリ外) | `403 text/plain` | パストラバーサル攻撃をブロック (`Forbidden`) |

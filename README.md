@@ -4,9 +4,12 @@
 > **アイコン・UIイラスト・キャラクター・ロゴなど、あらゆるSVG素材** と **文字コンテ**（`shooting-script.md`）から、 **キラーエフェクト付きのLottieアニメーション**（JSON）を構築し、 **ブラウザ検収スタジオでコマ送り確認＆AIへの修正指示プロンプトをワンクリック生成** できる汎用CLIツールです。
 
 [![GitHub Pages Preview](https://img.shields.io/badge/Online%20Showroom-GitHub%20Pages-brightgreen?style=for-the-badge&logo=github)](https://eijikobayashi.github.io/svg2lottie-cli/)
+[![Effects Catalog](https://img.shields.io/badge/Effects%20Catalog-Interactive%20Showcase-blue?style=for-the-badge&logo=sparkles)](https://eijikobayashi.github.io/svg2lottie-cli/effects.html)
 
 > 🌐 **ブラウザ上で今すぐ動かせるオンライン検収スタジオ**: [https://eijikobayashi.github.io/svg2lottie-cli/](https://eijikobayashi.github.io/svg2lottie-cli/)  
-> （コマ送り、反転・Day & Night確認、AI修正指示プロンプト生成がGitHub Pages上で試せます）
+> （コマ送り、反転・Day & Night確認、AI修正指示プロンプト生成がGitHub Pages上で試せます）  
+> ✨ **キラーエフェクト専用ショールーム（別ページ）**: [https://eijikobayashi.github.io/svg2lottie-cli/effects.html](https://eijikobayashi.github.io/svg2lottie-cli/effects.html)  
+> （単純オブジェクトに施された炎・水・リキッドグラス・粉飛散・ネオン・バウンスなどの全エフェクトをカード一覧で比較＆スロー検収できます）
 
 ---
 

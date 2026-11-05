@@ -1,11 +1,11 @@
 /**
- * 水エフェクト（波紋リップルリング拡散・連続流体ウェーブ揺らぎ・水滴スプラッシュ）モジュール
+ * 水エフェクト（表面張力プルプル弾性振動・波紋リップルリング拡散・流体ウェーブ揺らぎ）モジュール
  */
 
 import { hexToLottieColor, round4 } from '../path-parser.mjs';
 
 /**
- * 水面の連続ウェーブ揺らぎ（wave）および楕円波紋リング（ripple）を生成する
+ * 水滴の表面張力プルプル変形（スケールX/Y非対称振動）および波紋リングを生成する
  * @param {object} layer
  * @param {{
  *   mode?: 'ripple' | 'wave' | 'splash',
@@ -20,26 +20,53 @@ import { hexToLottieColor, round4 } from '../path-parser.mjs';
 export function applyWater(layer, options = {}, ctx = {}) {
   const {
     mode = 'ripple',
-    start = 30,
+    start = 0,
     end = 180,
     rings = 3,
-    amplitude = 6,
+    amplitude = 14,
     color = '#38bdf8',
   } = options;
-  const [cx, cy] = ctx.center || layer.ks?.a?.k || [260, 70];
-  const w = ctx.width || 600;
+
+  const [cx, cy] = ctx.center || layer.ks?.a?.k || [100, 100];
+  const w = ctx.width || 200;
   const rgba = hexToLottieColor(color);
 
-  // レイヤー自体にも心地よい水面の揺らぎ（スキュー角度の周期振動）を付与
+  // 1. 本体の表面張力プルプル弾性スケール（X軸・Y軸が逆位相でバウンドする流体物理）
+  const dur = Math.max(24, end - start);
+  const jellyKfs = [];
+  const easeJelly = { x: [0.25, 0.25, 0.25], y: [1, 1, 1] };
+
+  // 減衰するスプリング物理（4段階バウンス）
+  const t0 = start;
+  const t1 = Math.round(start + dur * 0.18);
+  const t2 = Math.round(start + dur * 0.38);
+  const t3 = Math.round(start + dur * 0.58);
+  const t4 = Math.round(start + dur * 0.78);
+  const t5 = Math.min(end, start + dur);
+
+  jellyKfs.push(
+    { t: t0, s: [100, 100, 100], i: easeJelly, o: easeJelly },
+    // 1バウンス目: 横にボヨヨンと潰れる (X大, Y小)
+    { t: t1, s: [round4(100 + amplitude), round4(100 - amplitude * 0.9), 100], i: easeJelly, o: easeJelly },
+    // 2バウンス目: 縦に伸びる (X小, Y大)
+    { t: t2, s: [round4(100 - amplitude * 0.7), round4(100 + amplitude * 0.75), 100], i: easeJelly, o: easeJelly },
+    // 3バウンス目: 戻り反発 (X中大, Y中小)
+    { t: t3, s: [round4(100 + amplitude * 0.4), round4(100 - amplitude * 0.35), 100], i: easeJelly, o: easeJelly },
+    // 4バウンス目: 微小振動
+    { t: t4, s: [round4(100 - amplitude * 0.15), round4(100 + amplitude * 0.15), 100], i: easeJelly, o: easeJelly },
+    // 収束
+    { t: t5, s: [100, 100, 100] }
+  );
+
+  layer.ks.s = { a: 1, k: jellyKfs };
+
+  // 2. 本体の水面スキュー揺らぎ
   const waveCycles = 3;
-  const step = Math.max(12, Math.round((end - start) / (waveCycles * 2)));
+  const step = Math.max(10, Math.round(dur / (waveCycles * 2)));
   const skewKfs = [];
-  if (start > 0) {
-    skewKfs.push({ t: 0, s: [0], i: { x: [0.42], y: [0] }, o: { x: [0.58], y: [1] } });
-  }
   for (let i = 0; i <= waveCycles * 2; i++) {
     const t = Math.min(end, start + i * step);
-    const val = i === waveCycles * 2 ? 0 : i % 2 === 0 ? amplitude * 0.45 : -amplitude * 0.45;
+    const val = i === waveCycles * 2 ? 0 : (i % 2 === 0 ? 1 : -1) * (amplitude * 0.25);
     skewKfs.push({
       t,
       s: [round4(val)],
@@ -56,14 +83,14 @@ export function applyWater(layer, options = {}, ctx = {}) {
     return { layer, extraLayers: [] };
   }
 
-  // キャンバスサイズに比例した自然な水面楕円リップルリングを生成
-  const ringBaseW = Math.round(w * 0.22);
-  const ringBaseH = Math.round(ringBaseW * 0.32);
+  // 3. 水滴・波紋リップルリング（キャンバスサイズ連動）
+  const ringBaseW = Math.round(w * 0.28);
+  const ringBaseH = Math.round(ringBaseW * 0.36);
 
   const extraLayers = [];
   for (let i = 0; i < rings; i++) {
-    const rStart = start + i * 16;
-    const rEnd = Math.min(end + 20, rStart + 64);
+    const rStart = start + i * 18;
+    const rEnd = Math.min(end + 20, rStart + 56);
 
     extraLayers.push({
       ddd: 0,
@@ -76,7 +103,7 @@ export function applyWater(layer, options = {}, ctx = {}) {
           a: 1,
           k: [
             { t: rStart, s: [0], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
-            { t: rStart + 10, s: [70], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
+            { t: rStart + 8, s: [75], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
             { t: rEnd, s: [0] },
           ],
         },
@@ -88,11 +115,11 @@ export function applyWater(layer, options = {}, ctx = {}) {
           k: [
             {
               t: rStart,
-              s: [35, 35, 100],
+              s: [30, 30, 100],
               i: { x: [0.16, 0.16, 0.16], y: [1, 1, 1] },
               o: { x: [0.36, 0.36, 0.36], y: [1, 1, 1] },
             },
-            { t: rEnd, s: [165, 165, 100] },
+            { t: rEnd, s: [180, 180, 100] },
           ],
         },
       },
@@ -117,7 +144,7 @@ export function applyWater(layer, options = {}, ctx = {}) {
                 a: 1,
                 k: [
                   { t: rStart, s: [3.5], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
-                  { t: rEnd, s: [0.5] },
+                  { t: rEnd, s: [0.4] },
                 ],
               },
               lc: 2,

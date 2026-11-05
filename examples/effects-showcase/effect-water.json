@@ -1,0 +1,25 @@
+{
+  "name": "effect-water",
+  "width": 240,
+  "height": 240,
+  "fps": 60,
+  "durationFrames": 120,
+  "loop": true,
+  "layers": [
+    {
+      "id": "main-shape",
+      "svg": "examples/shapes/drop.svg",
+      "effects": [
+        {
+          "type": "water",
+          "mode": "ripple",
+          "start": 0,
+          "end": 120,
+          "rings": 3,
+          "amplitude": 16,
+          "color": "#38bdf8"
+        }
+      ]
+    }
+  ]
+}
