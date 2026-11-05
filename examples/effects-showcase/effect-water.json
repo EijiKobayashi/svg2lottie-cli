@@ -12,11 +12,11 @@
       "effects": [
         {
           "type": "water",
-          "mode": "ripple",
+          "mode": "drop-ripple",
           "start": 0,
           "end": 120,
           "rings": 3,
-          "amplitude": 16,
+          "fallDistance": 80,
           "color": "#38bdf8"
         }
       ]

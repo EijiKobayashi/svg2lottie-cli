@@ -86,6 +86,21 @@
 3. `src/effects/<effect-name>.mjs` を純粋関数として最小実装し、`src/effects/index.mjs` の `EFFECT_REGISTRY` に登録する。
 4. `npm test` が全件パスし、不要コードやドキュメント矛盾がないことを確認する。
 ```
+---
+
+## プロンプト5: インタラクション設定（ホバー・クリック）とWebサイト埋め込みプロンプト
+
+```markdown
+作成したLottieアニメーションに、Webサイト組み込み用のインタラクション（ホバー連動・クリック遷移）を設定してください。
+
+### 要件
+1. `storyboard.json` のルートに `interaction` 設定を付与する：
+   - ホバー再生（`hover: "play"` または `"reverse"` / `"loop"`）
+   - クリック挙動（`click: "toggle"` または `"seek"` / `"url"`）
+2. 安全なURL検証（`https://` または許可された相対パスのみ）。
+3. 検収スタジオ（`docs/index.html`）で動作確認を行い、1行埋め込みHTMLコード（`<script>` + `<div id="lottie-...">`）を出力する。
+```
+
 # 季節演出テンプレート
 
 - 冬・クリスマス素材では雪片グループだけを独立レイヤーにし、`snowfall-loop` の `end` を総フレーム数へ合わせる。

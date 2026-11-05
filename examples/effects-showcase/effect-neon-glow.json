@@ -14,10 +14,11 @@
           "type": "echo-glow-neon",
           "mode": "neon",
           "flicker": true,
-          "blur": 16,
+          "tube": true,
+          "blur": 18,
           "color": "#f43f5e",
-          "start": 0,
-          "end": 40
+          "start": 6,
+          "end": 32
         }
       ]
     }

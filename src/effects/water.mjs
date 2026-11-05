@@ -1,29 +1,29 @@
 /**
- * 水エフェクト（表面張力プルプル弾性振動・波紋リップルリング拡散・流体ウェーブ揺らぎ）モジュール
+ * 水エフェクト（水滴の重力落下 ➔ 着水瞬間の消失 ➔ 美しい波紋リング拡散）モジュール
  */
 
 import { hexToLottieColor, round4 } from '../path-parser.mjs';
 
 /**
- * 水滴の表面張力プルプル変形（スケールX/Y非対称振動）および波紋リングを生成する
+ * 水滴の着水ストーリー（落下・着水・波紋拡散）を生成する
  * @param {object} layer
  * @param {{
- *   mode?: 'ripple' | 'wave' | 'splash',
+ *   mode?: 'drop-ripple' | 'ripple' | 'wave',
  *   start?: number,
  *   end?: number,
  *   rings?: number,
- *   amplitude?: number,
+ *   fallDistance?: number,
  *   color?: string
  * }} options
  * @param {{ width?: number, height?: number, center?: [number, number] }} ctx
  */
 export function applyWater(layer, options = {}, ctx = {}) {
   const {
-    mode = 'ripple',
+    mode = 'drop-ripple',
     start = 0,
-    end = 180,
+    end = 120,
     rings = 3,
-    amplitude = 14,
+    fallDistance = 80,
     color = '#38bdf8',
   } = options;
 
@@ -31,66 +31,54 @@ export function applyWater(layer, options = {}, ctx = {}) {
   const w = ctx.width || 200;
   const rgba = hexToLottieColor(color);
 
-  // 1. 本体の表面張力プルプル弾性スケール（X軸・Y軸が逆位相でバウンドする流体物理）
-  const dur = Math.max(24, end - start);
-  const jellyKfs = [];
-  const easeJelly = { x: [0.25, 0.25, 0.25], y: [1, 1, 1] };
+  const dur = Math.max(30, end - start);
+  const impactTime = Math.round(start + dur * 0.28); // 全体の28%の時点で着水
 
-  // 減衰するスプリング物理（4段階バウンス）
-  const t0 = start;
-  const t1 = Math.round(start + dur * 0.18);
-  const t2 = Math.round(start + dur * 0.38);
-  const t3 = Math.round(start + dur * 0.58);
-  const t4 = Math.round(start + dur * 0.78);
-  const t5 = Math.min(end, start + dur);
+  // 1. 水滴本体の落下と着水消失アニメーション
+  if (mode === 'drop-ripple') {
+    // 重力加速落下 (ease-in)
+    const easeInQuad = { x: [0.55, 0.55, 0.55], y: [0, 0, 0] };
+    const easeOutQuad = { x: [0.25, 0.25, 0.25], y: [1, 1, 1] };
 
-  jellyKfs.push(
-    { t: t0, s: [100, 100, 100], i: easeJelly, o: easeJelly },
-    // 1バウンス目: 横にボヨヨンと潰れる (X大, Y小)
-    { t: t1, s: [round4(100 + amplitude), round4(100 - amplitude * 0.9), 100], i: easeJelly, o: easeJelly },
-    // 2バウンス目: 縦に伸びる (X小, Y大)
-    { t: t2, s: [round4(100 - amplitude * 0.7), round4(100 + amplitude * 0.75), 100], i: easeJelly, o: easeJelly },
-    // 3バウンス目: 戻り反発 (X中大, Y中小)
-    { t: t3, s: [round4(100 + amplitude * 0.4), round4(100 - amplitude * 0.35), 100], i: easeJelly, o: easeJelly },
-    // 4バウンス目: 微小振動
-    { t: t4, s: [round4(100 - amplitude * 0.15), round4(100 + amplitude * 0.15), 100], i: easeJelly, o: easeJelly },
-    // 収束
-    { t: t5, s: [100, 100, 100] }
-  );
+    layer.ks.p = {
+      a: 1,
+      k: [
+        { t: 0, s: [cx, cy - fallDistance, 0], i: easeInQuad, o: easeInQuad },
+        { t: start, s: [cx, cy - fallDistance, 0], i: easeInQuad, o: easeInQuad },
+        { t: impactTime, s: [cx, cy, 0] },
+      ],
+    };
 
-  layer.ks.s = { a: 1, k: jellyKfs };
+    // 落下中は縦長にし、着水瞬間に横に潰れて消滅
+    layer.ks.s = {
+      a: 1,
+      k: [
+        { t: start, s: [85, 115, 100], i: easeInQuad, o: easeInQuad },
+        { t: impactTime - 2, s: [80, 125, 100], i: easeOutQuad, o: easeOutQuad },
+        { t: impactTime, s: [140, 40, 100] },
+      ],
+    };
 
-  // 2. 本体の水面スキュー揺らぎ
-  const waveCycles = 3;
-  const step = Math.max(10, Math.round(dur / (waveCycles * 2)));
-  const skewKfs = [];
-  for (let i = 0; i <= waveCycles * 2; i++) {
-    const t = Math.min(end, start + i * step);
-    const val = i === waveCycles * 2 ? 0 : (i % 2 === 0 ? 1 : -1) * (amplitude * 0.25);
-    skewKfs.push({
-      t,
-      s: [round4(val)],
-      i: { x: [0.42], y: [0] },
-      o: { x: [0.58], y: [1] },
-    });
-  }
-  delete skewKfs[skewKfs.length - 1].i;
-  delete skewKfs[skewKfs.length - 1].o;
-  layer.ks.sk = { a: 1, k: skewKfs };
-  layer.ks.sa = { a: 0, k: 0 };
-
-  if (mode === 'wave') {
-    return { layer, extraLayers: [] };
+    layer.ks.o = {
+      a: 1,
+      k: [
+        { t: start, s: [100] },
+        { t: impactTime, s: [100] },
+        { t: impactTime + 3, s: [0] },
+      ],
+    };
   }
 
-  // 3. 水滴・波紋リップルリング（キャンバスサイズ連動）
-  const ringBaseW = Math.round(w * 0.28);
-  const ringBaseH = Math.round(ringBaseW * 0.36);
+  // 2. 着水点からの多重波紋（Ripple）リング
+  const ringBaseW = Math.round(w * 0.42);
+  const ringBaseH = Math.round(ringBaseW * 0.45);
 
   const extraLayers = [];
+  const rippleStart = mode === 'drop-ripple' ? impactTime : start;
+
   for (let i = 0; i < rings; i++) {
-    const rStart = start + i * 18;
-    const rEnd = Math.min(end + 20, rStart + 56);
+    const rStart = rippleStart + i * 14;
+    const rEnd = Math.min(end, rStart + 56);
 
     extraLayers.push({
       ddd: 0,
@@ -103,23 +91,23 @@ export function applyWater(layer, options = {}, ctx = {}) {
           a: 1,
           k: [
             { t: rStart, s: [0], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
-            { t: rStart + 8, s: [75], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
+            { t: rStart + 6, s: [85], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
             { t: rEnd, s: [0] },
           ],
         },
         r: { a: 0, k: 0 },
-        p: { a: 0, k: [cx, cy, 0] },
+        p: { a: 0, k: [cx, cy + 10, 0] },
         a: { a: 0, k: [0, 0, 0] },
         s: {
           a: 1,
           k: [
             {
               t: rStart,
-              s: [30, 30, 100],
+              s: [15, 15, 100],
               i: { x: [0.16, 0.16, 0.16], y: [1, 1, 1] },
               o: { x: [0.36, 0.36, 0.36], y: [1, 1, 1] },
             },
-            { t: rEnd, s: [180, 180, 100] },
+            { t: rEnd, s: [160, 160, 100] },
           ],
         },
       },
@@ -139,12 +127,12 @@ export function applyWater(layer, options = {}, ctx = {}) {
               ty: 'st',
               nm: 'Water Stroke',
               c: { a: 0, k: rgba },
-              o: { a: 0, k: 85 },
+              o: { a: 0, k: 90 },
               w: {
                 a: 1,
                 k: [
-                  { t: rStart, s: [3.5], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
-                  { t: rEnd, s: [0.4] },
+                  { t: rStart, s: [3.2], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
+                  { t: rEnd, s: [0.3] },
                 ],
               },
               lc: 2,

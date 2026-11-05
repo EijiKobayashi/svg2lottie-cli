@@ -23,6 +23,22 @@ GitHub Pages 上で、アスペクト比の異なる3種類の実用的なアニ
 | **サマービーチ**   | <img src="./docs/assets/tropical-vibes-wide.gif" width="260" alt="サマービーチ横長アニメーション" /> | **横長ワイド (2.46:1)**<br/>800 × 325px | 雲の左右スライド、波の多層パララックス流動、中央タイポグラフィの弾むポップイン                         | [`tropical-vibes-wide.json`](./docs/dist/tropical-vibes-wide.json)     |
 | **クリスマスの家** | <img src="./docs/assets/merry-christmas-house.gif" width="260" alt="クリスマス16:9アニメーション" /> | **標準ワイド (16:9)**<br/>800 × 450px   | 雪降る夜の家、窓の灯りの灯火、煙突の煙、降雪・星の多重ループ（四角い背景を除外した完全透過・反転対応） | [`merry-christmas-house.json`](./docs/dist/merry-christmas-house.json) |
 
+---
+
+## ✨ 洗練されたキラーエフェクト・ショールーム（[別ページで今すぐ確認](https://eijikobayashi.github.io/svg2lottie-cli/effects.html)）
+
+単純なSVGオブジェクト（幾何学・シンプル形状）に施された、物理挙動と美しさを徹底追求したエフェクト群です。  
+👉 **[キラーエフェクト・カタログ専用ページを開く](https://eijikobayashi.github.io/svg2lottie-cli/effects.html)** （スローモーション0.25x観察、Day & Night、設定JSONコピー完備）
+
+| エフェクト名 | 素材形状 | 演出・物理挙動の特徴 | Lottie JSON |
+| :--- | :---: | :--- | :--- |
+| **炎 (`fire`)** | 炎 | **二層メラメラうねり**: 外炎（橙赤）と高熱内炎コア（白黄）の二層構造。有機的ベジェ熱波呼吸とうねり、上昇する火の粉 | [`effect-fire.json`](./docs/dist/effects/effect-fire.json) |
+| **水 (`water`)** | しずく | **落下着水＆波紋ストーリー**: 水滴が空中から重力落下 ➔ 着水瞬間に弾けて水面に同化 ➔ 着水点から同心円の波紋リングが3重拡散 | [`effect-water.json`](./docs/dist/effects/effect-water.json) |
+| **リキッドグラス (`liquid-glass`)** | 四角 | **Apple風立体ガラス＆斜め光沢シマー**: すりガラスプレート＋立体エッジリム＋表面を左上から右下へ斜め45度に横切るグロス屈折光沢 | [`effect-liquid-glass.json`](./docs/dist/effects/effect-liquid-glass.json) |
+| **ガラスひび割れ (`glass-crack`)** | 星 | **クラック ➔ 粉々砕け散り（Shatter）**: 衝撃点から鋭角幾何クラックが走る ➔ 瞬時に多角形破片シャードへ分裂し四方八方へ回転飛散・落下消滅 | [`effect-glass-crack.json`](./docs/dist/effects/effect-glass-crack.json) |
+| **ネオン管＆グロー (`echo-glow-neon`)** | ハート | **中空ガラス管＆点灯フリッカー**: 純白コア芯ストロークと鮮やかネオン管の中空構造。バチバチッと瞬く点灯フリッカーから安定点灯 | [`effect-neon-glow.json`](./docs/dist/effects/effect-neon-glow.json) |
+| **ポップイン (`pop-in`)** | 円 | **カートゥーン調 Squash & Stretch**: タメ（力を溜めて横に潰れる Anticipation） ➔ 飛び出し（縦長に伸びる Stretch） ➔ 着地バウンス | [`effect-pop-bounce.json`](./docs/dist/effects/effect-pop-bounce.json) |
+
 ![svg2lottie-cli Architecture & Stack Diagram](./docs/stack-diagram.svg)
 
 ```mermaid
@@ -49,22 +65,25 @@ flowchart LR
 
 ---
 
-## 5つのコア機能
+## 6つのコア機能
 
 1. 📝 **文字コンテ駆動**（`shooting-script.md`）:
    - 専門的なLottieの知識がなくても、日本語の「文字コンテ（台本）」からアニメーションを構築可能。
 2. 🔍 **インタラクティブ検収＆AI修正指示スタジオ**（`preview`）:
    - コマ送り（`1f`単位）・速度変更（`0.25x〜1.5x`）・シーンジャンプ・Day & Night 色反転（CSS `invert`）確認に加え、 **今のフレーム・今のレイヤーに対するAI修正指示をワンクリックでMarkdownコピー** できます。
-3. ✨ **1行で追加できるモジュラー・キラーエフェクト群**（`src/effects/` 全17モジュール）:
+3. 🖱️ **ホバー・クリック連携＆1行HTML貼り付けコード生成**（Webサイト組み込み）:
+   - 「マウスを乗せたら再生・離したら逆再生」「クリックで特定フレームへジャンプ」「クリックで安全にURL遷移（`rel="noopener"`）」などのインタラクションを定義可能。
+   - 検収スタジオから **Webサイトに貼るだけの1行HTMLコードをワンクリックコピー** できます。
+4. ✨ **1行で追加できるモジュラー・キラーエフェクト群**（`src/effects/` 全17モジュール）:
    `storyboard.json` のレイヤーに `"effects": [{ "type": "liquid-glass" }, { "type": "pop-in" }]` のように書くだけで即座に合成できます。
    - **トランジション系**: `bleed-fade`（フェードイン・アウト／滲んだフェード）、`cross-dissolve`（クロスディゾルブ）、`wipe`（上下左右・アイリスワイプ）、`slide-push-pull`（Push/Pullスライドイン）、`pop-in`（弾性ポップイン）、`trim-stroke`（一筆書き）
    - **モーション・変形・速度系**: `zoom-slide-spin`（ズーム・スライド・スピン）、`transform`（汎用トランスフォーム・スキュー歪み）、`speed-control`（倍速・スローモーション）
    - **マスク・カラー・キーイング系**: `mask`（加算・減算・反転・ぼかしマスク）、`color-grade`（カラーコレクション・グレーディング）、`ultra-key`（Ultraキー／指定色クロマキー透過）
    - **光学・Apple風グラス系**: `echo-glow-neon`（エコー／グロー／ネオン）、`liquid-glass`（すりガラス・グラスプレート・Apple風リキッドグラス）
    - **物理・自然現象系**: `snowfall-loop`（継ぎ目のない降雪ループ）、`powder-scatter`（粉飛散パーティクル）、`glass-crack`（ガラスひび割れ）、`fire`（炎エフェクト）、`water`（水・波紋エフェクト）
-4. 🛡️ **セキュア第一**（外部依存ゼロ）:
+5. 🛡️ **セキュア第一**（外部依存ゼロ）:
    - Node.js 標準モジュールのみで動作。サプライチェーン攻撃リスクゼロ、パストラバーサル防止、SVG無害化検査を標準搭載。
-5. ♿ **a11y第二**（アクセシビリティ完全対応）:
+6. ♿ **a11y第二**（アクセシビリティ完全対応）:
    - キーボードショートカット（`Space`, `←`, `→`, `Home`）、スクリーンリーダー通知（`aria-live="polite"`）、`prefers-reduced-motion` 自動再生抑制に対応。
 
 ---
@@ -114,6 +133,50 @@ npx svg2lottie-cli preview --dir . --port 4322
 ```
 
 ブラウザで `http://127.0.0.1:4322` を開きます。
+
+---
+
+## 🖱️ ホバー・クリック連携＆Web埋め込み（インタラクション機能）
+
+Webサイトのアイコンやボタンとして Lottie を組み込む際、`storyboard.json` に `interaction` を追加するだけで、直感的なマイクロインタラクションを実現できます。
+
+```json
+{
+  "name": "beach-island-square",
+  "width": 600,
+  "height": 600,
+  "fps": 60,
+  "durationFrames": 180,
+  "interaction": {
+    "hover": "reverse",
+    "click": "url",
+    "url": "https://example.com/beach-trip",
+    "target": "_blank"
+  },
+  "layers": [ ... ]
+}
+```
+
+### 貼り付けるだけの1行HTMLコード例（検収スタジオからワンクリック取得）
+
+```html
+<!-- Webサイトにそのまま貼り付けて動作（外部ビルド不要・XSS防止対応） -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+<div id="lottie-beach" style="width: 300px; height: 300px; cursor: pointer;"></div>
+<script>
+  const anim = lottie.loadAnimation({
+    container: document.getElementById('lottie-beach'),
+    renderer: 'svg',
+    loop: false,
+    autoplay: false,
+    path: './dist/beach-island-square.json'
+  });
+  const el = document.getElementById('lottie-beach');
+  el.addEventListener('mouseenter', () => anim.play());
+  el.addEventListener('mouseleave', () => { anim.setDirection(-1); anim.play(); });
+  el.addEventListener('click', () => window.open('https://example.com/beach-trip', '_blank', 'noopener,noreferrer'));
+</script>
+```
 
 ---
 

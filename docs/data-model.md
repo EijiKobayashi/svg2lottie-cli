@@ -100,9 +100,22 @@ erDiagram
 | `loop` | `boolean` | - | `false` | ループ再生フラグ |
 | `color` | `string` | - | `"#264f74"` | デフォルト描画カラー（`#RGB` または `#RRGGBB`） |
 | `shootingScript` | `string` | - | `"shooting-script.md"` | 紐づく文字コンテファイルのパス（任意） |
+| `interaction` | `InteractionConfig` | - | `undefined` | Web埋め込みおよび検収スタジオ用のインタラクション定義（ホバー・クリック・リンク） |
 | `layers` | `LayerConfig[]` | ✅ | - | レイヤー定義の配列 |
 | `markers` | `MarkerConfig[]` | - | `[]` | シーンマーカー配列（`{ cm, tm, dr }`） |
 | `powderEnding` | `PowderConfig` | - | `undefined` | 粉飛散エンディング派生版（`powder-scatter.mjs`）の生成設定 |
+
+### インタラクション設定 (`InteractionConfig`)
+
+Webサイトや検収スタジオ上で、ユーザーのマウス操作・タップに反応するアニメーション動作を定義します。
+
+| フィールド | 型 | 選択値 | 説明 |
+|---|---|---|---|
+| `hover` | `string` | `"play" \| "reverse" \| "loop" \| "pause"` | マウスホバー/フォーカス時の挙動（`play`: 先頭から再生、`reverse`: 離れた時逆再生、`loop`: ホバー中のみループ、`pause`: ホバー中停止） |
+| `click` | `string` | `"toggle" \| "seek" \| "url"` | クリック/タップ時の挙動（`toggle`: 再生/停止切替、`seek`: 指定フレームへジャンプ、`url`: セキュアな画面遷移） |
+| `seekFrame` | `number` | `0 〜 durationFrames` | `click: "seek"` 時にジャンプする目的のフレーム番号 |
+| `url` | `string` | 有効なURL | `click: "url"` 時の遷移先（`https://`, `http://`, 許可された相対パスのみ受付、`javascript:` 等は遮断） |
+| `target` | `string` | `"_blank" \| "_self"` | リンクの開き方（`_blank` 指定時は `rel="noopener noreferrer"` を強制付与） |
 
 ### レイヤー定義 (`LayerConfig`)
 

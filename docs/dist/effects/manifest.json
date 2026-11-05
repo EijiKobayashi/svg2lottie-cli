@@ -1,9 +1,9 @@
 [
   {
     "name": "effect-fire",
-    "title": "炎エフェクト (Fire & Ember)",
+    "title": "炎エフェクト (外炎・内炎二層メラメラうねり)",
     "category": "物理・自然現象",
-    "description": "本体の熱波呼吸スケール・スキュー揺らぎと、立ち昇る火の粉パーティクル",
+    "description": "外炎と高熱内炎コアの二層構造。ベジェ波形モーフィングによる立ち昇る炎の舌のうねり、有機的メラメラ感、ちぎれて舞い上がる火の粉パーティクル",
     "svg": "examples/shapes/flame.svg",
     "width": 240,
     "height": 240,
@@ -17,15 +17,16 @@
         "flameColor": "#ea580c",
         "coreColor": "#fef08a",
         "emberCount": 8,
-        "intensity": 1.2
+        "intensity": 1.3,
+        "innerCore": true
       }
     ]
   },
   {
     "name": "effect-water",
-    "title": "水エフェクト (Water & Ripple)",
+    "title": "水エフェクト (ポチャン落下着水＆波紋拡散)",
     "category": "物理・自然現象",
-    "description": "表面張力によるプルプル弾性振動（X/Y逆位相バウンス）と楕円波紋リング拡散",
+    "description": "空中から重力加速で水滴が落下 ➔ 着水瞬間に弾けて水面に同化 ➔ 着水点から同心円の波紋リングが外側へサーッと3重拡散する明確なストーリー",
     "svg": "examples/shapes/drop.svg",
     "width": 240,
     "height": 240,
@@ -34,20 +35,20 @@
     "effects": [
       {
         "type": "water",
-        "mode": "ripple",
+        "mode": "drop-ripple",
         "start": 0,
         "end": 120,
         "rings": 3,
-        "amplitude": 16,
+        "fallDistance": 80,
         "color": "#38bdf8"
       }
     ]
   },
   {
     "name": "effect-liquid-glass",
-    "title": "リキッドグラス (Apple風 Liquid Glass)",
+    "title": "リキッドグラス (Apple風立体ガラス＆斜め光沢シマー)",
     "category": "光学・質感",
-    "description": "実オブジェクト輪郭に沿って走るスペキュラ光沢シマーとフロスト半透明感",
+    "description": "半透明すりガラスプレート＋立体エッジリムハイライト＋表面を左上から右下へ斜め45度にツヤ〜ンと横切る美しいグロス屈折光沢",
     "svg": "examples/shapes/cube.svg",
     "width": 240,
     "height": 240,
@@ -57,9 +58,8 @@
       {
         "type": "liquid-glass",
         "variant": "liquid",
-        "blur": 14,
-        "tintOpacity": 28,
-        "specularWidth": 2.5,
+        "blur": 16,
+        "tintOpacity": 25,
         "start": 10,
         "end": 110
       }
@@ -67,9 +67,9 @@
   },
   {
     "name": "effect-glass-crack",
-    "title": "ガラスひび割れ (Glass Crack & Jitter)",
+    "title": "ガラスひび割れ＆粉砕 (クラック ➔ 粉々砕け散り Shatter)",
     "category": "物理・破壊",
-    "description": "衝撃点からの幾何クラックライン伝播と、割れた瞬間のリアルな衝撃振動ジッター",
+    "description": "衝撃点から鋭角幾何クラックが走る ➔ 瞬時に多角形破片シャードへ分裂し、四方八方へ回転しながら激しく吹き飛んで落下消滅！",
     "svg": "examples/shapes/star.svg",
     "width": 240,
     "height": 240,
@@ -79,18 +79,20 @@
       {
         "type": "glass-crack",
         "start": 15,
-        "end": 45,
+        "end": 65,
         "rays": 8,
-        "radius": 46,
-        "shake": true
+        "radius": 48,
+        "shake": true,
+        "shatter": true,
+        "shardCount": 8
       }
     ]
   },
   {
     "name": "effect-neon-glow",
-    "title": "ネオン＆グロー (Neon Tube & Glow)",
+    "title": "ネオン管＆グロー (中空ガラス管＆リアル点火フリッカー)",
     "category": "光学・演出",
-    "description": "バチバチッと点滅して点灯するネオン管フリッカーと多重ブルーム発光",
+    "description": "純白のコア芯ストロークと鮮やかネオン管ストロークの中空構造。バチバチッと瞬いて点灯するネオン管フリッカーから安定フル点灯",
     "svg": "examples/shapes/heart.svg",
     "width": 240,
     "height": 240,
@@ -101,18 +103,19 @@
         "type": "echo-glow-neon",
         "mode": "neon",
         "flicker": true,
-        "blur": 16,
+        "tube": true,
+        "blur": 18,
         "color": "#f43f5e",
-        "start": 0,
-        "end": 40
+        "start": 6,
+        "end": 32
       }
     ]
   },
   {
     "name": "effect-pop-bounce",
-    "title": "ポップイン (Elastic Spring Bounce)",
-    "category": "トランジション・出現",
-    "description": "4段階スプリング弾性物理（0% ➔ 120% ➔ 92% ➔ 100%）による弾むポップ出現",
+    "title": "ポップイン (カートゥーン調 Squash & Stretch)",
+    "category": "アニメーション演出",
+    "description": "タメ（力を溜めて横にペチャッと潰れる Anticipation） ➔ 飛び出し（ビヨーンと縦長に伸びる Stretch） ➔ ドスンと着地して弾むバウンス",
     "svg": "examples/shapes/circle.svg",
     "width": 240,
     "height": 240,
@@ -121,11 +124,10 @@
     "effects": [
       {
         "type": "pop-in",
+        "cartoon": true,
         "start": 10,
-        "end": 58,
-        "fromScale": 0,
-        "overshootScale": 120,
-        "undershootScale": 92
+        "end": 54,
+        "jumpHeight": 18
       }
     ]
   }
