@@ -1,11 +1,11 @@
 # データモデル設計書 (`docs/data-model.md`)
 
-> **TL;DR（4つのデータ構造）**
+> **TL;DR** （4つのデータ構造）
 > 本ツールはRDBを持たず、以下の **4つのシンプルなデータモデル** をパイプラインで処理します。
-> 1. **文字コンテ (`ShootingScript` / `shooting-script.md`)**: 人間とAIが共有するシーン別台本・修正履歴・回帰防止ルール
-> 2. **ストーリーボード (`StoryboardConfig` / `storyboard.json`)**: レイヤー・フレーム・モジュール化エフェクトの宣言的設定
-> 3. **ベジェ形状 (`LottieShape`)**: SVG Path `d` 属性から変換された頂点・接線データ（`{ c, v, i, o }`）
-> 4. **Lottie出力 (`LottieAnimation` / `dist/*.json`)**: Bodymovin v5.12.2 互換のアニメーションJSON
+> 1. **文字コンテ** （`ShootingScript` / `shooting-script.md`）: 人間とAIが共有するシーン別台本・修正履歴・回帰防止ルール
+> 2. **ストーリーボード** （`StoryboardConfig` / `storyboard.json`）: レイヤー・フレーム・モジュール化エフェクトの宣言的設定
+> 3. **ベジェ形状** （`LottieShape`）: SVG Path `d` 属性から変換された頂点・接線データ（`{ c, v, i, o }`）
+> 4. **Lottie出力** （`LottieAnimation` / `dist/*.json`）: Bodymovin v5.12.2 互換のアニメーションJSON
 
 ```mermaid
 flowchart LR
@@ -66,9 +66,10 @@ erDiagram
   StoryboardConfig ||--o{ LayerConfig : "layers (1個以上)"
   StoryboardConfig ||--o{ MarkerConfig : "markers (任意)"
   StoryboardConfig ||--o| PowderConfig : "powderEnding (任意)"
-  LayerConfig ||--o| MoveEffect : "move (move-slide.mjs)"
-  LayerConfig ||--o| FadeEffect : "fadeIn / fadeOut (bleed-fade.mjs)"
-  LayerConfig ||--o| TrimStrokeEffect : "trimStroke (trim-stroke.mjs)"
+  LayerConfig ||--o{ EffectConfig : "effects (17種のモジュラーエフェクト配列)"
+  LayerConfig ||--o| MoveEffect : "move (ショートハンド)"
+  LayerConfig ||--o| FadeEffect : "fadeIn / fadeOut (ショートハンド)"
+  LayerConfig ||--o| TrimStrokeEffect : "trimStroke (ショートハンド)"
 ```
 
 ### ルートオブジェクト (`StoryboardConfig`)
@@ -100,73 +101,49 @@ erDiagram
 | `inFrame` | `number` | - | レイヤー出現フレーム `ip`（デフォルト: `0`） |
 | `outFrame` | `number` | - | レイヤー消滅フレーム `op`（デフォルト: `durationFrames`） |
 | `initialOpacity` | `number` | - | `fadeIn` 前の待機時不透明度 `0〜100`（デフォルト: `fadeIn` がある場合は `0`、なければ `100`） |
-| `move` | `MoveEffect` | - | `src/effects/move-slide.mjs` による移動展開設定 |
-| `fadeIn` | `FadeEffect` | - | `src/effects/bleed-fade.mjs` による滲んだフェードイン＋センター拡大設定 |
-| `fadeOut` | `FadeEffect` | - | `src/effects/bleed-fade.mjs` による滲んだフェードアウト＋センター縮小設定 |
-| `trimStroke` | `TrimStrokeEffect` | 条件付 | `src/effects/trim-stroke.mjs` による頂点・線幅・Trim Paths 設定 |
+| `effects` | `EffectConfig[]` | - | **統一モジュラーエフェクト配列** （下記17種の `{ "type": "...", ... }` を順番に合成適用） |
+| `move` | `MoveEffect` | - | ショートハンド: `slide-push-pull.mjs` による移動展開設定 |
+| `fadeIn` / `fadeOut` | `FadeEffect` | - | ショートハンド: `bleed-fade.mjs` によるフェードイン／アウト設定 |
+| `trimStroke` | `TrimStrokeEffect` | 条件付 | ショートハンド: `trim-stroke.mjs` による頂点・線幅・Trim Paths 設定 |
 
-### エフェクトモジュール別設定スキーマ
+### 17種のモジュラーエフェクト設定スキーマ (`EffectConfig`)
 
-#### ① `bleed-fade` (`fadeIn` / `fadeOut`)
+`LayerConfig.effects` 配列に `{ "type": "<effectType>", ...options }` を追加するだけで、任意の数のエフェクトを宣言的に重ね掛けできます。
+
+| `type` 識別子 | 対応モジュール (`src/effects/`) | 主な設定プロパティ (`options`) |
+|---|---|---|
+| `"cross-dissolve"` | `cross-dissolve.mjs` | `direction: "in" \| "out"`, `start`, `end`, `curve?: "easeInOut" \| "linear"` |
+| `"bleed-fade"` | `bleed-fade.mjs` | `fadeIn?: { start, end, blur?: 24, scaleFrom?: 0 }`, `fadeOut?: { start, end, blur?: 24, scaleTo?: 0 }` |
+| `"wipe"` | `wipe.mjs` | `direction: "left" \| "right" \| "up" \| "down" \| "iris"`, `start`, `end`, `feather?: 0` |
+| `"slide-push-pull"` | `slide-push-pull.mjs` | `mode?: "slide" \| "push" \| "pull"`, `dx`, `dy`, `start`, `end`, `overshoot?: 0` |
+| `"pop-in"` | `pop-in.mjs` | `start`, `end`, `overshootScale?: 115`, `fromScale?: 0` |
+| `"trim-stroke"` | `trim-stroke.mjs` | `vertices`, `closed?: true`, `strokeWidth?: 4`, `start`, `end` |
+| `"zoom-slide-spin"` | `zoom-slide-spin.mjs` | `start`, `end`, `zoomFrom?: 100`, `zoomTo?: 100`, `dx?: 0`, `dy?: 0`, `rotations?: 1` |
+| `"transform"` | `transform.mjs` | `position?: [x, y]`, `scale?: [sx, sy]`, `rotation?: deg`, `skew?: deg`, `skewAxis?: deg`, `opacity?: 0..100` |
+| `"speed-control"` | `speed-control.mjs` | `rate: number` (`2.0`=倍速, `0.5`=スロー), `freezeFrame?: number` |
+| `"color-grade"` | `color-grade.mjs` | `tintColor?: string`, `hueShift?: deg`, `saturation?: number`, `brightness?: number`, `contrast?: number` |
+| `"mask"` | `mask.mjs` | `mode: "a" \| "s" \| "i"`, `inverted?: false`, `feather?: 0`, `expansion?: 0`, `vertices?: [x,y][]` |
+| `"ultra-key"` | `ultra-key.mjs` | `keyColor?: "#00ff00"`, `tolerance?: 0.25` (対象色に近いパス・塗りを自動透過/除外) |
+| `"echo-glow-neon"` | `echo-glow-neon.mjs` | `mode: "echo" \| "glow" \| "neon"`, `color?: string`, `blur?: 18`, `echoCount?: 3`, `echoDelayFrames?: 3` |
+| `"liquid-glass"` | `liquid-glass.mjs` | `variant?: "frosted" \| "plate" \| "liquid"`, `blur?: 20`, `tintOpacity?: 22`, `specularWidth?: 1.5`, `refraction?: 12` |
+| `"glass-crack"` | `glass-crack.mjs` | `start`, `end`, `impactPoint?: [cx, cy]`, `rays?: 8`, `rings?: 3`, `shatter?: true` |
+| `"fire"` | `fire.mjs` | `start`, `end`, `intensity?: 1.0`, `coreColor?: "#fff3b0"`, `flameColor?: "#ff5400"`, `emberCount?: 24` |
+| `"water"` | `water.mjs` | `mode?: "ripple" \| "wave" \| "splash"`, `start`, `end`, `rings?: 3`, `amplitude?: 12`, `color?: "#38bdf8"` |
+| `"powder-scatter"` | `powder-scatter.mjs` | ルート `powderEnding` またはレイヤー単位で頂点サンプリング粒子飛散を生成 |
+
+#### 代表的な設定例（JSON）
+
 ```json
 {
-  "fadeIn": {
-    "start": 40,
-    "end": 90,
-    "blur": 24,
-    "scaleFrom": 0
-  },
-  "fadeOut": {
-    "start": 140,
-    "end": 176,
-    "blur": 24,
-    "scaleTo": 0
-  }
-}
-```
-- `blur`: ガウシアンブラー最大値（デフォルト `24` px）。
-- `scaleFrom` / `scaleTo`: センター（アンカーポイント `[cx, cy]`）から全方位への拡縮率（`0` 指定で `0% ↔ 100%`、`100` 指定で拡縮なし）。
-
-#### ② `move-slide` (`move`)
-```json
-{
-  "move": {
-    "dx": 170.36,
-    "dy": 0,
-    "start": 40,
-    "end": 110
-  }
-}
-```
-- `0f 〜 start` まで `[cx + dx, cy + dy]` で待機し、`start 〜 end` で定位置 `[cx, cy]` へ Cubic Bezier (`0.22, 1, 0.36, 1`) で移動します。
-
-#### ③ `trim-stroke` (`trimStroke`)
-```json
-{
-  "trimStroke": {
-    "vertices": [[470, 20], [50, 20], [50, 120], [470, 120]],
-    "closed": true,
-    "strokeWidth": 4,
-    "start": 452,
-    "end": 504
-  }
-}
-```
-- `vertices` の並び順により描画開始点と回転方向（右上から左回り等）を自在に制御します。
-
-#### ④ `powder-scatter` (`powderEnding`)
-```json
-{
-  "powderEnding": {
-    "enabled": true,
-    "targetLayerIds": ["co-op", "frame-stroke"],
-    "appearFrame": 628,
-    "fadeStartFrame": 630,
-    "fadeEndFrame": 690,
-    "totalFrames": 720,
-    "particleCount": 3456,
-    "loop": true
-  }
+  "id": "glass-card",
+  "svg": "svg/card.svg",
+  "clipMask": true,
+  "fadeIn": { "start": 0, "end": 40, "blur": 24, "scaleFrom": 0 },
+  "effects": [
+    { "type": "pop-in", "start": 0, "end": 36, "overshootScale": 108 },
+    { "type": "liquid-glass", "variant": "liquid", "blur": 20, "tintOpacity": 25, "specularWidth": 2 },
+    { "type": "echo-glow-neon", "mode": "glow", "color": "#38bdf8", "blur": 16 }
+  ]
 }
 ```
 
@@ -190,5 +167,5 @@ erDiagram
 
 ## 4. 中間モデル (`LottieShape`) & 出力モデル (`LottieAnimation`)
 
-- **`LottieShape`**: `{ c: boolean, v: [number, number][], i: [number, number][], o: [number, number][] }`
-- **`LottieAnimation`**: `{ v: "5.12.2", fr, ip: 0, op, w, h, nm, ddd: 0, loop, assets: [], layers, markers }`
+| **統括** | `LottieShape` | `{ c: boolean, v: [number, number][], i: [number, number][], o: [number, number][] }` |
+| **出力** | `LottieAnimation` | `{ v: "5.12.2", fr, ip: 0, op, w, h, nm, ddd: 0, loop, assets: [], layers, markers }` |

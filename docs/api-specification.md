@@ -1,11 +1,11 @@
 # API・CLI仕様書 (`docs/api-specification.md`)
 
-> **TL;DR（インターフェース一覧）**
+> **TL;DR** （インターフェース一覧）
 > 本プロジェクトは以下の **4つのインターフェース** を提供します。
-> 1. **マルチランナー対応 CLI (`src/cli.mjs`)**: `npm` / `npx` / `pnpm` / `yarn` から `init` / `build` / `preview` を実行
-> 2. **コア＆文字コンテ API (`src/*.mjs`)**: SVG変換・文字コンテ解析・修正指示フォーマット生成
-> 3. **キラーエフェクト・モジュール API (`src/effects/*.mjs`)**: 滲んだフェード・移動・一筆書き・粉飛散の独立モジュール群
-> 4. **検収プレビュー＆AI修正指示スタジオ HTTP API (`src/preview-server.mjs`)**: `127.0.0.1` 限定の検収サーバー
+> 1. **マルチランナー対応 CLI** （`src/cli.mjs`）: `npm` / `npx` / `pnpm` / `yarn` から `init` / `build` / `preview` を実行
+> 2. **コア＆文字コンテ API** （`src/*.mjs`）: SVG変換・文字コンテ解析・修正指示フォーマット生成
+> 3. **キラーエフェクト・モジュール API** （`src/effects/*.mjs`）: 全17種の独立エフェクトモジュール群
+> 4. **検収プレビュー＆AI修正指示スタジオ HTTP API** （`src/preview-server.mjs`）: `127.0.0.1` 限定の検収サーバー
 
 ---
 
@@ -93,15 +93,30 @@ npx svg2lottie-cli preview [--dir <dir>] [--port <port>]
 
 ## 3. キラーエフェクト・モジュール API (`src/effects/*.mjs`)
 
-新しいエフェクトを追加する場合は `src/effects/<effect-name>.mjs` を作成し、`src/effects/index.mjs` の `EFFECT_REGISTRY` に登録します。
+すべてのエフェクトは `src/effects/` 配下に1ファイル1モジュールとして独立実装され、`src/effects/index.mjs` の `EFFECT_REGISTRY` と統一パイプライン関数 `applyLayerEffects(layer, effects, context)` によって合成されます。
+各エフェクトモジュールは、レイヤー自身のプロパティ（`ks`, `ef`, `masksProperties`, `shapes`, `tm`）を更新するか、付随するオーバーレイ／パーティクル／残像レイヤー配列 `extraLayers` を返す純粋関数として設計します。
 
-| モジュール | エクスポート関数 | 責務 |
-|---|---|---|
-| `src/effects/index.mjs` | `EFFECT_REGISTRY`, `listEffects()` | 登録済みキラーエフェクトの一覧取得とディスパッチ |
-| `src/effects/bleed-fade.mjs` | `buildBleedFadeProps(options)` | 不透明度 (`o`)、全方位スケール (`s`)、Gaussian Blur (`ty: 29`)、加算マスク (`masksProperties` `mode: 'a'`) の構築 |
-| `src/effects/move-slide.mjs` | `buildMoveKeyframes(options)` | 初期オフセット `[cx + dx, cy + dy]` から `[cx, cy]` へのイージング移動キーフレーム構築 |
-| `src/effects/trim-stroke.mjs` | `buildTrimStrokeLayer(options)` | 頂点配列・線幅・開始終了フレームから Trim Paths (`ty: 'tm'`) レイヤーを構築 |
-| `src/effects/powder-scatter.mjs` | `applyPowderScatter(baseLottie, options)` | 頂点サンプリングから粒子レイヤー群を生成し、本体・外枠と同期して枠内飛散＆完全透過させる |
+| カテゴリ | モジュール (`src/effects/`) | エクスポート関数 | 責務 |
+|---|---|---|---|
+| **統括** | `index.mjs` | `EFFECT_REGISTRY`, `listEffects()`, `applyLayerEffects(layer, effects, ctx)` | 全17種エフェクトの一覧取得・検証・レイヤーへの順次適用 |
+| ① **遷移・出現** | `cross-dissolve.mjs` | `applyCrossDissolve(layer, options, ctx)` | クロスディゾルブ（オーバーラップ不透明度イージング遷移） |
+| | `bleed-fade.mjs` | `buildBleedFadeProps(options)`, `applyBleedFade(layer, options, ctx)` | 不透明度(`o`)、全方位スケール(`s`)、Gaussian Blur(`ty:29`)、加算マスク(`mode:'a'`) |
+| | `wipe.mjs` | `applyWipe(layer, options, ctx)` | 上下左右・アイリス（円形）の動的マスク頂点アニメーションによるワイプ遷移 |
+| | `slide-push-pull.mjs` | `buildMoveKeyframes(options)`, `applySlidePushPull(layer, options, ctx)` | スライドイン・Push/Pull・オーバーシュート付き位置(`ks.p`)キーフレーム構築 |
+| | `pop-in.mjs` | `applyPopIn(layer, options, ctx)` | スプリング／バウンス弾性スケール（`0% → 115% → 100%`）のポップ出現 |
+| | `trim-stroke.mjs` | `buildTrimStrokeLayer(options)`, `applyTrimStroke(layer, options, ctx)` | 頂点配列・線幅・開始終了フレームから Trim Paths (`ty: 'tm'`) を構築 |
+| ② **モーション・時間** | `zoom-slide-spin.mjs` | `applyZoomSlideSpin(layer, options, ctx)` | ズーム拡縮(`ks.s`)・スライド(`ks.p`)・スピン回転(`ks.r`)の複合アニメーション |
+| | `transform.mjs` | `applyTransform(layer, options, ctx)` | アンカー・位置・スケール・回転・スキュー(`sk`/`sa`)・不透明度の汎用トランスフォーム |
+| | `speed-control.mjs` | `applySpeedControl(layer, options, ctx)` | 倍速・スローモーション（キーフレーム時間スケーリング＆Time Remap `tm`） |
+| ③ **色・マスク・キー** | `color-grade.mjs` | `applyColorGrade(layer, options, ctx)` | 色相・彩度・明度・コントラスト・ティント変換によるカラーグレーディング |
+| | `mask.mjs` | `applyMask(layer, options, ctx)` | 加算(`a`)・減算(`s`)・交差(`i`)・反転(`inv`)・ぼかし(`f`)・拡張(`x`)マスクの付与 |
+| | `ultra-key.mjs` | `applyUltraKey(layer, options, ctx)` | 指定キーカラー（グリーンスクリーン `#00ff00` 等）と許容距離内のシェイプを自動透過・除去 |
+| ④ **光学・Apple的UI** | `echo-glow-neon.mjs` | `applyEchoGlowNeon(layer, options, ctx)` | 時間遅延エコー残像レイヤー生成、ガウシアングロー発光、多層ネオン管ストローク生成 |
+| | `liquid-glass.mjs` | `applyLiquidGlass(layer, options, ctx)` | すりガラス・グラスプレート・Apple的リキッドグラス（フロストブラー＋スペキュラリム＋屈折シマー） |
+| ⑤ **物理・自然・破壊** | `glass-crack.mjs` | `applyGlassCrack(layer, options, ctx)` | 衝撃点からの放射状ひび割れライン（Trim Paths）＋破片シャード飛散レイヤー生成 |
+| | `fire.mjs` | `applyFire(layer, options, ctx)` | コア〜外炎の温度グラデーション揺らぎ＋上昇火の粉（エンバー）パーティクル生成 |
+| | `water.mjs` | `applyWater(layer, options, ctx)` | 水面リップル波紋リング拡大・流体ウェーブ・水滴スプラッシュレイヤー生成 |
+| | `powder-scatter.mjs` | `applyPowderScatter(baseLottie, options)` | 頂点サンプリングから微細粒子レイヤー群を生成し、本体と同期して枠内飛散＆完全透過させる |
 
 ---
 

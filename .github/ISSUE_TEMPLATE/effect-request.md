@@ -7,18 +7,26 @@ labels: ["enhancement", "effect"]
 
 ### 追加したいキラーエフェクトの概要
 
-- **エフェクト識別名 (`effectName`)**: 例 `ripple-wave`
+- **エフェクト識別名** (`effectName`): 例 `ripple-wave`
 - **モジュールファイル名**: `src/effects/<effect-name>.mjs`
 - **対象ユースケース**: （アイコン / イラスト / ロゴ / ローディング 等）
 
-### `storyboard.json` での設定イメージ
+### `storyboard.json` での設定イメージ（`effects` 配列）
 
 ```json
 {
-  "Start": 0,
-  "end": 60
+  "effects": [
+    {
+      "type": "new-effect-name",
+      "start": 0,
+      "end": 60
+    }
+  ]
 }
 ```
+
+> **現在標準搭載されている17種のエフェクトモジュール** （`src/effects/`）:
+> `cross-dissolve`, `bleed-fade`, `wipe`, `slide-push-pull`, `pop-in`, `trim-stroke`, `zoom-slide-spin`, `transform`, `speed-control`, `color-grade`, `mask`, `ultra-key`, `echo-glow-neon`, `liquid-glass`, `glass-crack`, `fire`, `water`, `powder-scatter`
 
 ### 期待するLottie出力仕様（キーフレーム・エフェクト）
 
