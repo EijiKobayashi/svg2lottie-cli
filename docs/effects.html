@@ -252,7 +252,8 @@
     let globalSpeed = 1.0;
 
     async function init() {
-      const res = await fetch('./dist/effects/manifest.json');
+      const cacheBust = 'v=' + Date.now();
+      const res = await fetch(`./dist/effects/manifest.json?${cacheBust}`);
       const items = await res.json();
       const grid = document.getElementById('effects-grid');
 
@@ -278,14 +279,14 @@
         `;
         grid.appendChild(card);
 
-        // Lottieアニメーション読み込み
+        // Lottieアニメーション読み込み（キャッシュを回避し常に最新JSONを取得）
         const stage = card.querySelector(`#stage-${item.name}`);
         const anim = lottie.loadAnimation({
           container: stage,
           renderer: 'svg',
           loop: true,
           autoplay: true,
-          path: `./dist/effects/${item.name}.json`,
+          path: `./dist/effects/${item.name}.json?${cacheBust}`,
         });
         anim.setSpeed(globalSpeed);
         animations.set(item.name, { anim, config: item, isPlaying: true });
