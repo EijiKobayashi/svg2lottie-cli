@@ -202,39 +202,43 @@
     <!-- Sub-group: Modular Killer Effects (src/effects/) -->
     <g transform="translate(22, 290)">
       <rect width="410" height="204" rx="10" fill="#f0fdfa" stroke="#0d9488" stroke-width="1.8" />
-      <rect x="14" y="-10" width="290" height="20" rx="4" fill="#ccfbf1" stroke="#0d9488" stroke-width="0.8" />
-      <text x="22" y="4" class="font-mono group-header" fill="#115e59">src/effects/* — Modular Killer Effects</text>
+      <rect x="14" y="-10" width="352" height="20" rx="4" fill="#ccfbf1" stroke="#0d9488" stroke-width="0.8" />
+      <text x="22" y="4" class="font-mono group-header" fill="#115e59">src/effects/* — 17+ Modular Killer Effects</text>
 
-      <!-- Effect 1: bleed-fade -->
-      <g transform="translate(14, 20)">
-        <rect width="184" height="74" rx="8" class="node-card" />
-        <text x="12" y="23" class="font-mono node-title" fill="#0f766e">bleed-fade.mjs</text>
-        <text x="12" y="42" class="font-sans node-sub">滲んだフェード In/Out</text>
-        <text x="12" y="58" class="font-mono" font-size="10" fill="#64748b">Blur(ty:29) + 全方位Scale + Mask</text>
+      <!-- Category 1: Transition & Appear -->
+      <g transform="translate(14, 18)">
+        <rect width="186" height="82" rx="8" class="node-card" />
+        <text x="10" y="20" class="font-sans node-title" fill="#0f766e">① 遷移・出現 (6種)</text>
+        <text x="10" y="37" class="font-mono" font-size="9.5" fill="#334155">cross-dissolve | bleed-fade</text>
+        <text x="10" y="52" class="font-mono" font-size="9.5" fill="#334155">wipe | slide-push-pull</text>
+        <text x="10" y="67" class="font-mono" font-size="9.5" fill="#334155">pop-in | trim-stroke</text>
       </g>
 
-      <!-- Effect 2: move-slide -->
-      <g transform="translate(212, 20)">
-        <rect width="184" height="74" rx="8" class="node-card" />
-        <text x="12" y="23" class="font-mono node-title" fill="#0f766e">move-slide.mjs</text>
-        <text x="12" y="42" class="font-sans node-sub">イージング移動・展開</text>
-        <text x="12" y="58" class="font-mono" font-size="10" fill="#64748b">[cx+dx, cy+dy] ➔ [cx, cy]</text>
+      <!-- Category 2 & 3: Motion, Time, Color, Mask, Key -->
+      <g transform="translate(210, 18)">
+        <rect width="186" height="82" rx="8" class="node-card" />
+        <text x="10" y="20" class="font-sans node-title" fill="#0f766e">② 動き・時間・色・Key (6種)</text>
+        <text x="10" y="37" class="font-mono" font-size="9.5" fill="#334155">zoom-slide-spin | transform</text>
+        <text x="10" y="52" class="font-mono" font-size="9.5" fill="#334155">speed-control | color-grade</text>
+        <text x="10" y="67" class="font-mono" font-size="9.5" fill="#334155">mask | ultra-key (Chroma)</text>
       </g>
 
-      <!-- Effect 3: trim-stroke -->
-      <g transform="translate(14, 108)">
-        <rect width="184" height="74" rx="8" class="node-card" />
-        <text x="12" y="23" class="font-mono node-title" fill="#0f766e">trim-stroke.mjs</text>
-        <text x="12" y="42" class="font-sans node-sub">一筆書き枠線描画</text>
-        <text x="12" y="58" class="font-mono" font-size="10" fill="#64748b">Trim Paths (0% ➔ 100%)</text>
+      <!-- Category 4: Optical & Apple Liquid Glass -->
+      <g transform="translate(14, 110)">
+        <rect width="186" height="80" rx="8" class="node-card" />
+        <text x="10" y="20" class="font-sans node-title" fill="#0f766e">③ 光学・Apple的UI (2種)</text>
+        <text x="10" y="38" class="font-mono" font-size="9.5" fill="#334155">echo-glow-neon (残像/発光)</text>
+        <text x="10" y="54" class="font-mono" font-size="9.5" fill="#334155">liquid-glass (すりガラス/</text>
+        <text x="10" y="68" class="font-mono" font-size="9.5" fill="#64748b">グラスプレート/Apple屈折)</text>
       </g>
 
-      <!-- Effect 4: powder-scatter -->
-      <g transform="translate(212, 108)">
-        <rect width="184" height="74" rx="8" class="node-card" />
-        <text x="12" y="23" class="font-mono node-title" fill="#0f766e">powder-scatter.mjs</text>
-        <text x="12" y="42" class="font-sans node-sub">粉飛散パーティクル (+拡張可)</text>
-        <text x="12" y="58" class="font-mono" font-size="10" fill="#64748b">頂点サンプル ➔ 枠内飛散・透過</text>
+      <!-- Category 5: Physics, Nature & Destruction -->
+      <g transform="translate(210, 110)">
+        <rect width="186" height="80" rx="8" class="node-card" />
+        <text x="10" y="20" class="font-sans node-title" fill="#0f766e">④ 物理・自然・破壊 (4種)</text>
+        <text x="10" y="38" class="font-mono" font-size="9.5" fill="#334155">glass-crack (ガラスひび割れ)</text>
+        <text x="10" y="54" class="font-mono" font-size="9.5" fill="#334155">fire (炎) | water (水/波紋)</text>
+        <text x="10" y="68" class="font-mono" font-size="9.5" fill="#334155">powder-scatter (粉飛散)</text>
       </g>
     </g>
   </g>

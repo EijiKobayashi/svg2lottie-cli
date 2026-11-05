@@ -1,7 +1,7 @@
 # svg2lottie-cli
 
 > **3秒でわかる概要**
-> **アイコン・UIイラスト・キャラクター・ロゴなど、あらゆるSVG素材**と**文字コンテ（`shooting-script.md`）**から、**キラーエフェクト付きのLottieアニメーション（JSON）**を構築し、**ブラウザ検収スタジオでコマ送り確認＆AIへの修正指示プロンプトをワンクリック生成**できる汎用CLIツールです。
+> **アイコン・UIイラスト・キャラクター・ロゴなど、あらゆるSVG素材** と **文字コンテ** （`shooting-script.md`）から、 **キラーエフェクト付きのLottieアニメーション** （JSON）を構築し、 **ブラウザ検収スタジオでコマ送り確認＆AIへの修正指示プロンプトをワンクリック生成** できる汎用CLIツールです。
 
 ![svg2lottie-cli Architecture & Stack Diagram](./docs/stack-diagram.svg)
 
@@ -21,28 +21,30 @@ flowchart LR
 
 | 用途 | 作れるアニメーション例 |
 |---|---|
-| **UIアイコン・マイクロインタラクション** | 一筆書き（`trim-stroke`）で描かれるチェックマーク、滲みながら切り替わる状態アイコン |
-| **ヒーローイラスト・キャラクター演出** | 複数パーツが時間差でスライド展開（`move-slide`）し、切手型マスク内で滲み出る（`bleed-fade`）演出 |
-| **バッジ・エフェクト・ローディング** | 表示後に粉になって外向きに飛散して消える（`powder-scatter`）ループアニメーション |
-| **ブランド・サービスロゴ** | テキストからイラストへのクロスフェード変身＋外枠一筆書き＋フィニッシュ |
+| **UIアイコン・マイクロインタラクション** | 一筆書き（`trim-stroke`）、弾むポップイン（`pop-in`）、ワイプ切替（`wipe`）、クロスディゾルブ（`cross-dissolve`） |
+| **Apple風UI・すりガラス・ネオン演出** | すりガラス／グラスプレート／リキッドグラス（`liquid-glass`）、残像エコー・発光グロー・ネオン管（`echo-glow-neon`） |
+| **ヒーローイラスト・キャラクター演出** | Push/Pullスライド（`slide-push-pull`）、ズーム・スピン（`zoom-slide-spin`）、滲むフェード（`bleed-fade`）、カラーグレーディング（`color-grade`） |
+| **物理・自然現象・ゲーム演出** | 粉飛散（`powder-scatter`）、ガラスひび割れ（`glass-crack`）、揺らめく炎（`fire`）、水紋リップル・水しぶき（`water`） |
+| **素材クレンジング・速度制御** | グリーンスクリーン等の特定色自動透過（`ultra-key`）、倍速・スローモーション調整（`speed-control`） |
 
 ---
 
 ## 5つのコア機能
 
-1. **📝 文字コンテ駆動（`shooting-script.md`）**:
+1. 📝 **文字コンテ駆動** （`shooting-script.md`）:
    - 専門的なLottieの知識がなくても、日本語の「文字コンテ（台本）」からアニメーションを構築可能。
-2. **🔍 インタラクティブ検収＆AI修正指示スタジオ（`preview`）**:
-   - コマ送り（`1f`単位）・速度変更（`0.25x〜1.5x`）・シーンジャンプ・Day & Night 色反転（CSS `invert`）確認に加え、**「今のフレーム・今のレイヤーに対するAI修正指示」をワンクリックでMarkdownコピー**できます。
-3. **✨ モジュール化されたキラーエフェクト（`src/effects/`）**:
-   - `bleed-fade`（ガウスブラー＋センター全方位拡縮＋はみ出し防止加算マスク）
-   - `move-slide`（Cubic Bezier イージング移動・展開）
-   - `trim-stroke`（右上から左回り等の自由な一筆書き枠線）
-   - `powder-scatter`（頂点サンプリングによる粉飛散パーティクル＆完全透過）
-   - 新しいエフェクトも `src/effects/` に1ファイル追加するだけで拡張可能。
-4. **🛡️ セキュア第一（外部依存ゼロ）**:
+2. 🔍 **インタラクティブ検収＆AI修正指示スタジオ** （`preview`）:
+   - コマ送り（`1f`単位）・速度変更（`0.25x〜1.5x`）・シーンジャンプ・Day & Night 色反転（CSS `invert`）確認に加え、 **今のフレーム・今のレイヤーに対するAI修正指示をワンクリックでMarkdownコピー** できます。
+3. ✨ **1行で追加できるモジュラー・キラーエフェクト群** （`src/effects/` 全17モジュール）:
+   `storyboard.json` のレイヤーに `"effects": [{ "type": "liquid-glass" }, { "type": "pop-in" }]` のように書くだけで即座に合成できます。
+   - **トランジション系**: `bleed-fade`（フェードイン・アウト／滲んだフェード）、`cross-dissolve`（クロスディゾルブ）、`wipe`（上下左右・アイリスワイプ）、`slide-push-pull`（Push/Pullスライドイン）、`pop-in`（弾性ポップイン）、`trim-stroke`（一筆書き）
+   - **モーション・変形・速度系**: `zoom-slide-spin`（ズーム・スライド・スピン）、`transform`（汎用トランスフォーム・スキュー歪み）、`speed-control`（倍速・スローモーション）
+   - **マスク・カラー・キーイング系**: `mask`（加算・減算・反転・ぼかしマスク）、`color-grade`（カラーコレクション・グレーディング）、`ultra-key`（Ultraキー／指定色クロマキー透過）
+   - **光学・Apple風グラス系**: `echo-glow-neon`（エコー／グロー／ネオン）、`liquid-glass`（すりガラス・グラスプレート・Apple風リキッドグラス）
+   - **物理・自然現象系**: `powder-scatter`（粉飛散パーティクル）、`glass-crack`（ガラスひび割れ）、`fire`（炎エフェクト）、`water`（水・波紋エフェクト）
+4. 🛡️ **セキュア第一** （外部依存ゼロ）:
    - Node.js 標準モジュールのみで動作。サプライチェーン攻撃リスクゼロ、パストラバーサル防止、SVG無害化検査を標準搭載。
-5. **♿ a11y第二（アクセシビリティ完全対応）**:
+5. ♿ **a11y第二** （アクセシビリティ完全対応）:
    - キーボードショートカット（`Space`, `←`, `→`, `Home`）、スクリーンリーダー通知（`aria-live="polite"`）、`prefers-reduced-motion` 自動再生抑制に対応。
 
 ---
@@ -66,8 +68,8 @@ yarn dlx svg2lottie-cli init
 ```
 
 実行すると以下の3ファイルが生成されます：
-- `shooting-script.md` — 人間が書き、AIに指示を出すための**文字コンテ**
-- `storyboard.json` — エフェクトとフレーム配分を定義する**設計図**
+- `shooting-script.md` — 人間が書き、AIに指示を出すための **文字コンテ**
+- `storyboard.json` — エフェクトとフレーム配分を定義する **設計図**
 - `svg/scene0.svg` — サンプルのSVG素材
 
 ### 2. Lottie JSON をビルドする
@@ -115,7 +117,7 @@ sequenceDiagram
 - **対象シーン・フレーム**: `scene2` (`148f` / 全560f)
 - **対象レイヤーID**: `o`
 - **現状の課題と修正内容**: イラスト `o` の出現タイミングが早いので、フェードイン開始を `144f` から `154f` へ10フレーム遅らせてください。
-- **回帰防止チェック（壊してはいけない既存仕様）**:
+- **回帰防止チェック** （壊してはいけない既存仕様）:
   - `0f` 待機時の透過 `0%` を維持すること
   - ガウス効果がマスク領域外にはみ出ないこと（`clipMask: true` 維持）
   - 背景透過・単色構成を維持すること
@@ -139,11 +141,25 @@ svg2lottie-cli/
 │   ├── path-parser.mjs           # SVG Path(d) & カラーコード変換エンジン
 │   ├── svg-extractor.mjs         # セキュアSVG解析・ID別Path抽出モジュール
 │   ├── shooting-script.mjs       # 文字コンテ(shooting-script.md)解析・生成・修正指示整形
-│   ├── effects/                  # キラーエフェクト・モジュール群
-│   │   ├── index.mjs             # エフェクトレジストリ
-│   │   ├── bleed-fade.mjs        # 滲んだフェードイン／アウト（ガウス＋全方位拡縮＋加算マスク）
-│   │   ├── move-slide.mjs        # イージング移動・展開
+│   ├── effects/                  # キラーエフェクト・モジュール群（5カテゴリ・全17種）
+│   │   ├── index.mjs             # エフェクトレジストリ（register / applyEffects / listEffects）
+│   │   ├── bleed-fade.mjs        # フェードイン・アウト / 滲んだフェード
+│   │   ├── cross-dissolve.mjs    # ディゾルブ（クロスディゾルブ）
+│   │   ├── wipe.mjs              # ワイプ（上下左右・斜め・アイリス）
+│   │   ├── slide-push-pull.mjs   # スライドイン（Push / Pull）
+│   │   ├── pop-in.mjs            # ポップイン（弾性バウンス出現）
 │   │   ├── trim-stroke.mjs       # 一筆書き枠線（Trim Paths）
+│   │   ├── zoom-slide-spin.mjs   # ズーム・スライド・スピン
+│   │   ├── transform.mjs         # 汎用トランスフォーム（位置・拡縮・回転・スキュー）
+│   │   ├── speed-control.mjs     # スピード調整（倍速・スローモーション）
+│   │   ├── mask.mjs              # マスク（加算・減算・交差・反転・ぼかし）
+│   │   ├── color-grade.mjs       # カラーコレクション・カラーグレーディング
+│   │   ├── ultra-key.mjs         # Ultraキー（グリーンスクリーン / 指定色透過）
+│   │   ├── echo-glow-neon.mjs    # エコー / グロー / ネオン
+│   │   ├── liquid-glass.mjs      # すりガラス・グラスプレート・Apple風リキッドグラス
+│   │   ├── glass-crack.mjs       # ガラスひび割れエフェクト
+│   │   ├── fire.mjs              # 炎エフェクト
+│   │   ├── water.mjs             # 水エフェクト（波紋・液体ウェーブ・水滴）
 │   │   └── powder-scatter.mjs    # 粉飛散パーティクル（Powder）
 │   ├── lottie-builder.mjs        # Storyboard + エフェクト合成エンジン
 │   ├── preview-server.mjs        # 検収＆AI修正指示スタジオ付きローカルサーバー
