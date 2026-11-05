@@ -1,7 +1,24 @@
 # svg2lottie-cli
 
-> **3秒でわかる概要**
-> **アイコン・UIイラスト・キャラクター・ロゴなど、あらゆるSVG素材** と **文字コンテ** （`shooting-script.md`）から、 **キラーエフェクト付きのLottieアニメーション** （JSON）を構築し、 **ブラウザ検収スタジオでコマ送り確認＆AIへの修正指示プロンプトをワンクリック生成** できる汎用CLIツールです。
+> **3秒でわかる概要**  
+> **アイコン・UIイラスト・キャラクター・ロゴなど、あらゆるSVG素材** と **文字コンテ**（`shooting-script.md`）から、 **キラーエフェクト付きのLottieアニメーション**（JSON）を構築し、 **ブラウザ検収スタジオでコマ送り確認＆AIへの修正指示プロンプトをワンクリック生成** できる汎用CLIツールです。
+
+[![GitHub Pages Preview](https://img.shields.io/badge/Online%20Showroom-GitHub%20Pages-brightgreen?style=for-the-badge&logo=github)](https://eijikobayashi.github.io/svg2lottie-cli/)
+
+> 🌐 **ブラウザ上で今すぐ動かせるオンライン検収スタジオ**: [https://eijikobayashi.github.io/svg2lottie-cli/](https://eijikobayashi.github.io/svg2lottie-cli/)  
+> （コマ送り、反転・Day & Night確認、AI修正指示プロンプト生成がGitHub Pages上で試せます）
+
+---
+
+## 🎨 制作実績・ショールーム（3つの実例）
+
+GitHub Pages 上で、アスペクト比の異なる3種類の実用的なアニメーションを直接再生・検収できます。
+
+| 作品名             |                                           プレビュー (GIF)                                           | アスペクト比 / 解像度                   | 演出内容・特徴                                                                                         | Lottie JSON                                                            |
+| :----------------- | :--------------------------------------------------------------------------------------------------: | :-------------------------------------- | :----------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------- |
+| **ビーチロゴ**     | <img src="./docs/assets/beach-island-square.gif" width="200" alt="ビーチロゴ正方形アニメーション" /> | **正方形 (1:1)**<br/>600 × 600px        | 太陽の上昇・脈動、ヤシの木の左右スライド出現、波の重層パララックススライド、文字の弾性ポップイン       | [`beach-island-square.json`](./docs/dist/beach-island-square.json)     |
+| **サマービーチ**   | <img src="./docs/assets/tropical-vibes-wide.gif" width="260" alt="サマービーチ横長アニメーション" /> | **横長ワイド (2.46:1)**<br/>800 × 325px | 雲の左右スライド、波の多層パララックス流動、中央タイポグラフィの弾むポップイン                         | [`tropical-vibes-wide.json`](./docs/dist/tropical-vibes-wide.json)     |
+| **クリスマスの家** | <img src="./docs/assets/merry-christmas-house.gif" width="260" alt="クリスマス16:9アニメーション" /> | **標準ワイド (16:9)**<br/>800 × 450px   | 雪降る夜の家、窓の灯りの灯火、煙突の煙、降雪・星の多重ループ（四角い背景を除外した完全透過・反転対応） | [`merry-christmas-house.json`](./docs/dist/merry-christmas-house.json) |
 
 ![svg2lottie-cli Architecture & Stack Diagram](./docs/stack-diagram.svg)
 
@@ -19,32 +36,32 @@ flowchart LR
 
 ## 対応ユースケース（ロゴだけじゃない！）
 
-| 用途 | 作れるアニメーション例 |
-|---|---|
-| **UIアイコン・マイクロインタラクション** | 一筆書き（`trim-stroke`）、弾むポップイン（`pop-in`）、ワイプ切替（`wipe`）、クロスディゾルブ（`cross-dissolve`） |
-| **Apple風UI・すりガラス・ネオン演出** | すりガラス／グラスプレート／リキッドグラス（`liquid-glass`）、残像エコー・発光グロー・ネオン管（`echo-glow-neon`） |
-| **ヒーローイラスト・キャラクター演出** | Push/Pullスライド（`slide-push-pull`）、ズーム・スピン（`zoom-slide-spin`）、滲むフェード（`bleed-fade`）、カラーグレーディング（`color-grade`） |
-| **物理・自然現象・ゲーム演出** | 粉飛散（`powder-scatter`）、ガラスひび割れ（`glass-crack`）、揺らめく炎（`fire`）、水紋リップル・水しぶき（`water`） |
-| **素材クレンジング・速度制御** | グリーンスクリーン等の特定色自動透過（`ultra-key`）、倍速・スローモーション調整（`speed-control`） |
+| 用途                                     | 作れるアニメーション例                                                                                                                              |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **UIアイコン・マイクロインタラクション** | 一筆書き（`trim-stroke`）、弾むポップイン（`pop-in`）、ワイプ切替（`wipe`）、クロスディゾルブ（`cross-dissolve`）                                   |
+| **Apple風UI・すりガラス・ネオン演出**    | すりガラス／グラスプレート／リキッドグラス（`liquid-glass`）、残像エコー・発光グロー・ネオン管（`echo-glow-neon`）                                  |
+| **ヒーローイラスト・キャラクター演出**   | Push/Pullスライド（`slide-push-pull`）、ズーム・スピン（`zoom-slide-spin`）、滲むフェード（`bleed-fade`）、カラーグレーディング（`color-grade`）    |
+| **物理・自然現象・ゲーム演出**           | 降雪ループ（`snowfall-loop`）、粉飛散（`powder-scatter`）、ガラスひび割れ（`glass-crack`）、揺らめく炎（`fire`）、水紋リップル・水しぶき（`water`） |
+| **素材クレンジング・速度制御**           | グリーンスクリーン等の特定色自動透過（`ultra-key`）、倍速・スローモーション調整（`speed-control`）                                                  |
 
 ---
 
 ## 5つのコア機能
 
-1. 📝 **文字コンテ駆動** （`shooting-script.md`）:
+1. 📝 **文字コンテ駆動**（`shooting-script.md`）:
    - 専門的なLottieの知識がなくても、日本語の「文字コンテ（台本）」からアニメーションを構築可能。
-2. 🔍 **インタラクティブ検収＆AI修正指示スタジオ** （`preview`）:
+2. 🔍 **インタラクティブ検収＆AI修正指示スタジオ**（`preview`）:
    - コマ送り（`1f`単位）・速度変更（`0.25x〜1.5x`）・シーンジャンプ・Day & Night 色反転（CSS `invert`）確認に加え、 **今のフレーム・今のレイヤーに対するAI修正指示をワンクリックでMarkdownコピー** できます。
-3. ✨ **1行で追加できるモジュラー・キラーエフェクト群** （`src/effects/` 全17モジュール）:
+3. ✨ **1行で追加できるモジュラー・キラーエフェクト群**（`src/effects/` 全17モジュール）:
    `storyboard.json` のレイヤーに `"effects": [{ "type": "liquid-glass" }, { "type": "pop-in" }]` のように書くだけで即座に合成できます。
    - **トランジション系**: `bleed-fade`（フェードイン・アウト／滲んだフェード）、`cross-dissolve`（クロスディゾルブ）、`wipe`（上下左右・アイリスワイプ）、`slide-push-pull`（Push/Pullスライドイン）、`pop-in`（弾性ポップイン）、`trim-stroke`（一筆書き）
    - **モーション・変形・速度系**: `zoom-slide-spin`（ズーム・スライド・スピン）、`transform`（汎用トランスフォーム・スキュー歪み）、`speed-control`（倍速・スローモーション）
    - **マスク・カラー・キーイング系**: `mask`（加算・減算・反転・ぼかしマスク）、`color-grade`（カラーコレクション・グレーディング）、`ultra-key`（Ultraキー／指定色クロマキー透過）
    - **光学・Apple風グラス系**: `echo-glow-neon`（エコー／グロー／ネオン）、`liquid-glass`（すりガラス・グラスプレート・Apple風リキッドグラス）
-   - **物理・自然現象系**: `powder-scatter`（粉飛散パーティクル）、`glass-crack`（ガラスひび割れ）、`fire`（炎エフェクト）、`water`（水・波紋エフェクト）
-4. 🛡️ **セキュア第一** （外部依存ゼロ）:
+   - **物理・自然現象系**: `snowfall-loop`（継ぎ目のない降雪ループ）、`powder-scatter`（粉飛散パーティクル）、`glass-crack`（ガラスひび割れ）、`fire`（炎エフェクト）、`water`（水・波紋エフェクト）
+4. 🛡️ **セキュア第一**（外部依存ゼロ）:
    - Node.js 標準モジュールのみで動作。サプライチェーン攻撃リスクゼロ、パストラバーサル防止、SVG無害化検査を標準搭載。
-5. ♿ **a11y第二** （アクセシビリティ完全対応）:
+5. ♿ **a11y第二**（アクセシビリティ完全対応）:
    - キーボードショートカット（`Space`, `←`, `→`, `Home`）、スクリーンリーダー通知（`aria-live="polite"`）、`prefers-reduced-motion` 自動再生抑制に対応。
 
 ---
@@ -68,6 +85,7 @@ yarn dlx svg2lottie-cli init
 ```
 
 実行すると以下の3ファイルが生成されます：
+
 - `shooting-script.md` — 人間が書き、AIに指示を出すための **文字コンテ**
 - `storyboard.json` — エフェクトとフレーム配分を定義する **設計図**
 - `svg/scene0.svg` — サンプルのSVG素材
@@ -77,6 +95,12 @@ yarn dlx svg2lottie-cli init
 ```bash
 npx svg2lottie-cli build --config storyboard.json --out dist
 # または: npm run build / pnpm build / yarn build
+```
+
+クリスマスデモは次のコマンドで生成できます。夜空と家を段階表示し、`MERRY` / `CHRISTMAS` をグロー付きで登場させ、雪をシームレスに循環させます。
+
+```bash
+node ./src/cli.mjs build --config examples/demo/storyboard-merry-christmas.json --out examples/demo/dist
 ```
 
 ### 3. 検収プレビュー＆AI修正指示スタジオを起動する（最重要！）
@@ -113,6 +137,7 @@ sequenceDiagram
 
 ```markdown
 ### 修正指示 (scene2 / 148f付近)
+
 - **対象ファイル**: `logo-animation.json`
 - **対象シーン・フレーム**: `scene2` (`148f` / 全560f)
 - **対象レイヤーID**: `o`
@@ -171,9 +196,19 @@ svg2lottie-cli/
 
 ## コマンド早見表
 
-| やりたいこと | `npx` | `npm` | `pnpm` | `yarn` |
-|---|---|---|---|---|
-| **雛形を作る** | `npx svg2lottie-cli init` | `npm run init` | `pnpm init-project` | `yarn init-project` |
-| **ビルドする** | `npx svg2lottie-cli build` | `npm run build` | `pnpm build` | `yarn build` |
-| **検収プレビュー** | `npx svg2lottie-cli preview` | `npm run preview` | `pnpm preview` | `yarn preview` |
-| **テスト実行** | `node --test` | `npm test` | `pnpm test` | `yarn test` |
+| やりたいこと       | `npx`                        | `npm`             | `pnpm`              | `yarn`              |
+| ------------------ | ---------------------------- | ----------------- | ------------------- | ------------------- |
+| **雛形を作る**     | `npx svg2lottie-cli init`    | `npm run init`    | `pnpm init-project` | `yarn init-project` |
+| **ビルドする**     | `npx svg2lottie-cli build`   | `npm run build`   | `pnpm build`        | `yarn build`        |
+| **検収プレビュー** | `npx svg2lottie-cli preview` | `npm run preview` | `pnpm preview`      | `yarn preview`      |
+| **テスト実行**     | `node --test`                | `npm test`        | `pnpm test`         | `yarn test`         |
+
+---
+
+## 今後の課題（インタラクション対応）
+
+- **ホバーアニメーション**: 対象要素へポインターを重ねたときに、アニメーションを先頭または指定フレームから再生する。ポインターを外したときの停止・逆再生・初期状態復帰も設定可能にする。
+- **ホバー／クリックによるフレーム遷移**: ホバーまたはクリックをトリガーに、通常・フォーカス・選択済みなどの状態を表す別フレーム／マーカーへ遷移する。
+- **ホバー／クリックによるURL遷移**: レイヤーまたは指定領域へ安全なURLを関連付け、ホバーまたはクリック後に同一タブ／別タブで遷移できるようにする。
+- **キーボード・タッチ操作との同等性**: ホバーだけに依存せず、フォーカス、`Enter`、`Space`、タップでも同じ操作ができるようにする。
+- **安全な遷移先検証**: `javascript:` など危険なURLスキームを拒否し、許可するプロトコルと遷移先を明示的に制限する。

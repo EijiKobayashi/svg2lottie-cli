@@ -1,0 +1,119 @@
+{
+  "name": "merry-christmas-house",
+  "width": 800,
+  "height": 450,
+  "fps": 60,
+  "durationFrames": 240,
+  "loop": true,
+  "color": "#f6dda5",
+  "shootingScript": "shooting-script-merry-christmas.md",
+  "markers": [
+    { "cm": "scene0 (Starry Sky & Snow)", "tm": 0, "dr": 60 },
+    { "cm": "scene1 (Christmas House & Warm Glow)", "tm": 50, "dr": 80 },
+    { "cm": "scene2 (Merry Christmas Stagger)", "tm": 90, "dr": 80 },
+    { "cm": "scene3 (Full Winter Landscape)", "tm": 170, "dr": 70 }
+  ],
+  "layers": [
+    {
+      "id": "sky-stars",
+      "svg": "svg/merry-christmas-house-illustration-with-snow-and-starry.svg",
+      "targetId": "sky-stars",
+      "preserveColors": true,
+      "fadeIn": { "start": 0, "end": 42, "blur": 8, "scaleFrom": 80 },
+      "effects": [
+        { "type": "pop-in", "start": 0, "end": 45, "fromScale": 80, "overshootScale": 110, "undershootScale": 98 }
+      ]
+    },
+    {
+      "id": "snow-ground",
+      "svg": "svg/merry-christmas-house-illustration-with-snow-and-starry.svg",
+      "targetId": "snow-ground",
+      "preserveColors": true,
+      "fadeIn": { "start": 10, "end": 55, "blur": 12, "scaleFrom": 94 },
+      "effects": [
+        { "type": "slide-push-pull", "mode": "pull", "dx": 0, "dy": 35, "start": 10, "end": 58, "overshoot": 4 }
+      ]
+    },
+    {
+      "id": "house-body",
+      "svg": "svg/merry-christmas-house-illustration-with-snow-and-starry.svg",
+      "targetId": "house-body",
+      "preserveColors": true,
+      "fadeIn": { "start": 22, "end": 68, "blur": 14, "scaleFrom": 90 },
+      "effects": [
+        { "type": "slide-push-pull", "mode": "push", "dx": 0, "dy": 30, "start": 22, "end": 72, "overshoot": 5 }
+      ]
+    },
+    {
+      "id": "house-roof-snow",
+      "svg": "svg/merry-christmas-house-illustration-with-snow-and-starry.svg",
+      "targetId": "house-roof-snow",
+      "preserveColors": true,
+      "fadeIn": { "start": 32, "end": 76, "blur": 10, "scaleFrom": 94 }
+    },
+    {
+      "id": "chimney-smoke",
+      "svg": "svg/merry-christmas-house-illustration-with-snow-and-starry.svg",
+      "targetId": "chimney-smoke",
+      "preserveColors": true,
+      "fadeIn": { "start": 40, "end": 85, "blur": 8, "scaleFrom": 85 },
+      "effects": [
+        { "type": "slide-push-pull", "mode": "pull", "dx": 8, "dy": -24, "start": 40, "end": 90, "overshoot": 2 }
+      ]
+    },
+    {
+      "id": "window-frames",
+      "svg": "svg/merry-christmas-house-illustration-with-snow-and-starry.svg",
+      "targetId": "window-frames",
+      "preserveColors": true,
+      "fadeIn": { "start": 46, "end": 82, "blur": 6, "scaleFrom": 96 }
+    },
+    {
+      "id": "warm-windows",
+      "svg": "svg/merry-christmas-house-illustration-with-snow-and-starry.svg",
+      "targetId": "warm-windows",
+      "preserveColors": true,
+      "fadeIn": { "start": 52, "end": 88, "blur": 10, "scaleFrom": 85 },
+      "effects": [
+        { "type": "pop-in", "start": 52, "end": 92, "fromScale": 85, "overshootScale": 112, "undershootScale": 98 }
+      ]
+    },
+    {
+      "id": "merry-letters",
+      "svg": "svg/merry-christmas-house-illustration-with-snow-and-starry.svg",
+      "targetId": "merry-letters",
+      "preserveColors": true,
+      "fadeIn": { "start": 70, "end": 100, "blur": 10, "scaleFrom": 90 },
+      "stagger": {
+        "start": 72,
+        "delayFrames": 4,
+        "durationFrames": 28,
+        "fromScale": 0,
+        "overshootScale": 118
+      }
+    },
+    {
+      "id": "christmas-letters",
+      "svg": "svg/merry-christmas-house-illustration-with-snow-and-starry.svg",
+      "targetId": "christmas-letters",
+      "preserveColors": true,
+      "fadeIn": { "start": 92, "end": 120, "blur": 10, "scaleFrom": 90 },
+      "stagger": {
+        "start": 94,
+        "delayFrames": 3.2,
+        "durationFrames": 26,
+        "fromScale": 0,
+        "overshootScale": 116
+      }
+    },
+    {
+      "id": "sky-snowflakes",
+      "svg": "svg/merry-christmas-house-illustration-with-snow-and-starry.svg",
+      "targetId": "sky-snowflakes",
+      "preserveColors": true,
+      "effects": [
+        { "type": "snowfall-loop", "start": 0, "end": 240, "distance": 450, "drift": 18, "copies": 2, "opacity": 90 }
+      ]
+    }
+  ]
+}

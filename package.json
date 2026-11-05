@@ -1,29 +1,43 @@
 {
   "name": "svg2lottie-cli",
   "version": "1.0.0",
-  "description": "あらゆるSVG素材と文字コンテ(shooting-script.md) / Storyboard JSONから汎用的なLottieアニメーションを構築・検収・修正指示するCLIツール",
+  "description": "あらゆるSVG素材と文字コンテ(shooting-script.md)からモジュラーエフェクト付きLottieアニメーションを構築・検収・修正指示できるゼロ依存CLIツール",
   "type": "module",
   "bin": {
     "svg2lottie": "./src/cli.mjs",
     "svg2lottie-cli": "./src/cli.mjs"
   },
   "exports": {
+    ".": "./src/lottie-builder.mjs",
+    "./effects": "./src/effects/index.mjs",
     "./path-parser": "./src/path-parser.mjs",
     "./svg-extractor": "./src/svg-extractor.mjs",
     "./shooting-script": "./src/shooting-script.mjs",
-    "./effects": "./src/effects/index.mjs",
-    "./lottie-builder": "./src/lottie-builder.mjs",
     "./preview-server": "./src/preview-server.mjs"
   },
+  "files": [
+    "src/",
+    "README.md",
+    "AGENTS.md"
+  ],
   "scripts": {
-    "test": "node --test tests/*.test.mjs",
-    "init": "node src/cli.mjs init",
-    "init-project": "node src/cli.mjs init",
-    "build": "node src/cli.mjs build",
-    "preview": "node src/cli.mjs preview"
+    "init": "node ./src/cli.mjs init",
+    "init-project": "node ./src/cli.mjs init",
+    "build": "node ./src/cli.mjs build",
+    "preview": "node ./src/cli.mjs preview",
+    "test": "node --test tests/*.test.mjs"
   },
   "engines": {
     "node": ">=20.0.0"
   },
+  "keywords": [
+    "svg",
+    "lottie",
+    "animation",
+    "bodymovin",
+    "shooting-script",
+    "liquid-glass",
+    "cli"
+  ],
   "license": "MIT"
 }

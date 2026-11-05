@@ -79,8 +79,8 @@ npx svg2lottie-cli preview [--dir <dir>] [--port <port>]
 ### 2.3 `src/shooting-script.mjs`（文字コンテ＆修正指示モジュール）
 | 関数シグネチャ | 説明 |
 |---|---|
-| `parseShootingScript(markdownText: string): ParsedShootingScript` | `shooting-script.md` からタイトル、キーワード、回帰防止ガード、シーン別演出・修正履歴を抽出する。 |
-| `createDefaultShootingScript(name?: string): string` | `init` コマンドで出力する文字コンテ Markdown テンプレートを生成する。 |
+| `parseShootingScript(markdownText: string): ParsedShootingScript` | `shooting-script.md` からタイトル、縦横サイズ（`width`, `height`）、`fps`、`durationFrames`、キーワード、回帰防止ガード、シーン別演出・修正履歴を抽出する。 |
+| `createDefaultShootingScript(name?: string, options?: { width?: number, height?: number, fps?: number, durationFrames?: number, color?: string }): string` | `init` コマンドで出力する文字コンテ Markdown テンプレート（冒頭の縦横サイズ初期入力欄付き）を生成する。 |
 | `formatRevisionInstruction(revision: RevisionInstruction): string` | 検収プレビュー等で入力された修正情報を、AIエージェント／GitHub Issue 貼り付け用の構造化 Markdown に整形する。 |
 
 ### 2.4 `src/lottie-builder.mjs`
@@ -129,3 +129,6 @@ npx svg2lottie-cli preview [--dir <dir>] [--port <port>]
 | `GET` | `/dist/<name>.json` | `200 application/json` | 生成された Lottie JSON ファイル |
 | `GET` | `/../...` (ディレクトリ外) | `403 text/plain` | パストラバーサル攻撃をブロック (`Forbidden`) |
 | `GET` | 存在しないパス | `404 text/plain` | `Not Found` |
+# 降雪ループエフェクト
+
+`effects` に `{ "type": "snowfall-loop" }` を指定すると、対象レイヤーを縦方向にタイル複製して循環させます。`start` / `end` はループ区間、`distance` は落下距離、`drift` は左右の揺れ幅、`copies` はタイル数、`opacity` は雪の不透明度です。ループ用Storyboardでは `end` を `durationFrames` と一致させます。
