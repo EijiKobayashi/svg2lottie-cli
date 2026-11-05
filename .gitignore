@@ -2,5 +2,7 @@
 Thumbs.db
 *.code-workspace
 node_modules/
-dist/
+/dist/
+examples/demo/dist/
+!/docs/dist/
 
