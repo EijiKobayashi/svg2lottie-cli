@@ -203,3 +203,19 @@ Webサイトや検収スタジオ上で、ユーザーのマウス操作・タ�
 
 - **中間シェイプ** （`LottieShape`）: `{ c: boolean, v: [number, number][], i: [number, number][], o: [number, number][] }`
 - **最終アニメーション** （`LottieAnimation`）: `{ v: "5.12.2", fr, ip: 0, op, w, h, nm, ddd: 0, loop, assets: [], layers, markers }`
+
+---
+
+## 5. ローカル検収状態 (`PreviewWorkspaceState`)
+
+ブラウザ内だけに保存する再開用モデルです。
+
+| フィールド | 型 | 説明 |
+|---|---|---|
+| `currentFile` | `string` | 最後に検収していたLottie JSON |
+| `frameByFile` | `Record<string, number>` | ファイル別の最終フレーム |
+| `progressByFile` | `Record<string, "unreviewed" | "reviewing" | "needs-fix" | "approved">` | ファイル別検収状態 |
+| `memoByFile` | `Record<string, string>` | ファイル別の修正メモ下書き |
+| `layerByFile` | `Record<string, string>` | ファイル別の選択レイヤー |
+| `speed` / `zoom` / `background` | `string` | 表示・再生設定 |
+| `savedAt` | `string` | 最終保存日時（ISO 8601） |
