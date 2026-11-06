@@ -8,7 +8,7 @@
   "layers": [
     {
       "id": "main-shape",
-      "svg": "examples/shapes/heart.svg",
+      "svg": "examples/shapes/heart-.svg",
       "effects": [
         {
           "type": "echo-glow-neon",

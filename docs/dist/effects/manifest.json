@@ -45,76 +45,11 @@
     ]
   },
   {
-    "name": "effect-water-drop",
-    "title": "水滴落下エフェクト (小ぶり滴下・表面張力くびれ＆弾け)",
-    "category": "物理・自然現象",
-    "description": "天井や蛇口から表面張力で徐々に小ぶりな水滴が膨らみ ➔ 自重で縦長にくびれてポタッと滴下 ➔ 加速落下し着水スプラッシュと波紋を残して弾ける",
-    "svg": "examples/shapes/drop.svg",
-    "width": 240,
-    "height": 240,
-    "fps": 60,
-    "durationFrames": 120,
-    "effects": [
-      {
-        "type": "water",
-        "mode": "dripping",
-        "start": 5,
-        "end": 90,
-        "fallDistance": 70,
-        "color": "#0284c7"
-      }
-    ]
-  },
-  {
-    "name": "effect-liquid-glass",
-    "title": "リキッドグラス (有機的流動ブロブ＆Apple風立体屈折ガラス)",
-    "category": "光学・質感",
-    "description": "液体の表面張力でぷるぷる流動する有機的Liquid Blob ＋ 純白の立体エッジリムハイライト ＋ 内側屈折コースティクス ＋ 斜め45度グロス光沢シマー",
-    "svg": "examples/shapes/cube.svg",
-    "width": 240,
-    "height": 240,
-    "fps": 60,
-    "durationFrames": 120,
-    "effects": [
-      {
-        "type": "liquid-glass",
-        "variant": "liquid",
-        "blur": 16,
-        "tintOpacity": 38,
-        "start": 10,
-        "end": 110
-      }
-    ]
-  },
-  {
-    "name": "effect-glass-crack",
-    "title": "ガラスひび割れ＆粉砕 (アシンメトリー不規則クラック ➔ 粉砕)",
-    "category": "物理・破壊",
-    "description": "偏心衝撃点から鋭利で不規則・アシンメトリーなクラックが走る ➔ 瞬時に多角形破片シャードへ分裂し、枠内で回転しながら吹き飛んで落下消滅！",
-    "svg": "examples/shapes/star.svg",
-    "width": 240,
-    "height": 240,
-    "fps": 60,
-    "durationFrames": 120,
-    "effects": [
-      {
-        "type": "glass-crack",
-        "start": 15,
-        "end": 65,
-        "rays": 8,
-        "radius": 46,
-        "shake": true,
-        "shatter": true,
-        "shardCount": 8
-      }
-    ]
-  },
-  {
     "name": "effect-neon-glow",
     "title": "ネオン管＆グロー (中空ガラス管＆リアル点火フリッカー)",
     "category": "光学・演出",
     "description": "純白のコア芯ストロークと鮮やかネオン管ストロークの中空構造。バチバチッと瞬いて点灯するネオン管フリッカーから安定フル点灯",
-    "svg": "examples/shapes/heart.svg",
+    "svg": "examples/shapes/heart-.svg",
     "width": 240,
     "height": 240,
     "fps": 60,
@@ -152,5 +87,49 @@
         "baseScale": 52
       }
     ]
+  },
+  {
+    "name": "effect-glass-crack",
+    "title": "ガラスひび割れ＆粉砕 (オブジェクト全体蜘蛛の巣クラック ➔ 48破片大粉砕 Shatter)",
+    "category": "物理・破壊",
+    "description": "星の5大先端・谷・中心全体へ濃紺スレートの高コントラスト蜘蛛の巣クラックがバキッと走る ➔ 星のシルエット位置に倣った48個の破片が四方へ一斉に大粉砕飛散し、黄金星が再生！",
+    "svg": "examples/shapes/star.svg",
+    "width": 240,
+    "height": 240,
+    "fps": 60,
+    "durationFrames": 120,
+    "effects": [
+      {
+        "type": "glass-crack",
+        "start": 16,
+        "end": 72,
+        "rays": 16,
+        "radius": 44,
+        "shake": true,
+        "shatter": true,
+        "shardCount": 48
+      }
+    ]
+  },
+  {
+    "name": "effect-powder-scatter",
+    "title": "粉飛散パーティクル (頂点サンプリング ➔ 240粒子放射飛散＆滲みフェード)",
+    "category": "物理・エモーショナル演出",
+    "description": "オブジェクトの輪郭から240個の微細マルチカラー粉末粒子が煙のようにふわりと四方へ放射飛散し、本体が滲みながら静かに消滅する映画的エンディング（Powder Ending）",
+    "svg": "examples/shapes/cube.svg",
+    "color": "#a855f7",
+    "width": 240,
+    "height": 240,
+    "fps": 60,
+    "durationFrames": 140,
+    "effects": [],
+    "powderEnding": {
+      "enabled": true,
+      "appearFrame": 35,
+      "fadeStartFrame": 40,
+      "fadeEndFrame": 95,
+      "totalFrames": 140,
+      "particleCount": 240
+    }
   }
 ]
