@@ -44,28 +44,33 @@ export function applyWater(layer, options = {}, ctx = {}) {
     const startY = cy - Math.round(fallDistance * 0.72);
     const groundY = cy + Math.round(fallDistance * 0.65);
 
+    // アンカーポイントを中心 [cx, cy, 0] に保証
+    layer.ks.a = { a: 0, k: [cx, cy, 0] };
+
     const t0 = start;
-    const tSwell = t0 + 14;   // 19f: 丸くぷく〜っと膨らむ
-    const tNeck = t0 + 26;    // 31f: 表面張力でくびれて垂れ下がる
-    const tRelease = t0 + 30; // 35f: プツンとちぎれて滴下開始
-    const tImpact = t0 + 44;  // 49f: 地面に着水！
+    const tSwell = t0 + 14;   // 14f: 丸くぷく〜っと膨らむ
+    const tNeck = t0 + 26;    // 26f: 表面張力でくびれて垂れ下がる
+    const tRelease = t0 + 30; // 30f: プツンとちぎれて滴下開始
+    const tImpact = t0 + 44;  // 44f: 地面に着水！
 
     const easeInQuad = { x: [0.55, 0.55, 0.55], y: [0, 0, 0] };
     const easeOutQuad = { x: [0.25, 0.25, 0.25], y: [1, 1, 1] };
     const easeInOut = { x: [0.35, 0.35, 0.35], y: [0.65, 0.65, 0.65] };
 
-    // スケール: 膨らみ ➔ くびれ ➔ 落下時縦長 ➔ 着水時横潰れ
+    // スケール: 最初から天井に溜まっている（0fで可視）
     layer.ks.s = {
       a: 1,
       k: [
-        { t: 0, s: [0, 0, 100] },
-        { t: t0, s: [0, 0, 100], i: easeOutQuad, o: easeOutQuad },
+        { t: 0, s: [70, 70, 100], i: easeInOut, o: easeInOut },
+        { t: t0, s: [70, 70, 100], i: easeOutQuad, o: easeOutQuad },
         { t: tSwell, s: [102, 94, 100], i: easeInOut, o: easeInOut },
         { t: tNeck, s: [62, 148, 100], i: easeInQuad, o: easeInQuad }, // 表面張力でくびれてビヨーンと伸びる
         { t: tRelease, s: [80, 125, 100], i: easeInQuad, o: easeInQuad },
         { t: tImpact - 2, s: [75, 135, 100], i: easeOutQuad, o: easeOutQuad },
         { t: tImpact, s: [155, 30, 100] }, // 着水でペチャッと大潰れ
-        { t: totalFrames, s: [0, 0, 100] },
+        { t: tImpact + 4, s: [0, 0, 100] },
+        { t: totalFrames - 15, s: [0, 0, 100] },
+        { t: totalFrames, s: [70, 70, 100] },
       ],
     };
 
@@ -76,23 +81,24 @@ export function applyWater(layer, options = {}, ctx = {}) {
         { t: 0, s: [cx, startY, 0] },
         { t: t0, s: [cx, startY, 0] },
         { t: tSwell, s: [cx, startY + 4, 0] },
-        { t: tNeck, s: [cx, startY + 14, 0], i: easeInQuad, o: easeInQuad },
+        { t:
+ tNeck, s: [cx, startY + 14, 0], i: easeInQuad, o: easeInQuad },
         { t: tRelease, s: [cx, startY + 22, 0], i: easeInQuad, o: easeInQuad },
         { t: tImpact, s: [cx, groundY, 0] },
-        { t: totalFrames, s: [cx, groundY, 0] },
+        { t: totalFrames - 15, s: [cx, groundY, 0] },
+        { t: totalFrames, s: [cx, startY, 0] },
       ],
     };
 
-    // 不透明度
+    // 不透明度: 最初から天井に水滴が見えている！
     layer.ks.o = {
       a: 1,
       k: [
-        { t: 0, s: [0] },
-        { t: t0, s: [0] },
-        { t: t0 + 2, s: [100] },
+        { t: 0, s: [100] },
         { t: tImpact, s: [100] },
-        { t: tImpact + 2, s: [0] },
-        { t: totalFrames, s: [0] },
+        { t: tImpact + 3, s: [0] },
+        { t: totalFrames - 15, s: [0] },
+        { t: totalFrames, s: [100] },
       ],
     };
 

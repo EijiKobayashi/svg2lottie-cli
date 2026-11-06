@@ -44,17 +44,17 @@ function makeBlurEffect(blurRadius = 16) {
  */
 function buildNeonPulseKeyframes(start = 10, totalFrames = 120) {
   const kfs = [
-    { t: 0, s: [0] },
-    { t: start, s: [0] },
+    { t: 0, s: [35] }, // 0fでもネオン管が見えている
+    { t: start, s: [35] },
     // 1. 最初の放電パルス（バチッ！）
-    { t: start + 2, s: [65] },
-    { t: start + 4, s: [0] },
+    { t: start + 2, s: [75] },
+    { t: start + 4, s: [20] },
     // 2. 激しい放電ストロボ（チッチッ！）
-    { t: start + 7, s: [85] },
-    { t: start + 9, s: [25] },
+    { t: start + 7, s: [90] },
+    { t: start + 9, s: [30] },
     { t: start + 12, s: [95] },
     // 3. 一瞬の静寂タメ
-    { t: start + 14, s: [15] },
+    { t: start + 14, s: [25] },
     // 4. ガツンと100%全開フル点灯！
     { t: start + 17, s: [100] },
   ];

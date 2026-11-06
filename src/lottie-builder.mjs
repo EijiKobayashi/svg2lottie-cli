@@ -146,6 +146,10 @@ function buildShapeLayer(layerCfg, ind, defaultColorHex, durationFrames, canvasD
     pathIndices: layerCfg.pathIndices,
   });
 
+  const svgPrimaryFill = pathMetaList.find((p) => p.fill && p.fill !== 'none')?.fill;
+  const effectiveColorHex = layerCfg.color || svgPrimaryFill || defaultColorHex || '#38bdf8';
+  const effectiveRgba = safeHexToRgba(effectiveColorHex, fallbackRgba);
+
   const allShapes = [];
   const flatShapeItems = [];
   const partGroups = [];
@@ -234,7 +238,7 @@ function buildShapeLayer(layerCfg, ind, defaultColorHex, durationFrames, canvasD
               {
                 ty: 'fl',
                 nm: 'Fill 1',
-                c: { a: 0, k: fallbackRgba },
+                c: { a: 0, k: effectiveRgba },
                 o: { a: 0, k: 100 },
                 r: 1,
               },
@@ -291,6 +295,81 @@ function buildShapeLayer(layerCfg, ind, defaultColorHex, durationFrames, canvasD
 }
 
 /**
+ * Lottieの全キーフレームを走査し、i/oTangentの欠損や多次元補間不整合によるNaNクラッシュを完全にサニタイズする
+ * @param {object} lottie
+ */
+function sanitizeAllKeyframes(lottie) {
+  function sanitizeProp(prop, defaultDim = 1) {
+    if (!prop || typeof prop !== 'object') return;
+    if (prop.a !== 1 || !Array.isArray(prop.k)) return;
+    const len = prop.k.length;
+    for (let i = 0; i < len - 1; i++) {
+      const kf = prop.k[i];
+      if (!kf || typeof kf !== 'object') continue;
+      
+      const sVal = kf.s;
+      const dim = Array.isArray(sVal) ? sVal.length : defaultDim;
+
+      if (!kf.i || !kf.o) {
+        if (dim >= 3) {
+          kf.i = { x: Array(dim).fill(0.35), y: Array(dim).fill(0.65) };
+          kf.o = { x: Array(dim).fill(0.35), y: Array(dim).fill(0.65) };
+        } else if (dim === 2) {
+          kf.i = { x: [0.35, 0.35], y: [0.65, 0.65] };
+          kf.o = { x: [0.35, 0.35], y: [0.65, 0.65] };
+        } else {
+          kf.i = { x: 0.35, y: 0.65 };
+          kf.o = { x: 0.35, y: 0.65 };
+        }
+      } else {
+        // 多次元なのに単一数値または要素数不足の配列で渡されている場合は dim長に拡張
+        if (dim >= 3) {
+          const ix = Array.isArray(kf.i.x) ? (kf.i.x[0] ?? 0.35) : (typeof kf.i.x === 'number' ? kf.i.x : 0.35);
+          const iy = Array.isArray(kf.i.y) ? (kf.i.y[0] ?? 0.65) : (typeof kf.i.y === 'number' ? kf.i.y : 0.65);
+          const ox = Array.isArray(kf.o.x) ? (kf.o.x[0] ?? 0.35) : (typeof kf.o.x === 'number' ? kf.o.x : 0.35);
+          const oy = Array.isArray(kf.o.y) ? (kf.o.y[0] ?? 0.65) : (typeof kf.o.y === 'number' ? kf.o.y : 0.65);
+          if (!Array.isArray(kf.i.x) || kf.i.x.length < dim) {
+            kf.i = { x: Array(dim).fill(ix), y: Array(dim).fill(iy) };
+          }
+          if (!Array.isArray(kf.o.x) || kf.o.x.length < dim) {
+            kf.o = { x: Array(dim).fill(ox), y: Array(dim).fill(oy) };
+          }
+        }
+      }
+    }
+  }
+
+  function sanitizeShapes(items) {
+    if (!Array.isArray(items)) return;
+    for (const item of items) {
+      if (!item || typeof item !== 'object') continue;
+      if (item.it) sanitizeShapes(item.it);
+      if (item.p) sanitizeProp(item.p, 2);
+      if (item.s) sanitizeProp(item.s, 2);
+      if (item.a) sanitizeProp(item.a, 2);
+      if (item.r) sanitizeProp(item.r, 1);
+      if (item.o) sanitizeProp(item.o, 1);
+      if (item.w) sanitizeProp(item.w, 1);
+      if (item.c) sanitizeProp(item.c, 4);
+      if (item.ks) sanitizeProp(item.ks, 1);
+    }
+  }
+
+  for (const layer of lottie.layers || []) {
+    if (layer.ks) {
+      sanitizeProp(layer.ks.p, 3);
+      sanitizeProp(layer.ks.a, 3);
+      sanitizeProp(layer.ks.s, 3);
+      sanitizeProp(layer.ks.r, 1);
+      sanitizeProp(layer.ks.o, 1);
+    }
+    if (layer.shapes) {
+      sanitizeShapes(layer.shapes);
+    }
+  }
+}
+
+/**
  * StoryboardConfig と SVGリゾルバから LottieAnimation JSON オブジェクトを構築する
  * @param {object} config
  * @param {(svgPath: string) => string} svgResolver
@@ -326,7 +405,7 @@ export function buildLottieFromStoryboard(config, svgResolver) {
     l.ind = i + 1;
   });
 
-  return {
+  const lottie = {
     v: '5.12.2',
     fr: fps,
     ip: 0,
@@ -340,6 +419,9 @@ export function buildLottieFromStoryboard(config, svgResolver) {
     layers: outputLayers,
     markers: Array.isArray(config.markers) ? config.markers : [],
   };
+
+  sanitizeAllKeyframes(lottie);
+  return lottie;
 }
 
 /**

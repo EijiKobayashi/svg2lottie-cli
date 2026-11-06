@@ -235,7 +235,12 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
           p: {
             a: 1,
             k: [
-              { t: shatterStart, s: [ix, iy, 0], i: { x: [0.12], y: [1] }, o: { x: [0.25], y: [1] } },
+              {
+                t: shatterStart,
+                s: [ix, iy, 0],
+                i: { x: [0.12, 0.12, 0.12], y: [1, 1, 1] },
+                o: { x: [0.25, 0.25, 0.25], y: [1, 1, 1] },
+              },
               { t: shatterEnd, s: [targetX, targetY, 0] },
               { t: totalFrames, s: [targetX, targetY, 0] },
             ],

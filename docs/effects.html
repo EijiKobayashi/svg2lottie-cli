@@ -140,14 +140,13 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background-image:
-        linear-gradient(45deg, var(--checker-a) 25%, transparent 25%),
-        linear-gradient(-45deg, var(--checker-a) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, var(--checker-a) 75%),
-        linear-gradient(-45deg, transparent 75%, var(--checker-a) 75%);
-      background-size: 16px 16px;
-      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+      background: radial-gradient(circle at center, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%),
+        repeating-conic-gradient(rgba(255, 255, 255, 0.03) 0% 25%, transparent 0% 50%) 50% / 20px 20px;
       border-bottom: 1px solid var(--border);
+    }
+    body.light .card-stage-container {
+      background: radial-gradient(circle at center, #ffffff 0%, #f1f5f9 100%),
+        repeating-conic-gradient(rgba(0, 0, 0, 0.03) 0% 25%, transparent 0% 50%) 50% / 20px 20px;
     }
     .card-stage {
       width: 200px;
@@ -249,15 +248,31 @@
 
   <script>
     const animations = new Map();
+    window.animations = animations;
     let globalSpeed = 1.0;
 
     async function init() {
       const cacheBust = 'v=' + Date.now();
-      const res = await fetch(`./dist/effects/manifest.json?${cacheBust}`);
-      const items = await res.json();
-      const grid = document.getElementById('effects-grid');
+      let items = [];
+      try {
+        const res = await fetch(`./dist/effects/manifest.json?${cacheBust}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}: manifest.json not found`);
+        items = await res.json();
+      } catch (err) {
+        console.error('Failed to load manifest.json:', err);
+        document.getElementById('effects-grid').innerHTML = `
+          <div style="grid-column: 1 / -1; padding: 24px; background: #ef444422; border: 1px solid #ef4444; border-radius: 8px; color: #f87171;">
+            ⚠️ エフェクト一覧の読み込みに失敗しました: ${err.message}
+          </div>
+        `;
+        return;
+      }
 
-      for (const item of items) {
+      const grid = document.getElementById('effects-grid');
+      grid.innerHTML = '';
+
+      // 並列でカード生成と読み込みを実行
+      await Promise.all(items.map(async (item) => {
         const card = document.createElement('article');
         card.className = 'effect-card';
         card.innerHTML = `
@@ -279,22 +294,46 @@
         `;
         grid.appendChild(card);
 
-        // Lottieアニメーション読み込み（キャッシュを回避し常に最新JSONを取得）
         const stage = card.querySelector(`#stage-${item.name}`);
-        const anim = lottie.loadAnimation({
-          container: stage,
-          renderer: 'svg',
-          loop: true,
-          autoplay: true,
-          path: `./dist/effects/${item.name}.json?${cacheBust}`,
-        });
-        anim.setSpeed(globalSpeed);
-        animations.set(item.name, { anim, config: item, isPlaying: true });
+
+        // JSON を直接 fetch して animationData で読み込む（通信エラー・相対パス問題を根絶）
+        try {
+          const jsonRes = await fetch(`./dist/effects/${item.name}.json?${cacheBust}`);
+          if (!jsonRes.ok) throw new Error(`HTTP ${jsonRes.status}: ${item.name}.json not found`);
+          const animData = await jsonRes.json();
+
+          const anim = lottie.loadAnimation({
+            container: stage,
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            animationData: animData,
+          });
+          anim.setSpeed(globalSpeed);
+          animations.set(item.name, { anim, config: item, isPlaying: true });
+
+          // URL パラメータで指定されたフレームがあればそのフレームで静止
+          const urlParams = new URLSearchParams(window.location.search);
+          const targetFrame = urlParams.get('frame');
+          if (targetFrame !== null) {
+            anim.addEventListener('DOMLoaded', () => {
+              anim.goToAndStop(parseFloat(targetFrame), true);
+            });
+          }
+        } catch (loadErr) {
+          console.error(`Failed to load ${item.name}:`, loadErr);
+          stage.innerHTML = `
+            <div style="padding: 16px; font-size: 0.8rem; color: #f87171; text-align: center;">
+              ❌ 描画エラー:<br/>${loadErr.message}
+            </div>
+          `;
+        }
 
         // 個別ボタンのイベント
         const playBtn = card.querySelector('.play-btn');
         playBtn.addEventListener('click', () => {
           const entry = animations.get(item.name);
+          if (!entry) return;
           if (entry.isPlaying) {
             entry.anim.pause();
             entry.isPlaying = false;
@@ -311,6 +350,7 @@
         const stepBtn = card.querySelector('.step-btn');
         stepBtn.addEventListener('click', () => {
           const entry = animations.get(item.name);
+          if (!entry) return;
           entry.anim.goToAndPlay(0, true);
           entry.isPlaying = true;
           playBtn.textContent = '⏸ 停止';
@@ -324,7 +364,7 @@
           await navigator.clipboard.writeText(snippet);
           showToast(`「${item.title}」の effects 設定をコピーしました！`);
         });
-      }
+      }));
     }
 
     // 速度切替
