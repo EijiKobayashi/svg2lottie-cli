@@ -83,7 +83,16 @@ npx svg2lottie-cli preview [--dir <dir>] [--port <port>]
 | `createDefaultShootingScript(name?: string, options?: { width?: number, height?: number, fps?: number, durationFrames?: number, color?: string }): string` | `init` コマンドで出力する文字コンテ Markdown テンプレート（冒頭の縦横サイズ初期入力欄付き）を生成する。 |
 | `formatRevisionInstruction(revision: RevisionInstruction): string` | 検収プレビュー等で入力された修正情報を、AIエージェント／GitHub Issue 貼り付け用の構造化 Markdown に整形する。 |
 
-### 2.4 `src/lottie-builder.mjs`
+### 2.4 `src/revision-workflow.mjs`（変更契約・承認ゲート）
+
+| API | 説明 |
+|---|---|
+| `createRevisionContract(input, now?): RevisionContract` | 検収位置と入力内容から変更Inboxカードを作る。 |
+| `validateRevisionContract(contract): { valid, errors }` | 必須項目、不明点、優先度を検証し、承認可能か返す。 |
+| `transitionRevisionContract(contract, nextStatus, now?): RevisionContract` | 許可された状態遷移だけを適用する。`approved` 遷移時は検証失敗を例外にする。 |
+| `formatApprovedRevisionContracts(contracts): string` | 承認済みカードだけを、変更対象・禁止範囲・完了条件・推測禁止を含むAgent向けMarkdownに一括整形する。承認済みがなければ例外にする。 |
+
+### 2.5 `src/lottie-builder.mjs`
 | 関数シグネチャ | 説明 |
 |---|---|
 | `buildLottieFromStoryboard(config: StoryboardConfig, svgResolver: (svgPath: string) => string): LottieAnimation` | `StoryboardConfig` と `src/effects/` モジュール群を組み合わせて Lottie JSON を生成する。 |

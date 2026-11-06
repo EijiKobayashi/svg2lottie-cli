@@ -219,3 +219,25 @@ Webサイトや検収スタジオ上で、ユーザーのマウス操作・タ�
 | `layerByFile` | `Record<string, string>` | ファイル別の選択レイヤー |
 | `speed` / `zoom` / `background` | `string` | 表示・再生設定 |
 | `savedAt` | `string` | 最終保存日時（ISO 8601） |
+| `revisionItems` | `RevisionContract[]` | 上書きされない複数の変更Inboxカード |
+
+## 6. 変更契約 (`RevisionContract`)
+
+曖昧な気づきと実装可能な指示を分離し、承認前の指示がAgentへ渡らないようにするローカルデータモデルです。
+
+| フィールド | 型 | 必須 | 説明 |
+|---|---|---|---|
+| `id` | `string` | ✅ | ブラウザ内で一意なカードID |
+| `fileName` / `scene` / `frame` / `totalFrames` | `string` / `string` / `number` / `number` | ✅ | 指摘を記録した検収位置 |
+| `layerId` | `string` | ✅ | 変更対象レイヤー。全体変更は明示的に `全体` |
+| `observation` | `string` | ✅ | 現状・気になったこと |
+| `expectedResult` | `string` | ✅ | 期待する見た目・振る舞い |
+| `allowedChanges` | `string` | ✅ | 変更してよい範囲・プロパティ |
+| `forbiddenChanges` | `string` | ✅ | 変更してはいけない範囲 |
+| `acceptanceCriteria` | `string` | ✅ | 再検収可能な完了条件 |
+| `openQuestions` | `string` | - | 不明点。値がある間は承認不可 |
+| `priority` | `"required" | "optional" | "hold"` | ✅ | 必須・任意・保留 |
+| `status` | `"draft" | "review" | "approved" | "recheck" | "done"` | ✅ | 変更契約の進行状態 |
+| `createdAt` / `updatedAt` | `string` | ✅ | 作成・更新日時 |
+
+`approved` への遷移には、必須の契約項目がすべて入力済みで `openQuestions` が空であることを要求します。Agent向けMarkdownの生成対象も `approved` のカードだけです。
