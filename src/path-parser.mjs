@@ -14,6 +14,26 @@ export function round4(n) {
 }
 
 /**
+ * 3次元プロパティ（位置p・スケールs）用の安全なイージングハンドルを生成する
+ */
+export function makeEase3D(ix = 0.35, iy = 1, ox = 0.35, oy = 1) {
+  return {
+    i: { x: [ix, ix, ix], y: [iy, iy, iy] },
+    o: { x: [ox, ox, ox], y: [oy, oy, oy] },
+  };
+}
+
+/**
+ * 1次元プロパティ（不透明度o・回転r）用の安全なイージングハンドルを生成する
+ */
+export function makeEase1D(ix = 0.35, iy = 1, ox = 0.35, oy = 1) {
+  return {
+    i: { x: [ix], y: [iy] },
+    o: { x: [ox], y: [oy] },
+  };
+}
+
+/**
  * #RGB または #RRGGBB を Lottie 正規化 RGBA 配列 [r, g, b, 1] に変換する
  * @param {string} hex
  * @returns {[number, number, number, 1]}

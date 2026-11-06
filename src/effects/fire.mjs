@@ -35,7 +35,7 @@ function buildFlamePathKeyframes(baseShape, totalFrames = 120, opts = {}) {
   const numKeyframes = 13; // 12区間で滑らかなベジェ補間
   const step = totalFrames / (numKeyframes - 1);
   const kfs = [];
-  const easeInOut = { x: [0.35, 0.35, 0.35], y: [0.65, 0.65, 0.65] };
+  const easeInOutShape = { x: 0.35, y: 0.65 };
 
   for (let k = 0; k < numKeyframes; k++) {
     const t = Math.round(k * step);
@@ -84,7 +84,7 @@ function buildFlamePathKeyframes(baseShape, totalFrames = 120, opts = {}) {
     kfs.push({
       t,
       s: [morphedShape],
-      ...(k < numKeyframes - 1 ? { i: easeInOut, o: easeInOut } : {}),
+      ...(k < numKeyframes - 1 ? { i: easeInOutShape, o: easeInOutShape } : {}),
     });
   }
 
@@ -249,8 +249,18 @@ export function applyFire(layer, options = {}, ctx = {}) {
         p: {
           a: 1,
           k: [
-            { t: tearStart, s: [cx, cy - 36, 0], i: { x: [0.42], y: [0] }, o: { x: [0.58], y: [1] } },
-            { t: tearPinch, s: [cx + (c % 2 === 0 ? 5 : -5), cy - 56, 0], i: { x: [0.22], y: [1] }, o: { x: [0.36], y: [1] } },
+            {
+              t: tearStart,
+              s: [cx, cy - 36, 0],
+              i: { x: [0.42, 0.42, 0.42], y: [0, 0, 0] },
+              o: { x: [0.58, 0.58, 0.58], y: [1, 1, 1] },
+            },
+            {
+              t: tearPinch,
+              s: [cx + (c % 2 === 0 ? 5 : -5), cy - 56, 0],
+              i: { x: [0.22, 0.22, 0.22], y: [1, 1, 1] },
+              o: { x: [0.36, 0.36, 0.36], y: [1, 1, 1] },
+            },
             { t: tearEnd, s: [cx + (c % 2 === 0 ? 10 : -10), cy - 92, 0] },
             { t: totalFrames, s: [cx, cy - 92, 0] },
           ],
@@ -350,14 +360,14 @@ export function applyFire(layer, options = {}, ctx = {}) {
             {
               t: eStart,
               s: [round4(cx + startOffset), round4(cy - 10), 0],
-              i: { x: [0.2], y: [1] },
-              o: { x: [0.4], y: [1] },
+              i: { x: [0.2, 0.2, 0.2], y: [1, 1, 1] },
+              o: { x: [0.4, 0.4, 0.4], y: [1, 1, 1] },
             },
             {
               t: Math.round(eStart + eDur * 0.5),
               s: [round4(cx + startOffset + sway * 0.6), round4(cy - 10 - riseDist * 0.55), 0],
-              i: { x: [0.2], y: [1] },
-              o: { x: [0.4], y: [1] },
+              i: { x: [0.2, 0.2, 0.2], y: [1, 1, 1] },
+              o: { x: [0.4, 0.4, 0.4], y: [1, 1, 1] },
             },
             {
               t: eEnd,

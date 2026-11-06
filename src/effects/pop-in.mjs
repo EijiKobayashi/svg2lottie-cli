@@ -11,6 +11,7 @@ const BOUNCE_OUT = { x: [0.22, 0.22, 0.22], y: [1.2, 1.2, 1.2] };
 
 /**
  * ピクサー／カートゥーン調の生命感あふれる Squash & Stretch ポップインを適用する
+ * （初期フレームから100%可視化し、非表示・画面外飛び出しを防止）
  * @param {object} layer
  * @param {{
  *   cartoon?: boolean,
@@ -25,7 +26,7 @@ const BOUNCE_OUT = { x: [0.22, 0.22, 0.22], y: [1.2, 1.2, 1.2] };
 export function applyPopIn(layer, options = {}, ctx = {}) {
   const {
     cartoon = true,
-    start = 10,
+    start = 0,
     end = 56,
     jumpHeight = 28,
   } = options;
@@ -35,18 +36,21 @@ export function applyPopIn(layer, options = {}, ctx = {}) {
   const px = Array.isArray(origPos) ? origPos[0] : 120;
   const py = Array.isArray(origPos) ? origPos[1] : 120;
 
+  // アンカーポイントを中心 [px, py, 0] に保証
+  layer.ks.a = { a: 0, k: [px, py, 0] };
+
   if (cartoon) {
     const t0 = start;
-    const tAnticipate = t0 + 8; // 18f: ぐにゃっと力を溜める
-    const tJump = t0 + 16;      // 26f: 上空へビヨーンと伸びて跳び上がる
-    const tPeak = t0 + 22;      // 32f: 頂点でふわり
-    const tLand = t0 + 29;      // 39f: 着地してボヨンと潰れる
-    const tRebound = t0 + 36;   // 46f: 反動で上にビヨン
-    const tJiggle1 = t0 + 43;   // 53f: ぷるぷる振動1
-    const tJiggle2 = t0 + 50;   // 60f: ぷるぷる振動2
-    const tSettle = Math.min(totalFrames - 1, t0 + 58); // 68f: 収束
+    const tAnticipate = t0 + 8; // 8f: ギュッと横に潰れて力を溜める
+    const tJump = t0 + 16;      // 16f: 上空へビヨーンと伸びて跳び上がる
+    const tPeak = t0 + 22;      // 22f: 頂点でふわり
+    const tLand = t0 + 29;      // 29f: 着地してボヨンと潰れる
+    const tRebound = t0 + 36;   // 36f: 反動で上にビヨン
+    const tJiggle1 = t0 + 43;   // 43f: ぷるぷる振動1
+    const tJiggle2 = t0 + 50;   // 50f: ぷるぷる振動2
+    const tSettle = Math.min(totalFrames - 1, t0 + 58); // 58f: 収束
 
-    // 68f〜120f: 呼吸アイドリング（Idle Breathing）
+    // 58f〜120f: 呼吸アイドリング（Idle Breathing）
     const tBreath1 = tSettle + 14;
     const tBreath2 = tSettle + 28;
     const tBreath3 = tSettle + 42;
@@ -54,8 +58,9 @@ export function applyPopIn(layer, options = {}, ctx = {}) {
     layer.ks.s = {
       a: 1,
       k: [
-        { t: 0, s: [0, 0, 100], i: EASE_IN_OUT, o: EASE_IN_OUT },
-        { t: t0, s: [0, 0, 100], i: EASE_IN_OUT, o: EASE_IN_OUT },
+        // 0fでも最初から姿が見えている（100%）
+        { t: 0, s: [100, 100, 100], i: EASE_IN_OUT, o: EASE_IN_OUT },
+        { t: t0, s: [100, 100, 100], i: EASE_IN_OUT, o: EASE_IN_OUT },
         // 1. タメ (Anticipation): 地面にギュ〜ッと横に潰れて力を溜める
         { t: tAnticipate, s: [142, 60, 100], i: EASE_OUT, o: EASE_IN },
         // 2. 飛び出し (Stretch): ロケットのように縦長にビヨ〜ンと伸びる
@@ -82,28 +87,20 @@ export function applyPopIn(layer, options = {}, ctx = {}) {
     layer.ks.p = {
       a: 1,
       k: [
-        { t: 0, s: [px, py, 0] },
-        { t: t0, s: [px, py, 0] },
+        { t: 0, s: [px, py, 0], i: EASE_IN_OUT, o: EASE_IN_OUT },
+        { t: t0, s: [px, py, 0], i: EASE_IN_OUT, o: EASE_IN_OUT },
         { t: tAnticipate, s: [px, py + 8, 0], i: EASE_OUT, o: EASE_IN },
         { t: tJump, s: [px, py - jumpHeight, 0], i: EASE_IN_OUT, o: EASE_OUT },
         { t: tPeak, s: [px, py - jumpHeight - 4, 0], i: EASE_IN, o: EASE_OUT },
         { t: tLand, s: [px, py + 3, 0], i: BOUNCE_OUT, o: EASE_IN_OUT },
         { t: tRebound, s: [px, py - 4, 0], i: EASE_IN_OUT, o: EASE_IN_OUT },
-        { t: tSettle, s: [px, py, 0] },
+        { t: tSettle, s: [px, py, 0], i: EASE_IN_OUT, o: EASE_IN_OUT },
         { t: totalFrames, s: [px, py, 0] },
       ],
     };
 
-    // 不透明度: 出現前は0%、タメ開始で100%になり、最後まで100%を維持
-    layer.ks.o = {
-      a: 1,
-      k: [
-        { t: 0, s: [0] },
-        { t: t0, s: [0] },
-        { t: t0 + 2, s: [100] },
-        { t: totalFrames, s: [100] },
-      ],
-    };
+    // 不透明度: 最初から最後まで常時100%可視化！
+    layer.ks.o = { a: 0, k: 100 };
 
     return { layer, extraLayers: [] };
   }

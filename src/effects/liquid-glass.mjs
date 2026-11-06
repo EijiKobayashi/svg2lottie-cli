@@ -149,7 +149,12 @@ export function applyLiquidGlass(layer, options = {}, ctx = {}) {
         a: 1,
         k: [
           { t: 0, s: [cx - w * 0.55, cy - h * 0.55, 0] },
-          { t: sweepStart, s: [cx - w * 0.55, cy - h * 0.55, 0], i: { x: 0.16, y: 1 }, o: { x: 0.32, y: 1 } },
+          {
+            t: sweepStart,
+            s: [cx - w * 0.55, cy - h * 0.55, 0],
+            i: { x: [0.16, 0.16, 0.16], y: [1, 1, 1] },
+            o: { x: [0.32, 0.32, 0.32], y: [1, 1, 1] },
+          },
           { t: sweepEnd, s: [cx + w * 0.55, cy + h * 0.55, 0] },
           { t: totalFrames, s: [cx + w * 0.55, cy + h * 0.55, 0] },
         ],
