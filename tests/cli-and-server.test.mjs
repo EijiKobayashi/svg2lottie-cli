@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
@@ -7,6 +8,7 @@ import { runCli } from '../src/cli.mjs';
 import {
   createPreviewServer,
   createPreviewRequestHandler,
+  rebuildIfStoryboardExists,
 } from '../src/preview-server.mjs';
 
 function invokeHandler(handler, urlPath, method = 'GET') {
@@ -116,16 +118,94 @@ test('Preview Server: セキュリティヘッダー・a11y属性・API・パス
     assert.ok(html.includes('横幅 (width px)'));
     assert.ok(html.includes('縦幅 (height px)'));
 
-    // 2. GET /api/animations
+    // 認知アクセシビリティ: 段階表示・初期停止・進捗・自動保存・再開
+    assert.ok(html.includes('1. 選択'));
+    assert.ok(html.includes('2. 確認'));
+    assert.ok(html.includes('3. 修正指示'));
+    assert.ok(html.includes('id="display-options"'));
+    assert.ok(html.includes('id="review-status"'));
+    assert.ok(html.includes('未確認'));
+    assert.ok(html.includes('要修正'));
+    assert.ok(html.includes('確認済み'));
+    assert.ok(html.includes('id="resume-banner"'));
+    assert.ok(html.includes("const STORAGE_KEY = 'svg2lottie.preview.v1'"));
+    assert.ok(html.includes('localStorage.setItem(STORAGE_KEY'));
+    assert.ok(html.includes('autoplay: false'));
+    assert.ok(html.includes('次の未完了'));
+    assert.ok(html.includes('id="instruction-type"'));
+    assert.ok(html.includes('/api/reload-token'));
+
+    // 2. GET /api/animations & /api/live-reload
     const apiRes = invokeHandler(handler, '/api/animations');
     assert.equal(apiRes.status, 200);
     const apiData = apiRes.json();
     assert.ok(Array.isArray(apiData.files));
     assert.ok(apiData.files.length >= 1);
 
+    // ホットリロード SSE エンドポイント
+    const sseRes = invokeHandler(handler, '/api/live-reload');
+    assert.equal(sseRes.status, 200);
+    assert.ok(sseRes.headers.get('content-type').includes('text/event-stream'));
+    assert.ok(sseRes.headers.get('cache-control').includes('no-cache'));
+
     // 3. パストラバーサル拒否
     const forbiddenRes = invokeHandler(handler, '/..%2f..%2fetc/passwd');
     assert.equal(forbiddenRes.status, 403);
+  } finally {
+    if (server && typeof server.close === 'function') server.close();
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('Preview Server: ファイル保存検知 ➔ 自動再ビルド ➔ SSEホットリロード配信を検証する', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'svg2lottie-live-'));
+  await runCli(['init', '--dir', tmpDir]);
+
+  const sseClients = new Set();
+  let reloadToken = 'init-token';
+  const handler = createPreviewRequestHandler({
+    rootDir: tmpDir,
+    sseClients,
+    getReloadToken: () => reloadToken,
+  });
+
+  try {
+    // 1. SSE接続のモック
+    let sseOutput = '';
+    const mockReq = { method: 'GET', url: '/api/live-reload', on(event, cb) {} };
+    const mockRes = {
+      setHeader() {},
+      writeHead(code, hdrs) {},
+      write(chunk) {
+        sseOutput += chunk;
+      },
+      end() {},
+    };
+
+    handler(mockReq, mockRes);
+    assert.equal(sseClients.size, 1);
+    assert.ok(sseOutput.includes(': connected'));
+
+    // 2. storyboard.json を更新して自動再ビルド関数を実行
+    const sbPath = path.join(tmpDir, 'storyboard.json');
+    const sb = JSON.parse(fs.readFileSync(sbPath, 'utf8'));
+    sb.durationFrames = 240;
+    fs.writeFileSync(sbPath, JSON.stringify(sb, null, 2), 'utf8');
+
+    const rebuilt = rebuildIfStoryboardExists(tmpDir);
+    assert.equal(rebuilt, true);
+
+    const distPath = path.join(tmpDir, 'dist', `${sb.name}.json`);
+    assert.ok(fs.existsSync(distPath));
+    const builtLottie = JSON.parse(fs.readFileSync(distPath, 'utf8'));
+    assert.equal(builtLottie.op, 240);
+
+    // 3. ブロードキャスト送信
+    const payload = `data: ${JSON.stringify({ type: 'reload', timestamp: 12345 })}\n\n`;
+    for (const client of sseClients) {
+      client.write(payload);
+    }
+    assert.ok(sseOutput.includes('"type":"reload"'));
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }

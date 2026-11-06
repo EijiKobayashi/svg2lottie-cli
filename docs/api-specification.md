@@ -127,9 +127,16 @@ npx svg2lottie-cli preview [--dir <dir>] [--port <port>]
 | `GET` | `/` または `/preview/index.html` | `200 text/html; charset=utf-8` | 検収プレビュー＆AI修正指示スタジオ HTML |
 | `GET` | `/effects` または `/effects.html` | `200 text/html; charset=utf-8` | エフェクト専用カタログ・ショールーム HTML（全キラーエフェクト一覧） |
 | `GET` | `/api/animations` | `200 application/json` | `dist/` 内の `.json` ファイル一覧 `{ "files": ["..."] }` |
+| `GET` | `/api/live-reload` | `200 text/event-stream` | ホットリロード用 Server-Sent Events (SSE)。ファイル保存時に再読み込みイベントを配信 |
 | `GET` | `/dist/<name>.json` | `200 application/json` | 生成された Lottie JSON ファイル |
 | `GET` | `/../...` (ディレクトリ外) | `403 text/plain` | パストラバーサル攻撃をブロック (`Forbidden`) |
 | `GET` | 存在しないパス | `404 text/plain` | `Not Found` |
+
+### 4.1 検収スタジオのローカル状態
+
+検収スタジオは `svg2lottie.preview.v1` をキーとして、現在のファイル、フレーム、速度、背景、倍率、選択レイヤー、修正メモ、ファイル別進捗を `localStorage` に保存します。起動時に保存状態があれば「前回の続き」案内を表示して復元します。初回再生は常に停止し、保存データはネットワーク送信しません。
+
+`preview` コマンドは設定・文字コンテ・SVGの保存を監視し、デバウンス後に自動ビルドします。ブラウザは `/api/live-reload` (SSE) を通じて通知を受け取り、現在の検収フレーム位置を保持したまま最新のアニメーションJSONをスマート・ホットリロードします。
 ---
 
 ## 5. インタラクション＆HTML埋め込み API (`src/interaction.mjs`)

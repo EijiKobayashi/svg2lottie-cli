@@ -6,6 +6,11 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import {
+  buildLottieFromStoryboard,
+  appendPowderEnding,
+} from './lottie-builder.mjs';
+import { parseShootingScript } from './shooting-script.mjs';
 
 const SECURITY_HEADERS = Object.freeze({
   'Content-Security-Policy':
@@ -77,6 +82,48 @@ function buildPreviewStudioHtml() {
       margin-bottom: 14px;
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
     }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-width: 1280px;
+      margin: 0 auto 14px;
+    }
+    .step {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      font-weight: 700;
+      text-align: center;
+    }
+    .step.current { border-color: var(--accent); color: var(--accent); }
+    .resume-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      max-width: 1280px;
+      margin: 0 auto 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      background: var(--card);
+    }
+    .resume-banner.visible { display: flex; }
+    details.options {
+      max-width: 1280px;
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      background: var(--card);
+    }
+    details.options summary { cursor: pointer; font-weight: 700; }
+    details.options .toolbar { margin-top: 10px; }
+    .progress-bar { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin: 10px 0; }
+    .progress-bar > div { min-width: 180px; }
+    .progress-summary { color: var(--sub); font-size: 0.88rem; font-weight: 700; }
     .toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -231,9 +278,26 @@ function buildPreviewStudioHtml() {
       font-weight: 600;
       color: var(--accent);
     }
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
   </style>
 </head>
 <body>
+  <nav class="steps" aria-label="検収手順">
+    <div class="step current">1. 選択</div>
+    <div class="step">2. 確認</div>
+    <div class="step">3. 修正指示</div>
+  </nav>
+  <aside id="resume-banner" class="resume-banner" aria-live="polite">
+    <span id="resume-text">前回の続きがあります。</span>
+    <button type="button" id="btn-resume" class="primary">前回の続きから再開</button>
+  </aside>
   <header>
     <div>
       <h1>🔍 svg2lottie-cli — 高精度検収プレビュー＆AI修正指示スタジオ</h1>
@@ -242,6 +306,10 @@ function buildPreviewStudioHtml() {
     <div class="toolbar">
       <label for="file-select" style="margin:0">対象JSON:</label>
       <select id="file-select" aria-label="検収対象のLottie JSONファイル選択"></select>
+    </div>
+    <details id="display-options" class="options">
+      <summary>表示オプション</summary>
+      <div class="toolbar">
       <label for="zoom-select" style="margin:0">表示倍率:</label>
       <select id="zoom-select" aria-label="ステージ表示倍率切替">
         <option value="fit" selected>Auto-Fit (自動最適)</option>
@@ -260,11 +328,26 @@ function buildPreviewStudioHtml() {
       <button type="button" id="btn-guide" aria-label="センター十字・三分割ガイド枠切替">📐 ガイド枠</button>
       <button type="button" id="btn-dark" aria-label="ダークモード切替">🌙 Dark</button>
       <button type="button" id="btn-invert" aria-label="Day and Night 色反転切替">🔄 Day&amp;Night反転</button>
-    </div>
+      </div>
+    </details>
   </header>
 
   <main>
     <section class="panel" aria-label="アニメーション再生・コマ送り検収パネル">
+      <h2 style="font-size:1.02rem;margin-top:0">2. 確認</h2>
+      <div class="progress-bar">
+        <div>
+          <label for="review-status">このアニメーションの状態</label>
+          <select id="review-status">
+            <option value="unreviewed">未確認</option>
+            <option value="reviewing">確認中</option>
+            <option value="needs-fix">要修正</option>
+            <option value="approved">確認済み</option>
+          </select>
+        </div>
+        <button type="button" id="btn-next-incomplete">次の未完了へ</button>
+        <output id="progress-summary" class="progress-summary">進捗: 0 / 0 確認済み</output>
+      </div>
       <div class="meta-bar">
         <div>
           <span id="aspect-badge" class="badge">比率判定中</span>
@@ -300,7 +383,7 @@ function buildPreviewStudioHtml() {
     </section>
 
     <section class="panel" aria-label="AI修正指示および文字コンテ初期サイズ生成パネル">
-      <h2 style="font-size:1.02rem;margin-top:0">📝 AI修正指示 / GitHub Issue ジェネレーター（文字コンテ縦横サイズ欄対応）</h2>
+      <h2 style="font-size:1.02rem;margin-top:0">3. 修正指示</h2>
       <div class="grid-2">
         <div>
           <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -315,6 +398,13 @@ function buildPreviewStudioHtml() {
           </div>
           <label for="layer-select">修正対象レイヤーID（上のレイヤーチップをクリックでも選択可）</label>
           <select id="layer-select" style="width:100%;margin-bottom:8px" aria-label="修正対象レイヤーID"></select>
+          <label for="instruction-type">指示の種類</label>
+          <select id="instruction-type" style="width:100%;margin-bottom:8px">
+            <option value="要求">要求（必須条件）</option>
+            <option value="要望">要望（できれば実現）</option>
+            <option value="不具合">不具合（期待と異なる）</option>
+            <option value="修正" selected>修正（具体的な変更）</option>
+          </select>
           <label for="rev-memo">現象と修正指示メモ</label>
           <textarea id="rev-memo" placeholder="例: 太陽(sun-core)のポップインを10フレーム早める / 波(turquoise-waves)のワイプをゆっくりにする"></textarea>
           <button type="button" id="btn-copy" class="primary" style="margin-top:8px" aria-label="AI修正指示Markdownをクリップボードにコピー">📋 構造化修正指示をコピー</button>
@@ -347,12 +437,56 @@ function buildPreviewStudioHtml() {
     const revMemo = document.getElementById('rev-memo');
     const revOutput = document.getElementById('rev-output');
     const markerBar = document.getElementById('marker-buttons');
+    const reviewStatus = document.getElementById('review-status');
+    const progressSummary = document.getElementById('progress-summary');
+    const instructionType = document.getElementById('instruction-type');
+    const resumeBanner = document.getElementById('resume-banner');
+    const resumeText = document.getElementById('resume-text');
+
+    const STORAGE_KEY = 'svg2lottie.preview.v1';
+    const defaultState = () => ({
+      currentFile: '', frameByFile: {}, progressByFile: {}, memoByFile: {},
+      layerByFile: {}, instructionTypeByFile: {}, speed: '1', zoom: 'fit',
+      background: 'checker', savedAt: ''
+    });
+    let workspaceState = defaultState();
+    let availableFiles = [];
+    let resumeRequested = false;
+    let reloadToken = null;
 
     let anim = null;
     let animData = null;
     let currentFile = 'animation.json';
     let isPlaying = false;
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function readState() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        if (parsed && typeof parsed === 'object') workspaceState = { ...defaultState(), ...parsed };
+      } catch { workspaceState = defaultState(); }
+    }
+
+    function saveState() {
+      workspaceState.currentFile = currentFile;
+      workspaceState.speed = document.getElementById('speed-select').value;
+      workspaceState.zoom = zoomSelect.value;
+      workspaceState.background = bgSelect.value;
+      workspaceState.savedAt = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(workspaceState));
+    }
+
+    function updateProgress() {
+      const approved = availableFiles.filter((file) => workspaceState.progressByFile[file] === 'approved').length;
+      const needsFix = availableFiles.filter((file) => workspaceState.progressByFile[file] === 'needs-fix').length;
+      progressSummary.textContent = '進捗: ' + approved + ' / ' + availableFiles.length + ' 確認済み' + (needsFix ? '・要修正 ' + needsFix : '');
+    }
+
+    function markReviewing() {
+      if (!workspaceState.progressByFile[currentFile] || workspaceState.progressByFile[currentFile] === 'unreviewed') {
+        workspaceState.progressByFile[currentFile] = 'reviewing';
+        reviewStatus.value = 'reviewing';
+      }
+    }
 
     function announce(msg) {
       statusEl.textContent = msg;
@@ -405,6 +539,7 @@ function buildPreviewStudioHtml() {
         '- **キャンバスサイズ**: 横幅 \`' + w + 'px\` × 縦幅 \`' + h + 'px\` (' + classifyAspect(Number(w), Number(h)) + ')',
         '- **対象シーン・フレーム**: \`' + sc + '\` (\`' + f + 'f\` / 全\`' + total + 'f\`)',
         '- **対象レイヤーID**: \`' + lid + '\`',
+        '- **指示種別**: \`' + instructionType.value + '\`',
         '- **現象と修正内容**:',
         '  ' + memo,
         '',
@@ -415,9 +550,10 @@ function buildPreviewStudioHtml() {
       ].join('\\n');
     }
 
-    async function loadFile(file) {
+    async function loadFile(file, options = {}) {
+      const prevFrame = anim ? Math.round(anim.currentFrame) : 0;
       currentFile = file;
-      const res = await fetch('/dist/' + encodeURIComponent(file));
+      const res = await fetch('/dist/' + encodeURIComponent(file) + '?t=' + Date.now());
       animData = await res.json();
       if (anim) anim.destroy();
       canvasW.value = animData.w || 520;
@@ -471,10 +607,16 @@ function buildPreviewStudioHtml() {
           container: stageEl,
           renderer: 'svg',
           loop: Boolean(animData.loop),
-          autoplay: !reducedMotion,
+          autoplay: false,
           animationData: animData
         });
-        isPlaying = !reducedMotion;
+        isPlaying = false;
+        const targetFrame = options.keepFrame
+          ? prevFrame
+          : resumeRequested
+            ? Number(workspaceState.frameByFile[file] || 0)
+            : 0;
+        anim.goToAndStop(Math.min(targetFrame, Math.max(0, (animData.op || 1) - 1)), true);
         anim.addEventListener('enterFrame', () => {
           const f = Math.round(anim.currentFrame);
           const fps = animData.fr || 60;
@@ -483,17 +625,28 @@ function buildPreviewStudioHtml() {
           metaInfo.textContent =
             'サイズ: ' + animData.w + ' × ' + animData.h + ' px | フレーム: ' + f + ' / ' + animData.op + 'f (' + sec + 's)';
           sceneInfo.textContent = '現在シーン: ' + currentSceneName(f);
+          workspaceState.frameByFile[currentFile] = f;
+          saveState();
           updateRevisionMarkdown();
         });
       }
+      revMemo.value = workspaceState.memoByFile[file] || '';
+      instructionType.value = workspaceState.instructionTypeByFile[file] || '修正';
+      const savedLayer = workspaceState.layerByFile[file];
+      if (savedLayer && [...layerSelect.options].some((option) => option.value === savedLayer)) layerSelect.value = savedLayer;
+      reviewStatus.value = workspaceState.progressByFile[file] || 'unreviewed';
+      markReviewing();
+      updateProgress();
+      saveState();
       updateRevisionMarkdown();
       announce(file + ' を読み込みました');
     }
 
-    zoomSelect.addEventListener('change', applyStageSizing);
+    zoomSelect.addEventListener('change', () => { applyStageSizing(); saveState(); });
     window.addEventListener('resize', applyStageSizing);
     bgSelect.addEventListener('change', () => {
       viewportEl.className = 'stage-viewport ' + (bgSelect.value === 'checker' ? '' : bgSelect.value);
+      saveState();
     });
     document.getElementById('btn-guide').addEventListener('click', (e) => {
       guideOverlay.classList.toggle('visible');
@@ -524,6 +677,7 @@ function buildPreviewStudioHtml() {
     });
     document.getElementById('speed-select').addEventListener('change', (e) => {
       if (anim) anim.setSpeed(Number(e.target.value));
+      saveState();
       announce('再生速度 ' + e.target.value + '倍');
     });
     document.getElementById('btn-dark').addEventListener('click', () => {
@@ -534,7 +688,39 @@ function buildPreviewStudioHtml() {
       document.body.classList.toggle('invert');
       announce('Day and Night 色反転切替');
     });
-    [layerSelect, canvasW, canvasH, revMemo].forEach((el) => el.addEventListener('input', updateRevisionMarkdown));
+    layerSelect.addEventListener('change', () => {
+      workspaceState.layerByFile[currentFile] = layerSelect.value;
+      saveState(); updateRevisionMarkdown();
+    });
+    revMemo.addEventListener('input', () => {
+      workspaceState.memoByFile[currentFile] = revMemo.value;
+      saveState(); updateRevisionMarkdown();
+    });
+    instructionType.addEventListener('change', () => {
+      workspaceState.instructionTypeByFile[currentFile] = instructionType.value;
+      saveState(); updateRevisionMarkdown();
+    });
+    [canvasW, canvasH].forEach((el) => el.addEventListener('input', updateRevisionMarkdown));
+    reviewStatus.addEventListener('change', () => {
+      workspaceState.progressByFile[currentFile] = reviewStatus.value;
+      saveState(); updateProgress();
+      announce('検収状態を' + reviewStatus.options[reviewStatus.selectedIndex].text + 'に変更');
+    });
+    document.getElementById('btn-next-incomplete').addEventListener('click', () => {
+      const next = availableFiles.find((file) => !['approved', 'needs-fix'].includes(workspaceState.progressByFile[file]));
+      if (!next) { announce('未完了のアニメーションはありません'); return; }
+      fileSelect.value = next; loadFile(next);
+    });
+    document.getElementById('btn-resume').addEventListener('click', () => {
+      resumeRequested = true;
+      resumeBanner.classList.remove('visible');
+      zoomSelect.value = workspaceState.zoom || 'fit';
+      bgSelect.value = workspaceState.background || 'checker';
+      document.getElementById('speed-select').value = workspaceState.speed || '1';
+      if (availableFiles.includes(workspaceState.currentFile)) fileSelect.value = workspaceState.currentFile;
+      loadFile(fileSelect.value);
+      announce('前回の続きから再開しました');
+    });
     document.getElementById('btn-copy').addEventListener('click', async () => {
       updateRevisionMarkdown();
       if (navigator.clipboard) await navigator.clipboard.writeText(revOutput.value);
@@ -549,15 +735,59 @@ function buildPreviewStudioHtml() {
       else if (e.code === 'Home' && anim) { e.preventDefault(); anim.goToAndStop(0, true); announce('先頭フレームへ移動'); }
     });
 
+    readState();
     fetch('/api/animations').then((r) => r.json()).then((data) => {
+      availableFiles = data.files || [];
       (data.files || []).forEach((f) => {
         const o = document.createElement('option');
         o.value = f;
         o.textContent = f;
         fileSelect.appendChild(o);
       });
+      updateProgress();
+      if (workspaceState.currentFile && availableFiles.includes(workspaceState.currentFile)) {
+        const saved = new Date(workspaceState.savedAt);
+        resumeText.textContent = '前回は ' + workspaceState.currentFile + ' の ' + (workspaceState.frameByFile[workspaceState.currentFile] || 0) + 'f を確認していました（' + saved.toLocaleString() + '）';
+        resumeBanner.classList.add('visible');
+      }
       if (data.files && data.files[0]) loadFile(data.files[0]);
     });
+
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (window.EventSource) {
+      const sse = new EventSource('/api/live-reload');
+      sse.addEventListener('reload', () => {
+        if (currentFile) {
+          loadFile(currentFile, { keepFrame: true });
+          announce('ファイルを最新状態に自動更新しました');
+        }
+      });
+      sse.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === 'reload' && currentFile) {
+            loadFile(currentFile, { keepFrame: true });
+            announce('ファイルを最新状態に自動更新しました');
+          }
+        } catch {}
+      };
+    }
+
+    setInterval(async () => {
+      try {
+        const response = await fetch('/api/reload-token', { cache: 'no-store' });
+        const data = await response.json();
+        if (reloadToken === null) reloadToken = data.token;
+        else if (data.token !== reloadToken) {
+          reloadToken = data.token;
+          if (currentFile) {
+            loadFile(currentFile, { keepFrame: true });
+            announce('ファイルを最新状態に自動更新しました');
+          }
+        }
+      } catch { /* 次の確認で再試行 */ }
+    }, 1000);
     fileSelect.addEventListener('change', () => loadFile(fileSelect.value));
   </script>
 </body>
@@ -577,13 +807,89 @@ function resolveDistDirs(rootDir) {
   ];
 }
 
+export function rebuildIfStoryboardExists(rootDir) {
+  const storyboardPath = path.join(rootDir, 'storyboard.json');
+  if (!fs.existsSync(storyboardPath)) return false;
+  try {
+    const raw = fs.readFileSync(storyboardPath, 'utf8');
+    const config = JSON.parse(raw);
+    if (config.shootingScript) {
+      const scriptFull = path.resolve(rootDir, config.shootingScript);
+      const rel = path.relative(rootDir, scriptFull);
+      if (!rel.startsWith('..') && !path.isAbsolute(rel) && fs.existsSync(scriptFull)) {
+        const parsed = parseShootingScript(fs.readFileSync(scriptFull, 'utf8'));
+        if (!config.width && parsed.width) config.width = parsed.width;
+        if (!config.height && parsed.height) config.height = parsed.height;
+      }
+    }
+    const svgResolver = (relSvgPath) => {
+      const fullSvgPath = path.resolve(rootDir, relSvgPath);
+      const rel = path.relative(rootDir, fullSvgPath);
+      if (rel.startsWith('..') || path.isAbsolute(rel)) {
+        throw new Error(`Path traversal detected: ${relSvgPath}`);
+      }
+      return fs.readFileSync(fullSvgPath, 'utf8');
+    };
+    const baseLottie = buildLottieFromStoryboard(config, svgResolver);
+    const outDir = path.join(rootDir, 'dist');
+    fs.mkdirSync(outDir, { recursive: true });
+    const baseOutPath = path.join(outDir, `${config.name || 'animation'}.json`);
+    fs.writeFileSync(baseOutPath, JSON.stringify(baseLottie), 'utf8');
+    if (config.powderEnding && config.powderEnding.enabled) {
+      const powderLottie = appendPowderEnding(baseLottie, config);
+      const powderOutPath = path.join(outDir, `${config.name || 'animation'}-powder.json`);
+      fs.writeFileSync(powderOutPath, JSON.stringify(powderLottie), 'utf8');
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function setupLiveReloadWatcher(rootDir, broadcast) {
+  let timer = null;
+  const trigger = () => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      rebuildIfStoryboardExists(rootDir);
+      broadcast();
+    }, 150);
+  };
+
+  const watchers = [];
+  const safeWatch = (targetPath) => {
+    if (fs.existsSync(targetPath)) {
+      try {
+        const w = fs.watch(targetPath, trigger);
+        if (typeof w.unref === 'function') w.unref();
+        watchers.push(w);
+      } catch {}
+    }
+  };
+
+  safeWatch(rootDir);
+  safeWatch(path.join(rootDir, 'svg'));
+  safeWatch(path.join(rootDir, 'dist'));
+
+  return {
+    close() {
+      if (timer) clearTimeout(timer);
+      for (const w of watchers) {
+        try { w.close(); } catch {}
+      }
+    },
+  };
+}
+
 /**
  * 検収プレビュー＆AI修正指示スタジオのリクエストハンドラを生成する
- * @param {{ rootDir?: string }} [options]
+ * @param {{ rootDir?: string, sseClients?: Set<any>, getReloadToken?: () => string }} [options]
  */
 export function createPreviewRequestHandler(options = {}) {
   const rootDir = path.resolve(options.rootDir || process.cwd());
   const distDirs = resolveDistDirs(rootDir);
+  const sseClients = options.sseClients || new Set();
+  const getReloadToken = options.getReloadToken || (() => 'default-token');
 
   return (req, res) => {
     for (const [k, v] of Object.entries(SECURITY_HEADERS)) {
@@ -636,6 +942,32 @@ export function createPreviewRequestHandler(options = {}) {
         res.end(fs.readFileSync(candidate));
         return;
       }
+    }
+
+    if (decodedPathname === '/api/live-reload') {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive',
+      });
+      if (typeof res.write === 'function') {
+        res.write(': connected\n\n');
+      }
+      if (typeof req.on === 'function') {
+        sseClients.add(res);
+        req.on('close', () => {
+          sseClients.delete(res);
+        });
+      } else {
+        if (typeof res.end === 'function') res.end();
+      }
+      return;
+    }
+
+    if (decodedPathname === '/api/reload-token') {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ token: getReloadToken() }));
+      return;
     }
 
     if (decodedPathname === '/api/animations') {
@@ -697,5 +1029,43 @@ export function createPreviewRequestHandler(options = {}) {
  * @returns {import('node:http').Server}
  */
 export function createPreviewServer(options = {}) {
-  return http.createServer(createPreviewRequestHandler(options));
+  const rootDir = path.resolve(options.rootDir || process.cwd());
+  const sseClients = new Set();
+  let reloadToken = Date.now().toString(36);
+
+  const broadcast = () => {
+    reloadToken = Date.now().toString(36);
+    const payload = `data: ${JSON.stringify({ type: 'reload', timestamp: Date.now() })}\n\n`;
+    for (const client of sseClients) {
+      try {
+        if (typeof client.write === 'function') {
+          client.write(payload);
+        }
+      } catch {
+        sseClients.delete(client);
+      }
+    }
+  };
+
+  const watcher = setupLiveReloadWatcher(rootDir, broadcast);
+  const handler = createPreviewRequestHandler({
+    ...options,
+    sseClients,
+    getReloadToken: () => reloadToken,
+  });
+
+  const server = http.createServer(handler);
+  const originalClose = server.close.bind(server);
+  server.close = (callback) => {
+    watcher.close();
+    for (const client of sseClients) {
+      try {
+        if (typeof client.end === 'function') client.end();
+      } catch {}
+    }
+    sseClients.clear();
+    return originalClose(callback);
+  };
+
+  return server;
 }
