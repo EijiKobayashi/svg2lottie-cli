@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildLottieFromStoryboard } from '../src/lottie-builder.mjs';
+import { buildLottieFromStoryboard, appendPowderEnding } from '../src/lottie-builder.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -32,16 +32,22 @@ for (const item of manifest) {
       {
         id: 'main-shape',
         svg: item.svg,
-        effects: item.effects,
+        effects: item.effects || [],
       },
     ],
   };
 
-  const lottie = buildLottieFromStoryboard(storyboardConfig, svgResolver);
+  let lottie = buildLottieFromStoryboard(storyboardConfig, svgResolver);
+  if (item.powderEnding) {
+    lottie = appendPowderEnding(lottie, {
+      color: item.color || '#a855f7',
+      powderEnding: item.powderEnding,
+    });
+  }
+
   const outPath = path.join(rootDir, `docs/dist/effects/${item.name}.json`);
   fs.writeFileSync(outPath, JSON.stringify(lottie, null, 2), 'utf8');
   console.log(`  ✓ Written to ${outPath} (${lottie.layers.length} layers, ${lottie.op} frames)`);
 }
 
 console.log('All effects rebuilt successfully!');
-

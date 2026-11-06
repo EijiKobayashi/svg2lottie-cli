@@ -4,12 +4,9 @@
 > **アイコン・UIイラスト・キャラクター・ロゴなど、あらゆるSVG素材** と **文字コンテ**（`shooting-script.md`）から、 **キラーエフェクト付きのLottieアニメーション**（JSON）を構築し、 **ブラウザ検収スタジオでコマ送り確認＆AIへの修正指示プロンプトをワンクリック生成** できる汎用CLIツールです。
 
 [![GitHub Pages Preview](https://img.shields.io/badge/Online%20Showroom-GitHub%20Pages-brightgreen?style=for-the-badge&logo=github)](https://eijikobayashi.github.io/svg2lottie-cli/)
-[![Effects Catalog](https://img.shields.io/badge/Effects%20Catalog-Interactive%20Showcase-blue?style=for-the-badge&logo=sparkles)](https://eijikobayashi.github.io/svg2lottie-cli/effects.html)
 
 > 🌐 **ブラウザ上で今すぐ動かせるオンライン検収スタジオ**: [https://eijikobayashi.github.io/svg2lottie-cli/](https://eijikobayashi.github.io/svg2lottie-cli/)  
 > （コマ送り、反転・Day & Night確認、AI修正指示プロンプト生成がGitHub Pages上で試せます）  
-> ✨ **キラーエフェクト専用ショールーム（別ページ）**: [https://eijikobayashi.github.io/svg2lottie-cli/effects.html](https://eijikobayashi.github.io/svg2lottie-cli/effects.html)  
-> （単純オブジェクトに施された炎・水・リキッドグラス・粉飛散・ネオン・バウンスなどの全エフェクトをカード一覧で比較＆スロー検収できます）
 
 ---
 
@@ -25,20 +22,15 @@ GitHub Pages 上で、アスペクト比の異なる3種類の実用的なアニ
 
 ---
 
-## ✨ 洗練されたキラーエフェクト・ショールーム（[別ページで今すぐ確認](https://eijikobayashi.github.io/svg2lottie-cli/effects.html)）
+## 🧪 エフェクトモジュールについて（開発ステータス & 将来実装予定）
 
-単純なSVGオブジェクト（幾何学・シンプル形状）に施された、物理挙動と美しさを徹底追求したエフェクト群です。  
-👉 **[キラーエフェクト・カタログ専用ページを開く](https://eijikobayashi.github.io/svg2lottie-cli/effects.html)** （スローモーション0.25x観察、Day & Night、設定JSONコピー完備）
+> ⚠️ **エフェクト機能の開発状況について**  
+> 本ツールのエフェクト機能（炎、水、ガラス、クラック、ポップイン等）は現在 **実験的（Experimental）フェーズ** にあります。  
+> 映画・商業アニメーション級（ディズニー／ピクサー品質）の物理演算・スペーシング・質感・流体表現には **まだまだ未熟** な段階であり、妥協のないプロ品質を担保するため、エフェクト・ショールームは現在 **非表示（一時休止）** としています。  
+> 
+> 現在は「おしんこコープ」の最終シーンで実証された **最高峰の粉飛散パーティクル（Powder Ending）** をはじめ、真に実用に耐えうる高品質な演出のみを厳選・再構築中であり、将来のメジャーアップデートにて本格的な物理シミュレーション対応エフェクトとして順次正式リリース予定です。
 
-| エフェクト名 | 素材形状 | 演出・物理挙動の特徴 | Lottie JSON |
-| :--- | :---: | :--- | :--- |
-| **炎 (`fire`)** | 炎 | **点P空間準拠のメラメラ＆ちぎれ**: 熱対流による凹凸の波送り、先端が縦に伸びてくびれちぎれる火の玉（Flame Tear-Off）、高熱白黄コアと外炎の二層燃焼 | [`effect-fire.json`](./docs/dist/effects/effect-fire.json) |
-| **水 (`water`) - 波紋** | しずく | **落下着水＆波紋ストーリー**: 水滴が空中から重力落下 ➔ 着水瞬間に弾けて水面に同化 ➔ 着水点から同心円の波紋リングが3重拡散 | [`effect-water.json`](./docs/dist/effects/effect-water.json) |
-| **水滴落下 (`water` dripping)** | しずく | **滴下・表面張力くびれ＆弾け**: 天井・蛇口から表面張力で徐々に水滴が膨らみ ➔ 縦長にくびれてポタッと滴下 ➔ 加速落下して地面で弾ける | [`effect-water-drop.json`](./docs/dist/effects/effect-water-drop.json) |
-| **リキッドグラス (`liquid-glass`)** | 四角 | **Apple風立体ガラス＆斜め光沢シマー**: 不要な揺れを排除。すりガラスプレート＋立体エッジリム＋表面を左上から右下へ斜め45度にツヤ〜ンと走るシャープな光沢スイープ | [`effect-liquid-glass.json`](./docs/dist/effects/effect-liquid-glass.json) |
-| **ガラスひび割れ (`glass-crack`)** | 星 | **クラック ➔ 粉々砕け散り（Shatter & Scatter）**: 衝撃点から鋭角幾何クラックが走る ➔ 瞬時に8個の多角形破片シャードへ分裂し四方八方へ回転飛散・落下消滅 | [`effect-glass-crack.json`](./docs/dist/effects/effect-glass-crack.json) |
-| **ネオン管＆グロー (`echo-glow-neon`)** | ハート | **中空ガラス管＆常時点灯維持**: 純白コア芯ストロークと鮮やかネオン管の中空構造。バチバチッと瞬く点灯フリッカーから最終フレームまで100%フル点灯維持 | [`effect-neon-glow.json`](./docs/dist/effects/effect-neon-glow.json) |
-| **ポップイン (`pop-in`)** | 円 | **カートゥーン調 Squash & Stretch**: タメ（力を溜めて横に潰れる Anticipation） ➔ 飛び出し（縦長に伸びる Stretch） ➔ ドスンと着地して弾むバウンス（表示維持） | [`effect-pop-bounce.json`](./docs/dist/effects/effect-pop-bounce.json) |
+---
 
 ![svg2lottie-cli Architecture & Stack Diagram](./docs/stack-diagram.svg)
 

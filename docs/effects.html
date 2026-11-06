@@ -3,410 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>svg2lottie-cli — キラーエフェクト・ショールーム</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js" crossorigin="anonymous"></script>
+  <title>svg2lottie-cli — エフェクト機能は準備中です</title>
   <style>
     :root {
-      --bg: #0b1120;
-      --card: #1e293b;
-      --card-hover: #26334d;
-      --text: #f8fafc;
-      --sub: #94a3b8;
-      --border: #334155;
-      --accent: #38bdf8;
-      --accent-fg: #0f172a;
-      --checker-a: #1e293b;
-      --checker-b: #0f172a;
-    }
-    body.light {
       --bg: #f8fafc;
       --card: #ffffff;
-      --card-hover: #f1f5f9;
       --text: #0f172a;
-      --sub: #475569;
-      --border: #cbd5e1;
+      --sub: #64748b;
+      --border: #e2e8f0;
       --accent: #0284c7;
-      --accent-fg: #ffffff;
-      --checker-a: #e2e8f0;
-      --checker-b: #f8fafc;
     }
-    * { box-sizing: border-box; }
     body {
       margin: 0;
+      padding: 40px 20px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.5;
-      transition: background 0.2s, color 0.2s;
-    }
-    header {
-      padding: 24px 20px;
-      border-bottom: 1px solid var(--border);
-      background: var(--card);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .header-inner {
-      max-width: 1240px;
-      margin: 0 auto;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-    }
-    .title-group h1 {
-      margin: 0;
-      font-size: 1.4rem;
-      font-weight: 800;
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      min-height: 80vh;
     }
-    .title-group p {
-      margin: 4px 0 0;
-      color: var(--sub);
-      font-size: 0.88rem;
-    }
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-    }
-    button, select {
-      font: inherit;
-      font-size: 0.86rem;
-      color: var(--text);
+    .notice-card {
+      max-width: 620px;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: border-color 0.15s, background 0.15s;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      text-align: center;
     }
-    button:hover, select:hover {
-      border-color: var(--accent);
+    h1 {
+      margin: 0 0 16px;
+      font-size: 24px;
     }
-    button:focus-visible, select:focus-visible {
-      outline: 3px solid var(--accent);
-      outline-offset: 2px;
+    p {
+      margin: 0 0 24px;
+      color: var(--sub);
+      line-height: 1.7;
     }
-    .nav-btn {
-      text-decoration: none;
+    .back-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      background: var(--card);
-      color: var(--text);
-      border: 1px solid var(--border);
-      font-size: 0.86rem;
-      font-weight: 600;
-    }
-    .nav-btn:hover {
-      border-color: var(--accent);
-    }
-    main {
-      max-width: 1240px;
-      margin: 32px auto;
-      padding: 0 20px 60px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-      gap: 24px;
-    }
-    .effect-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.15s, border-color 0.15s;
-    }
-    .effect-card:hover {
-      border-color: var(--accent);
-      transform: translateY(-2px);
-    }
-    .card-stage-container {
-      position: relative;
-      width: 100%;
-      height: 240px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: radial-gradient(circle at center, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%),
-        repeating-conic-gradient(rgba(255, 255, 255, 0.03) 0% 25%, transparent 0% 50%) 50% / 20px 20px;
-      border-bottom: 1px solid var(--border);
-      overflow: hidden; /* オブジェクトの枠外はみ出しを完全防止 */
-    }
-    body.light .card-stage-container {
-      background: radial-gradient(circle at center, #ffffff 0%, #f1f5f9 100%),
-        repeating-conic-gradient(rgba(0, 0, 0, 0.03) 0% 25%, transparent 0% 50%) 50% / 20px 20px;
-    }
-    /* ネオン管カードはLightモード時でも発光美を最大化するためダークステージを維持 */
-    .effect-card:has(#stage-effect-neon-glow) .card-stage-container,
-    #stage-effect-neon-glow-container {
-      background: radial-gradient(circle at center, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 1) 100%) !important;
-    }
-    .card-stage {
-      width: 240px;
-      height: 240px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    body.invert .card-stage {
-      filter: invert(1) brightness(1.6);
-    }
-    .badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--accent);
-      margin-bottom: 8px;
-    }
-    .card-body {
-      padding: 18px 20px;
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-    }
-    .card-title {
-      margin: 0 0 6px;
-      font-size: 1.12rem;
-      font-weight: 700;
-    }
-    .card-desc {
-      margin: 0 0 16px;
-      font-size: 0.88rem;
-      color: var(--sub);
-      flex: 1;
-    }
-    .card-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
       gap: 8px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border);
-    }
-    .btn-group {
-      display: flex;
-      gap: 6px;
-    }
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #0284c7;
-      color: #ffffff;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 0.9rem;
+      background: var(--accent);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 9999px;
+      text-decoration: none;
       font-weight: 600;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-      opacity: 0;
-      transform: translateY(10px);
-      transition: opacity 0.2s, transform 0.2s;
-      pointer-events: none;
-      z-index: 999;
+      transition: opacity 0.2s;
     }
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
+    .back-btn:hover {
+      opacity: 0.9;
     }
   </style>
 </head>
-<body class="light">
-  <header>
-    <div class="header-inner">
-      <div class="title-group">
-        <h1>✨ キラーエフェクト・ショールーム</h1>
-        <p>本物の炎のうねり、水滴落下＆波紋、Apple風立体ガラス、ガラス粉砕、ネオン管点灯、カートゥーンバウンスなど、磨き抜かれたキラーエフェクトをカード一覧で鑑賞・検収できます。</p>
-      </div>
-      <div class="controls">
-        <a href="./index.html" class="nav-btn" aria-label="メイン検収スタジオへ移動">🏠 検収スタジオへ</a>
-        <label for="speed-select" class="visually-hidden" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0);">速度</label>
-        <select id="speed-select" aria-label="再生速度切替">
-          <option value="1">1.0x (通常再生)</option>
-          <option value="0.5">0.5x (ハーフスロー)</option>
-          <option value="0.25">0.25x (スーパースロー検収)</option>
-        </select>
-        <button id="theme-btn" aria-label="ライト／ダークモード切替">🌙 Dark</button>
-        <button id="invert-btn" aria-label="色反転Day&Night確認">🌓 反転確認</button>
-      </div>
-    </div>
-  </header>
-
-  <main>
-    <div class="grid" id="effects-grid">
-      <!-- カードは manifest.json から動的レンダリング -->
-    </div>
-  </main>
-
-  <div id="toast" class="toast" role="status" aria-live="polite">設定JSONをコピーしました！</div>
-
-  <script>
-    const animations = new Map();
-    window.animations = animations;
-    let globalSpeed = 1.0;
-
-    async function init() {
-      const cacheBust = 'v=' + Date.now();
-      let items = [];
-      try {
-        const res = await fetch(`./dist/effects/manifest.json?${cacheBust}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}: manifest.json not found`);
-        items = await res.json();
-      } catch (err) {
-        console.error('Failed to load manifest.json:', err);
-        document.getElementById('effects-grid').innerHTML = `
-          <div style="grid-column: 1 / -1; padding: 24px; background: #ef444422; border: 1px solid #ef4444; border-radius: 8px; color: #f87171;">
-            ⚠️ エフェクト一覧の読み込みに失敗しました: ${err.message}
-          </div>
-        `;
-        return;
-      }
-
-      const grid = document.getElementById('effects-grid');
-      grid.innerHTML = '';
-
-      // 並列でカード生成と読み込みを実行
-      await Promise.all(items.map(async (item) => {
-        const card = document.createElement('article');
-        card.className = 'effect-card';
-        card.innerHTML = `
-          <div class="card-stage-container">
-            <div id="stage-${item.name}" class="card-stage" aria-label="${item.title}"></div>
-          </div>
-          <div class="card-body">
-            <div><span class="badge">${item.category}</span></div>
-            <h2 class="card-title">${item.title}</h2>
-            <p class="card-desc">${item.description}</p>
-            <div class="card-actions">
-              <div class="btn-group">
-                <button class="play-btn" data-name="${item.name}" aria-label="${item.title}を一時停止">⏸ 停止</button>
-                <button class="step-btn" data-name="${item.name}" aria-label="${item.title}を先頭へ">⏮ 先頭</button>
-              </div>
-              <button class="copy-btn" data-name="${item.name}" aria-label="${item.title}の設定JSONをコピー">📋 設定コピー</button>
-            </div>
-          </div>
-        `;
-        grid.appendChild(card);
-
-        const stage = card.querySelector(`#stage-${item.name}`);
-
-        // JSON を直接 fetch して animationData で読み込む（通信エラー・相対パス問題を根絶）
-        try {
-          const jsonRes = await fetch(`./dist/effects/${item.name}.json?${cacheBust}`);
-          if (!jsonRes.ok) throw new Error(`HTTP ${jsonRes.status}: ${item.name}.json not found`);
-          const animData = await jsonRes.json();
-
-          const anim = lottie.loadAnimation({
-            container: stage,
-            renderer: 'svg',
-            loop: true,
-            autoplay: true,
-            animationData: animData,
-          });
-          anim.setSpeed(globalSpeed);
-          animations.set(item.name, { anim, config: item, isPlaying: true });
-
-          // URL パラメータで指定されたフレームがあればそのフレームで静止
-          const urlParams = new URLSearchParams(window.location.search);
-          const targetFrame = urlParams.get('frame');
-          if (targetFrame !== null) {
-            anim.addEventListener('DOMLoaded', () => {
-              anim.goToAndStop(parseFloat(targetFrame), true);
-            });
-          }
-        } catch (loadErr) {
-          console.error(`Failed to load ${item.name}:`, loadErr);
-          stage.innerHTML = `
-            <div style="padding: 16px; font-size: 0.8rem; color: #f87171; text-align: center;">
-              ❌ 描画エラー:<br/>${loadErr.message}
-            </div>
-          `;
-        }
-
-        // 個別ボタンのイベント
-        const playBtn = card.querySelector('.play-btn');
-        playBtn.addEventListener('click', () => {
-          const entry = animations.get(item.name);
-          if (!entry) return;
-          if (entry.isPlaying) {
-            entry.anim.pause();
-            entry.isPlaying = false;
-            playBtn.textContent = '▶ 再生';
-            playBtn.setAttribute('aria-label', `${item.title}を再生`);
-          } else {
-            entry.anim.play();
-            entry.isPlaying = true;
-            playBtn.textContent = '⏸ 停止';
-            playBtn.setAttribute('aria-label', `${item.title}を一時停止`);
-          }
-        });
-
-        const stepBtn = card.querySelector('.step-btn');
-        stepBtn.addEventListener('click', () => {
-          const entry = animations.get(item.name);
-          if (!entry) return;
-          entry.anim.goToAndPlay(0, true);
-          entry.isPlaying = true;
-          playBtn.textContent = '⏸ 停止';
-        });
-
-        const copyBtn = card.querySelector('.copy-btn');
-        copyBtn.addEventListener('click', async () => {
-          const snippet = JSON.stringify({
-            effects: item.effects,
-          }, null, 2);
-          await navigator.clipboard.writeText(snippet);
-          showToast(`「${item.title}」の effects 設定をコピーしました！`);
-        });
-      }));
-    }
-
-    // 速度切替
-    document.getElementById('speed-select').addEventListener('change', (e) => {
-      globalSpeed = parseFloat(e.target.value);
-      for (const { anim } of animations.values()) {
-        anim.setSpeed(globalSpeed);
-      }
-    });
-
-    // テーマ切替
-    const themeBtn = document.getElementById('theme-btn');
-    themeBtn.addEventListener('click', () => {
-      document.body.classList.toggle('light');
-      const isLight = document.body.classList.contains('light');
-      themeBtn.textContent = isLight ? '🌙 Dark' : '☀️ Light';
-    });
-
-    // 反転切替
-    const invertBtn = document.getElementById('invert-btn');
-    invertBtn.addEventListener('click', () => {
-      document.body.classList.toggle('invert');
-    });
-
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2500);
-    }
-
-    init();
-  </script>
+<body>
+  <div class="notice-card">
+    <div style="font-size: 48px; margin-bottom: 16px;">🧪</div>
+    <h1>エフェクト・ショールームは現在準備中です</h1>
+    <p>
+      エフェクト機能群（炎、水、ガラス、クラック、ポップイン等）は現在実験的フェーズにあり、商業アニメーション・プロ品質の水準を満たすべく再設計を行っているため、ショールームは一時的に非表示としています。<br/>
+      アニメーションの検収およびAI修正指示の作成は、メインのオンライン検収スタジオをご利用ください。
+    </p>
+    <a href="./index.html" class="back-btn">🔍 オンライン検収スタジオへ戻る</a>
+  </div>
 </body>
 </html>
-
