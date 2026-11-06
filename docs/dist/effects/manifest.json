@@ -1,9 +1,9 @@
 [
   {
     "name": "effect-fire",
-    "title": "炎エフェクト (点P空間準拠: 凹凸の波送り・先端ちぎれ・二層燃焼)",
+    "title": "炎エフェクト (点P空間準拠: 根元固定・波送り・先端ちぎれ)",
     "category": "物理・自然現象",
-    "description": "点P空間アニメーション基礎準拠。熱対流による凹凸の波送り、先端が縦に伸びてくびれちぎれる火の玉（Flame Tear-Off）、高熱白黄コアと外炎の二層燃焼",
+    "description": "点P空間アニメーション基礎準拠。根元アンカー固定、熱対流による凹凸の波送り、先端が縦に伸びてくびれちぎれる火の玉（Flame Tear-Off）、高熱白黄コアと外炎の二層燃焼",
     "svg": "examples/shapes/flame.svg",
     "width": 240,
     "height": 240,
@@ -17,16 +17,16 @@
         "flameColor": "#ea580c",
         "coreColor": "#fef08a",
         "emberCount": 8,
-        "intensity": 1.3,
+        "intensity": 1.2,
         "innerCore": true
       }
     ]
   },
   {
     "name": "effect-water",
-    "title": "水エフェクト (着水波紋拡散ストーリー)",
+    "title": "水エフェクト (小ぶり水滴・着水波紋ストーリー)",
     "category": "物理・自然現象",
-    "description": "空中から水滴が重力落下 ➔ 着水瞬間に弾けて同化 ➔ 着水点から同心円の波紋リングが外側へサーッと3重拡散する明確なストーリー",
+    "description": "空中から小ぶりで上品なしずくが自然落下 ➔ 着水瞬間に弾けて同化 ➔ 着水点から同心円の波紋リングが外側へサーッと3重拡散する繊細なストーリー",
     "svg": "examples/shapes/drop.svg",
     "width": 240,
     "height": 240,
@@ -39,16 +39,16 @@
         "start": 0,
         "end": 120,
         "rings": 3,
-        "fallDistance": 80,
-        "color": "#38bdf8"
+        "fallDistance": 60,
+        "color": "#0284c7"
       }
     ]
   },
   {
     "name": "effect-water-drop",
-    "title": "水滴落下エフェクト (滴下・表面張力くびれ＆弾け)",
+    "title": "水滴落下エフェクト (小ぶり滴下・表面張力くびれ＆弾け)",
     "category": "物理・自然現象",
-    "description": "天井や蛇口から表面張力で徐々に水滴が膨らみ ➔ 自身の重みで縦長にくびれてポタッと滴下 ➔ 重力加速で落下し着水スプラッシュと波紋を残して弾ける",
+    "description": "天井や蛇口から表面張力で徐々に小ぶりな水滴が膨らみ ➔ 自重で縦長にくびれてポタッと滴下 ➔ 加速落下し着水スプラッシュと波紋を残して弾ける",
     "svg": "examples/shapes/drop.svg",
     "width": 240,
     "height": 240,
@@ -60,16 +60,16 @@
         "mode": "dripping",
         "start": 5,
         "end": 90,
-        "fallDistance": 85,
-        "color": "#38bdf8"
+        "fallDistance": 70,
+        "color": "#0284c7"
       }
     ]
   },
   {
     "name": "effect-liquid-glass",
-    "title": "リキッドグラス (Apple風立体ガラス＆斜め光沢シマー)",
+    "title": "リキッドグラス (有機的流動ブロブ＆Apple風立体屈折ガラス)",
     "category": "光学・質感",
-    "description": "半透明すりガラスプレート＋立体エッジリムハイライト＋表面を左上から右下へ斜め45度にツヤ〜ンと横切る美しいグロス屈折光沢",
+    "description": "液体の表面張力でぷるぷる流動する有機的Liquid Blob ＋ 純白の立体エッジリムハイライト ＋ 内側屈折コースティクス ＋ 斜め45度グロス光沢シマー",
     "svg": "examples/shapes/cube.svg",
     "width": 240,
     "height": 240,
@@ -80,7 +80,7 @@
         "type": "liquid-glass",
         "variant": "liquid",
         "blur": 16,
-        "tintOpacity": 25,
+        "tintOpacity": 38,
         "start": 10,
         "end": 110
       }
@@ -88,9 +88,9 @@
   },
   {
     "name": "effect-glass-crack",
-    "title": "ガラスひび割れ＆粉砕 (クラック ➔ 粉々砕け散り Shatter)",
+    "title": "ガラスひび割れ＆粉砕 (アシンメトリー不規則クラック ➔ 粉砕)",
     "category": "物理・破壊",
-    "description": "衝撃点から鋭角幾何クラックが走る ➔ 瞬時に多角形破片シャードへ分裂し、四方八方へ回転しながら激しく吹き飛んで落下消滅！",
+    "description": "偏心衝撃点から鋭利で不規則・アシンメトリーなクラックが走る ➔ 瞬時に多角形破片シャードへ分裂し、枠内で回転しながら吹き飛んで落下消滅！",
     "svg": "examples/shapes/star.svg",
     "width": 240,
     "height": 240,
@@ -102,7 +102,7 @@
         "start": 15,
         "end": 65,
         "rays": 8,
-        "radius": 48,
+        "radius": 46,
         "shake": true,
         "shatter": true,
         "shardCount": 8
@@ -134,9 +134,9 @@
   },
   {
     "name": "effect-pop-bounce",
-    "title": "ポップイン (カートゥーン調 Squash & Stretch)",
+    "title": "ポップイン (枠内完全収容のカートゥーン調 Squash & Stretch)",
     "category": "アニメーション演出",
-    "description": "タメ（力を溜めて横にペチャッと潰れる Anticipation） ➔ 飛び出し（ビヨーンと縦長に伸びる Stretch） ➔ ドスンと着地して弾むバウンス",
+    "description": "枠内完全収容＆体積保存。タメ（力を溜めて横にペチャッと潰れる Anticipation） ➔ 飛び出し（縦長に伸びる Stretch） ➔ ドスンと着地バウンス",
     "svg": "examples/shapes/circle.svg",
     "width": 240,
     "height": 240,
@@ -148,7 +148,8 @@
         "cartoon": true,
         "start": 10,
         "end": 54,
-        "jumpHeight": 18
+        "jumpHeight": 20,
+        "baseScale": 52
       }
     ]
   }

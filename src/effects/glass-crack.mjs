@@ -32,10 +32,14 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
   } = options;
 
   const totalFrames = layer.op || 120;
-  const [ix, iy] = impactPoint || ctx.center || layer.ks?.a?.k || [120, 120];
-  const origPos = layer.ks?.p?.k || [ix, iy, 0];
-  const px = Array.isArray(origPos) ? origPos[0] : ix;
-  const py = Array.isArray(origPos) ? origPos[1] : iy;
+  const rawCenter = ctx.center || layer.ks?.a?.k || [120, 120];
+  const cx = rawCenter[0];
+  const cy = rawCenter[1];
+  // 衝撃点を自然に少し偏心させる（アシンメトリー化）
+  const [ix, iy] = impactPoint || [round4(cx - 10), round4(cy - 6)];
+  const origPos = layer.ks?.p?.k || [cx, cy, 0];
+  const px = Array.isArray(origPos) ? origPos[0] : cx;
+  const py = Array.isArray(origPos) ? origPos[1] : cy;
 
   const crackHit = start;
   const crackEnd = start + 8;
@@ -53,9 +57,9 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
       k: [
         { t: 0, s: [px, py, 0] },
         { t: crackHit, s: [px, py, 0] },
-        { t: crackHit + 2, s: [px + 5, py - 4, 0] },
-        { t: crackHit + 4, s: [px - 4, py + 4, 0] },
-        { t: crackHit + 6, s: [px + 3, py - 2, 0] },
+        { t: crackHit + 2, s: [px + 4, py - 3, 0] },
+        { t: crackHit + 4, s: [px - 3, py + 3, 0] },
+        { t: crackHit + 6, s: [px + 2, py - 1, 0] },
         { t: crackEnd, s: [px, py, 0] },
         { t: rebirthStart, s: [px, py, 0] },
         { t: rebirthStart + 8, s: [px, py - 12, 0], i: easeInOut, o: easeInOut },
@@ -91,15 +95,20 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
     ],
   };
 
-  // 3. 鋭角幾何クラックライン
+  // 3. アシンメトリー・不規則なクラックライン（不揃いな角度・ジグザグ折れ線・長短の差）
+  const rayAngles = [0.12, 0.78, 1.45, 2.32, 3.15, 3.92, 4.68, 5.6];
   const rayPaths = [];
   for (let i = 0; i < rays; i++) {
-    const angle = (i / rays) * Math.PI * 2 + (i % 2 === 0 ? 0.18 : -0.14);
-    const midR = radius * 0.48;
-    const mx = round4(ix + Math.cos(angle + 0.16) * midR);
-    const my = round4(iy + Math.sin(angle + 0.16) * midR);
-    const ex = round4(ix + Math.cos(angle) * radius);
-    const ey = round4(iy + Math.sin(angle) * radius);
+    const baseAngle = rayAngles[i % rayAngles.length];
+    // 長短の差（主クラックは長く、枝クラックは短く）
+    const rLen = radius * (i % 3 === 0 ? 1.05 : (i % 3 === 1 ? 0.68 : 0.88));
+    const midR = rLen * (0.35 + (i % 2) * 0.18);
+    // ジグザグの曲がり角（自然界のひび割れの不規則性）
+    const bend = (i % 2 === 0 ? 0.28 : -0.22);
+    const mx = round4(ix + Math.cos(baseAngle + bend) * midR);
+    const my = round4(iy + Math.sin(baseAngle + bend) * midR);
+    const ex = round4(ix + Math.cos(baseAngle) * rLen);
+    const ey = round4(iy + Math.sin(baseAngle) * rLen);
 
     rayPaths.push({
       ty: 'sh',
@@ -118,7 +127,7 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
 
   const extraLayers = [];
 
-  // クラックラインレイヤー（衝撃で一瞬で走り、粉砕と同時に消える）
+  // クラックラインレイヤー（Light/Dark双方でくっきり見える濃いコントラスト線）
   extraLayers.push({
     ddd: 0,
     ind: (layer.ind || 1) + 200,
@@ -166,9 +175,10 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
           {
             ty: 'st',
             nm: 'Crack Stroke',
-            c: { a: 0, k: [0.98, 0.99, 1, 1] },
-            o: { a: 0, k: 100 },
-            w: { a: 0, k: 2.2 },
+            // LightモードでもDarkモードでもくっきり見える濃紺スレート色
+            c: { a: 0, k: [0.12, 0.18, 0.28, 1] },
+            o: { a: 0, k: 95 },
+            w: { a: 0, k: 2.4 },
             lc: 2,
             lj: 2,
           },
@@ -191,17 +201,18 @@ export function applyGlassCrack(layer, options = {}, ctx = {}) {
     bm: 0,
   });
 
-  // 4. 四方八方に激しく砕け散る多角形破片シャード（Shatter & Fly Shards）
+  // 4. 四方八方に激しく砕け散る多角形破片シャード（枠内240×240に完全収容）
   if (shatter) {
     const shatterDur = Math.max(20, shatterEnd - shatterStart);
 
     for (let i = 0; i < shardCount; i++) {
-      const angle = (i / shardCount) * Math.PI * 2 + (i % 2 === 0 ? 0.22 : -0.22);
-      const flyDist = radius * (1.4 + (i % 3) * 0.55);
-      const targetX = round4(ix + Math.cos(angle) * flyDist);
-      const targetY = round4(iy + Math.sin(angle) * flyDist + 45); // 重力加速落下
-      const spinAngle = (i % 2 === 0 ? 1 : -1) * (260 + i * 50);
-      const shardSize = round4(radius * (0.28 + (i % 3) * 0.09));
+      const angle = rayAngles[i % rayAngles.length] + (i % 2 === 0 ? 0.15 : -0.15);
+      // 枠内収容: 飛散距離を抑制（最大 70px）、重力加速度落下も +22px 以内に収める
+      const flyDist = Math.min(68, radius * (0.8 + (i % 3) * 0.25));
+      const targetX = Math.round(Math.max(20, Math.min(220, ix + Math.cos(angle) * flyDist)));
+      const targetY = Math.round(Math.max(20, Math.min(218, iy + Math.sin(angle) * flyDist + 20))); // 重力加速落下
+      const spinAngle = (i % 2 === 0 ? 1 : -1) * (180 + i * 40);
+      const shardSize = round4(radius * (0.24 + (i % 3) * 0.08));
 
       const p1 = [0, -shardSize];
       const p2 = [round4(shardSize * 0.85), round4(shardSize * 0.75)];

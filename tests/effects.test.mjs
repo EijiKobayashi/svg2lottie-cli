@@ -259,12 +259,16 @@ test('pop-in: カートゥーン調Squash & Stretch（タメAnticipation➔縦�
     ip: 0,
     op: 180,
     ks: {
-      p: { a: 0, k: [100, 100, 0] },
+      p: { a: 0, k: [120, 120, 0] },
       s: { a: 0, k: [100, 100, 100] },
       o: { a: 0, k: 100 },
     },
   };
-  const result = EFFECT_REGISTRY['pop-in'](layer, { cartoon: true, start: 10, end: 54 });
+  const result = EFFECT_REGISTRY['pop-in'](
+    layer,
+    { cartoon: true, start: 10, end: 54, jumpHeight: 24, baseScale: 100 },
+    { center: [120, 120], width: 240, height: 240 }
+  );
   assert.equal(result.layer.ks.s.a, 1, 'スケールアニメーションが付与される');
   // タメ: X > 100 かつ Y < 100
   const anticipationKf = result.layer.ks.s.k.find((k) => k.s && k.s[0] > 105 && k.s[1] < 90);
@@ -272,6 +276,75 @@ test('pop-in: カートゥーン調Squash & Stretch（タメAnticipation➔縦�
   // 飛び出し: X < 100 かつ Y > 120
   const stretchKf = result.layer.ks.s.k.find((k) => k.s && k.s[0] < 90 && k.s[1] > 120);
   assert.ok(stretchKf, 'ビヨーンと縦長に伸びるStretchキーフレームが存在する');
+
+  // はみ出し防止: 位置pの全キーフレームがキャンバス枠内（30〜210）に収まる
+  for (const kf of result.layer.ks.p.k) {
+    if (kf.s) {
+      assert.ok(kf.s[1] >= 40 && kf.s[1] <= 200, `Position Y ${kf.s[1]} out of canvas`);
+    }
+  }
+});
+
+test('liquid-glass: 有機的液状変形（Liquid Blob）と立体屈折ガラス', () => {
+  const layer = {
+    nm: 'glass-plate',
+    ip: 0,
+    op: 120,
+    ks: {
+      p: { a: 0, k: [120, 120, 0] },
+      o: { a: 0, k: 100 },
+      s: { a: 0, k: [100, 100, 100] },
+    },
+    shapes: [
+      {
+        ty: 'gr',
+        nm: 'plate',
+        it: [
+          { ty: 'sh', nm: 'contour', ks: { a: 0, k: { c: true, v: [[-40, -40], [40, -40], [40, 40], [-40, 40]], i: [[0, 0], [0, 0], [0, 0], [0, 0]], o: [[0, 0], [0, 0], [0, 0], [0, 0]] } } },
+          { ty: 'fl', nm: 'Fill', c: { a: 0, k: [0.5, 0.5, 0.5, 1] } },
+        ],
+      },
+    ],
+  };
+  const result = EFFECT_REGISTRY['liquid-glass'](
+    layer,
+    { variant: 'liquid', start: 0, end: 120 },
+    { center: [120, 120], width: 240, height: 240 }
+  );
+  assert.ok(result.extraLayers.length >= 2, '立体エッジリムと光沢シマーレイヤーが生成される');
+  const rimLayer = result.extraLayers.find((l) => l.nm.includes('rim'));
+  assert.ok(rimLayer, 'エッジハイライトリムが存在する');
+});
+
+test('glass-crack: アシンメトリーな不規則クラックと枠内破片飛散', () => {
+  const layer = {
+    nm: 'glass',
+    ip: 0,
+    op: 120,
+    ks: {
+      p: { a: 0, k: [120, 120, 0] },
+      o: { a: 0, k: 100 },
+    },
+    shapes: [
+      { ty: 'sh', nm: 'contour', ks: { a: 0, k: { c: true, v: [[0, 0]], i: [[0, 0]], o: [[0, 0]] } } },
+    ],
+  };
+  const result = EFFECT_REGISTRY['glass-crack'](layer, { shatter: true, start: 15, end: 60, asymmetric: true }, { center: [120, 120], width: 240, height: 240 });
+  const crackLinesLayer = result.extraLayers.find((l) => l.nm.includes('lines') || l.nm.includes('crack'));
+  assert.ok(crackLinesLayer, 'クラック線レイヤーが存在する');
+  const shards = result.extraLayers.filter((l) => l.nm.includes('shard'));
+  assert.ok(shards.length >= 6, '四方へ砕け散る破片シャードレイヤーが生成される');
+  // 破片の飛び散り位置が枠内（0〜240px）に収まっていること
+  for (const shard of shards) {
+    if (shard.ks.p.k) {
+      for (const kf of shard.ks.p.k) {
+        if (kf.s) {
+          assert.ok(kf.s[0] >= 0 && kf.s[0] <= 240, `Shard X ${kf.s[0]} out of frame`);
+          assert.ok(kf.s[1] >= 0 && kf.s[1] <= 240, `Shard Y ${kf.s[1]} out of frame`);
+        }
+      }
+    }
+  }
 });
 
 
