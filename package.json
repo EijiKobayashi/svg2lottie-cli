@@ -13,6 +13,7 @@
     "./path-parser": "./src/path-parser.mjs",
     "./svg-extractor": "./src/svg-extractor.mjs",
     "./shooting-script": "./src/shooting-script.mjs",
+    "./revision-workflow": "./src/revision-workflow.mjs",
     "./preview-server": "./src/preview-server.mjs"
   },
   "files": [

@@ -272,6 +272,13 @@ function buildPreviewStudioHtml() {
       margin-bottom: 4px;
     }
     textarea { width: 100%; min-height: 110px; }
+    .revision-list { display: grid; gap: 8px; margin-top: 12px; }
+    .revision-card { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: var(--bg); }
+    .revision-card header { margin: 0 0 8px; }
+    .revision-card p { margin: 4px 0; font-size: 0.84rem; }
+    .revision-card[aria-current="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(56,189,248,.2); }
+    .contract-note { color: var(--sub); font-size: .84rem; margin: 0 0 10px; }
+    .field-error { color: #b91c1c; font-size: .84rem; font-weight: 700; }
     .sr-status {
       display: inline-block;
       font-size: 0.84rem;
@@ -382,36 +389,44 @@ function buildPreviewStudioHtml() {
       <div class="layer-chips" id="layer-chips" aria-label="レイヤー別表示切替および選択バー"></div>
     </section>
 
-    <section class="panel" aria-label="AI修正指示および文字コンテ初期サイズ生成パネル">
-      <h2 style="font-size:1.02rem;margin-top:0">3. 修正指示</h2>
+    <section class="panel" aria-label="変更Inboxおよび承認ゲート">
+      <h2 style="font-size:1.02rem;margin-top:0">3. 変更Inbox</h2>
+      <p class="contract-note">気づきをカードとして保存し、変更対象と禁止範囲を確認してから承認します。承認済みのカードだけがAgent向け指示に含まれます。</p>
       <div class="grid-2">
         <div>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <div style="flex:1">
-              <label for="canvas-w">横幅 (width px)</label>
-              <input type="number" id="canvas-w" value="520" style="width:100%" />
-            </div>
-            <div style="flex:1">
-              <label for="canvas-h">縦幅 (height px)</label>
-              <input type="number" id="canvas-h" value="140" style="width:100%" />
-            </div>
-          </div>
+          <p class="contract-note">横幅 (width px)・縦幅 (height px)・対象シーン・フレームは現在のLottieから自動記録します。</p>
           <label for="layer-select">修正対象レイヤーID（上のレイヤーチップをクリックでも選択可）</label>
           <select id="layer-select" style="width:100%;margin-bottom:8px" aria-label="修正対象レイヤーID"></select>
-          <label for="instruction-type">指示の種類</label>
-          <select id="instruction-type" style="width:100%;margin-bottom:8px">
-            <option value="要求">要求（必須条件）</option>
-            <option value="要望">要望（できれば実現）</option>
-            <option value="不具合">不具合（期待と異なる）</option>
-            <option value="修正" selected>修正（具体的な変更）</option>
+          <label for="revision-priority">優先度</label>
+          <select id="revision-priority" style="width:100%;margin-bottom:8px">
+            <option value="hold" selected>保留（まだ判断しない）</option>
+            <option value="required">必須（必ず直す）</option>
+            <option value="optional">任意（できれば直す）</option>
           </select>
-          <label for="rev-memo">現象と修正指示メモ</label>
-          <textarea id="rev-memo" placeholder="例: 太陽(sun-core)のポップインを10フレーム早める / 波(turquoise-waves)のワイプをゆっくりにする"></textarea>
-          <button type="button" id="btn-copy" class="primary" style="margin-top:8px" aria-label="AI修正指示Markdownをクリップボードにコピー">📋 構造化修正指示をコピー</button>
+          <label for="revision-observation">現状・気になったこと</label>
+          <textarea id="revision-observation" placeholder="例: 148fでロゴの出現が早く見える"></textarea>
+          <label for="revision-expected">期待結果</label>
+          <textarea id="revision-expected" placeholder="例: 前の要素を読み終えてから自然に出現する"></textarea>
+          <label for="revision-allowed">変更対象（変更してよい範囲）</label>
+          <textarea id="revision-allowed" placeholder="例: scene2 / 144f〜164f / logo / opacity開始時刻のみ"></textarea>
+          <label for="revision-forbidden">変更禁止範囲</label>
+          <textarea id="revision-forbidden" placeholder="例: 総尺、位置、サイズ、色、他シーン、他レイヤー"></textarea>
+          <label for="revision-acceptance">完了条件</label>
+          <textarea id="revision-acceptance" placeholder="例: 154fまで透明、既存の尺とイージングを維持してフェードする"></textarea>
+          <label for="revision-questions">不明点（残っている間は承認不可）</label>
+          <textarea id="revision-questions" placeholder="不明点がなければ空欄"></textarea>
+          <output id="revision-errors" class="field-error" aria-live="polite"></output>
+          <div class="toolbar" style="margin-top:8px">
+            <button type="button" id="btn-save-revision" class="primary">変更Inboxへ保存</button>
+            <button type="button" id="btn-new-revision">新規入力</button>
+          </div>
         </div>
         <div>
-          <label for="rev-output">出力プレビュー（AIエージェント / GitHub Issue 貼付用）</label>
-          <textarea id="rev-output" readonly style="min-height:215px;font-family:monospace"></textarea>
+          <div class="toolbar">
+            <strong>保存した変更契約</strong>
+            <button type="button" id="btn-copy-approved" class="primary">承認済みを一括コピー</button>
+          </div>
+          <div id="revision-list" class="revision-list" aria-live="polite"></div>
         </div>
       </div>
     </section>
@@ -432,22 +447,27 @@ function buildPreviewStudioHtml() {
     const sceneInfo = document.getElementById('scene-info');
     const layerSelect = document.getElementById('layer-select');
     const layerChips = document.getElementById('layer-chips');
-    const canvasW = document.getElementById('canvas-w');
-    const canvasH = document.getElementById('canvas-h');
-    const revMemo = document.getElementById('rev-memo');
-    const revOutput = document.getElementById('rev-output');
     const markerBar = document.getElementById('marker-buttons');
     const reviewStatus = document.getElementById('review-status');
     const progressSummary = document.getElementById('progress-summary');
-    const instructionType = document.getElementById('instruction-type');
     const resumeBanner = document.getElementById('resume-banner');
     const resumeText = document.getElementById('resume-text');
+    const revisionList = document.getElementById('revision-list');
+    const revisionErrors = document.getElementById('revision-errors');
+    const revisionFields = {
+      observation: document.getElementById('revision-observation'),
+      expectedResult: document.getElementById('revision-expected'),
+      allowedChanges: document.getElementById('revision-allowed'),
+      forbiddenChanges: document.getElementById('revision-forbidden'),
+      acceptanceCriteria: document.getElementById('revision-acceptance'),
+      openQuestions: document.getElementById('revision-questions'),
+      priority: document.getElementById('revision-priority')
+    };
 
     const STORAGE_KEY = 'svg2lottie.preview.v1';
     const defaultState = () => ({
-      currentFile: '', frameByFile: {}, progressByFile: {}, memoByFile: {},
-      layerByFile: {}, instructionTypeByFile: {}, speed: '1', zoom: 'fit',
-      background: 'checker', savedAt: ''
+      currentFile: '', frameByFile: {}, progressByFile: {}, layerByFile: {}, speed: '1', zoom: 'fit',
+      background: 'checker', savedAt: '', revisionItems: []
     });
     let workspaceState = defaultState();
     let availableFiles = [];
@@ -458,6 +478,7 @@ function buildPreviewStudioHtml() {
     let animData = null;
     let currentFile = 'animation.json';
     let isPlaying = false;
+    let editingRevisionId = '';
 
     function readState() {
       try {
@@ -524,30 +545,104 @@ function buildPreviewStudioHtml() {
       return found;
     }
 
-    function updateRevisionMarkdown() {
-      const f = anim ? Math.round(anim.currentFrame) : 0;
-      const total = animData ? animData.op : 0;
-      const sc = currentSceneName(f);
-      const lid = layerSelect.value || '全体';
-      const w = canvasW.value || 520;
-      const h = canvasH.value || 140;
-      const memo = revMemo.value.trim() || '（ここに具体的な修正内容を記述してください）';
-      revOutput.value = [
-        '### アニメーション修正指示 (' + sc + ' / ' + f + 'f付近)',
-        '',
-        '- **対象ファイル**: \`' + currentFile + '\`',
-        '- **キャンバスサイズ**: 横幅 \`' + w + 'px\` × 縦幅 \`' + h + 'px\` (' + classifyAspect(Number(w), Number(h)) + ')',
-        '- **対象シーン・フレーム**: \`' + sc + '\` (\`' + f + 'f\` / 全\`' + total + 'f\`)',
-        '- **対象レイヤーID**: \`' + lid + '\`',
-        '- **指示種別**: \`' + instructionType.value + '\`',
-        '- **現象と修正内容**:',
-        '  ' + memo,
-        '',
-        '#### 回帰防止ガード（絶対に壊してはいけない既存仕様）',
-        '- [ ] \`0f\` 待機状態のレイヤーは \`opacity: 0%\`（完全透過）を維持しているか？',
-        '- [ ] ガウスブラーがオブジェクト境界外にはみ出ていないか（\`clipMask: true\` 維持）？',
-        '- [ ] \`#fff\` 等の不要な白座布団が出力されておらず、Day & Night 色反転で正常に見えるか？'
-      ].join('\\n');
+    function revisionValidation(item) {
+      const labels = {
+        observation: '現状', expectedResult: '期待結果', allowedChanges: '変更対象',
+        forbiddenChanges: '変更禁止範囲', acceptanceCriteria: '完了条件'
+      };
+      const errors = Object.entries(labels).filter(([key]) => !String(item[key] || '').trim()).map(([, label]) => label + 'を入力してください');
+      if (String(item.openQuestions || '').trim()) errors.push('不明点が残っています');
+      if (item.priority === 'hold') errors.push('優先度が保留です');
+      return errors;
+    }
+
+    function clearRevisionForm() {
+      editingRevisionId = '';
+      Object.entries(revisionFields).forEach(([key, field]) => { field.value = key === 'priority' ? 'hold' : ''; });
+      revisionErrors.textContent = '';
+    }
+
+    function readRevisionForm(existing = {}) {
+      const frame = anim ? Math.round(anim.currentFrame) : 0;
+      const now = new Date().toISOString();
+      return {
+        ...existing,
+        id: existing.id || 'revision-' + Date.now(),
+        fileName: existing.fileName || currentFile,
+        scene: existing.scene || currentSceneName(frame),
+        frame: Number.isFinite(existing.frame) ? existing.frame : frame,
+        totalFrames: existing.totalFrames || (animData ? animData.op : 0),
+        layerId: existing.layerId || layerSelect.value || '全体',
+        observation: revisionFields.observation.value.trim(),
+        expectedResult: revisionFields.expectedResult.value.trim(),
+        allowedChanges: revisionFields.allowedChanges.value.trim(),
+        forbiddenChanges: revisionFields.forbiddenChanges.value.trim(),
+        acceptanceCriteria: revisionFields.acceptanceCriteria.value.trim(),
+        openQuestions: revisionFields.openQuestions.value.trim(),
+        priority: revisionFields.priority.value,
+        status: existing.status || 'draft',
+        createdAt: existing.createdAt || now,
+        updatedAt: now
+      };
+    }
+
+    function editRevision(id) {
+      const item = workspaceState.revisionItems.find((entry) => entry.id === id);
+      if (!item) return;
+      editingRevisionId = id;
+      Object.keys(revisionFields).forEach((key) => { revisionFields[key].value = item[key] || (key === 'priority' ? 'hold' : ''); });
+      revisionErrors.textContent = '';
+      announce('変更契約を編集中');
+    }
+
+    function setRevisionStatus(id, nextStatus) {
+      const index = workspaceState.revisionItems.findIndex((entry) => entry.id === id);
+      if (index < 0) return;
+      const item = workspaceState.revisionItems[index];
+      const allowed = { draft: ['review'], review: ['draft', 'approved'], approved: ['review', 'recheck'], recheck: ['approved', 'done'], done: ['recheck'] };
+      if (!(allowed[item.status] || []).includes(nextStatus)) return;
+      if (nextStatus === 'approved') {
+        const errors = revisionValidation(item);
+        if (errors.length) { revisionErrors.textContent = errors.join(' / '); announce('承認できません'); return; }
+      }
+      workspaceState.revisionItems[index] = { ...item, status: nextStatus, updatedAt: new Date().toISOString() };
+      saveState(); renderRevisionList();
+      announce('変更契約の状態を更新しました');
+    }
+
+    function renderRevisionList() {
+      revisionList.innerHTML = '';
+      const statusLabel = { draft: '下書き', review: '確認待ち', approved: '承認済み', recheck: '再検収', done: '完了' };
+      const items = workspaceState.revisionItems.filter((item) => item.fileName === currentFile);
+      if (!items.length) { revisionList.textContent = 'このファイルの指摘はまだありません。'; return; }
+      items.forEach((item) => {
+        const card = document.createElement('article');
+        card.className = 'revision-card';
+        card.setAttribute('aria-current', String(editingRevisionId === item.id));
+        const title = document.createElement('strong');
+        title.textContent = statusLabel[item.status] + '・' + item.scene + ' / ' + item.frame + 'f / ' + item.layerId;
+        const summary = document.createElement('p');
+        summary.textContent = item.observation || '現状未入力';
+        const actions = document.createElement('div');
+        actions.className = 'toolbar';
+        const buttons = [['編集', () => editRevision(item.id)]];
+        if (item.status === 'draft') buttons.push(['確認待ちへ', () => setRevisionStatus(item.id, 'review')]);
+        if (item.status === 'review') buttons.push(['下書きへ戻す', () => setRevisionStatus(item.id, 'draft')], ['承認する', () => setRevisionStatus(item.id, 'approved')]);
+        if (item.status === 'approved') buttons.push(['承認を戻す', () => setRevisionStatus(item.id, 'review')], ['再検収へ', () => setRevisionStatus(item.id, 'recheck')]);
+        if (item.status === 'recheck') buttons.push(['承認済みへ戻す', () => setRevisionStatus(item.id, 'approved')], ['完了', () => setRevisionStatus(item.id, 'done')]);
+        if (item.status === 'done') buttons.push(['再検収へ戻す', () => setRevisionStatus(item.id, 'recheck')]);
+        buttons.forEach(([label, handler]) => { const button = document.createElement('button'); button.type = 'button'; button.textContent = label; button.addEventListener('click', handler); actions.appendChild(button); });
+        card.append(title, summary, actions);
+        revisionList.appendChild(card);
+      });
+    }
+
+    function approvedMarkdown() {
+      const items = workspaceState.revisionItems.filter((item) => item.status === 'approved');
+      if (!items.length) throw new Error('承認済みの変更契約がありません');
+      const rules = ['# 承認済みアニメーション変更契約', '', '## 実装時の絶対ルール', '', '- 記載されていない意図を推測して変更しない。', '- 変更対象に記載された範囲以外を変更しない。', '- 変更禁止範囲には触れない。', '- 対象外のリファクタリングを行わない。', '- 不明点や矛盾を発見した場合は実装を停止して確認する。'];
+      items.forEach((item, index) => rules.push('', '## 変更契約 ' + (index + 1) + ': ' + item.id, '', '- **対象ファイル**: \`' + item.fileName + '\`', '- **対象シーン・フレーム**: \`' + item.scene + '\` / \`' + item.frame + 'f\`', '- **対象レイヤーID**: \`' + item.layerId + '\`', '- **現状**: ' + item.observation, '- **期待結果**: ' + item.expectedResult, '- **変更対象**: ' + item.allowedChanges, '- **変更禁止範囲**: ' + item.forbiddenChanges, '- **完了条件**: ' + item.acceptanceCriteria));
+      return rules.join('\\n');
     }
 
     async function loadFile(file, options = {}) {
@@ -556,8 +651,6 @@ function buildPreviewStudioHtml() {
       const res = await fetch('/dist/' + encodeURIComponent(file) + '?t=' + Date.now());
       animData = await res.json();
       if (anim) anim.destroy();
-      canvasW.value = animData.w || 520;
-      canvasH.value = animData.h || 140;
       seekBar.max = Math.max(1, (animData.op || 100) - 1);
       applyStageSizing();
 
@@ -583,7 +676,6 @@ function buildPreviewStudioHtml() {
             targetG.style.display = hidden ? '' : 'none';
             chip.classList.toggle('muted', !hidden);
           }
-          updateRevisionMarkdown();
           announce('レイヤー ' + l.nm + ' を選択');
         });
         layerChips.appendChild(chip);
@@ -627,18 +719,16 @@ function buildPreviewStudioHtml() {
           sceneInfo.textContent = '現在シーン: ' + currentSceneName(f);
           workspaceState.frameByFile[currentFile] = f;
           saveState();
-          updateRevisionMarkdown();
         });
       }
-      revMemo.value = workspaceState.memoByFile[file] || '';
-      instructionType.value = workspaceState.instructionTypeByFile[file] || '修正';
       const savedLayer = workspaceState.layerByFile[file];
       if (savedLayer && [...layerSelect.options].some((option) => option.value === savedLayer)) layerSelect.value = savedLayer;
       reviewStatus.value = workspaceState.progressByFile[file] || 'unreviewed';
       markReviewing();
       updateProgress();
       saveState();
-      updateRevisionMarkdown();
+      clearRevisionForm();
+      renderRevisionList();
       announce(file + ' を読み込みました');
     }
 
@@ -690,17 +780,8 @@ function buildPreviewStudioHtml() {
     });
     layerSelect.addEventListener('change', () => {
       workspaceState.layerByFile[currentFile] = layerSelect.value;
-      saveState(); updateRevisionMarkdown();
+      saveState();
     });
-    revMemo.addEventListener('input', () => {
-      workspaceState.memoByFile[currentFile] = revMemo.value;
-      saveState(); updateRevisionMarkdown();
-    });
-    instructionType.addEventListener('change', () => {
-      workspaceState.instructionTypeByFile[currentFile] = instructionType.value;
-      saveState(); updateRevisionMarkdown();
-    });
-    [canvasW, canvasH].forEach((el) => el.addEventListener('input', updateRevisionMarkdown));
     reviewStatus.addEventListener('change', () => {
       workspaceState.progressByFile[currentFile] = reviewStatus.value;
       saveState(); updateProgress();
@@ -721,10 +802,26 @@ function buildPreviewStudioHtml() {
       loadFile(fileSelect.value);
       announce('前回の続きから再開しました');
     });
-    document.getElementById('btn-copy').addEventListener('click', async () => {
-      updateRevisionMarkdown();
-      if (navigator.clipboard) await navigator.clipboard.writeText(revOutput.value);
-      announce('AI修正指示Markdownをコピーしました');
+    document.getElementById('btn-save-revision').addEventListener('click', () => {
+      const index = workspaceState.revisionItems.findIndex((item) => item.id === editingRevisionId);
+      const existing = index >= 0 ? workspaceState.revisionItems[index] : {};
+      const item = readRevisionForm(existing);
+      if (index >= 0 && existing.status !== 'draft') item.status = 'draft';
+      if (index >= 0) workspaceState.revisionItems[index] = item;
+      else workspaceState.revisionItems.push(item);
+      saveState(); clearRevisionForm(); renderRevisionList();
+      announce('変更Inboxへ保存しました');
+    });
+    document.getElementById('btn-new-revision').addEventListener('click', clearRevisionForm);
+    document.getElementById('btn-copy-approved').addEventListener('click', async () => {
+      try {
+        const markdown = approvedMarkdown();
+        if (navigator.clipboard) await navigator.clipboard.writeText(markdown);
+        announce('承認済み変更契約をコピーしました');
+      } catch (error) {
+        revisionErrors.textContent = error.message;
+        announce(error.message);
+      }
     });
 
     window.addEventListener('keydown', (e) => {

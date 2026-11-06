@@ -132,7 +132,17 @@ test('Preview Server: セキュリティヘッダー・a11y属性・API・パス
     assert.ok(html.includes('localStorage.setItem(STORAGE_KEY'));
     assert.ok(html.includes('autoplay: false'));
     assert.ok(html.includes('次の未完了'));
-    assert.ok(html.includes('id="instruction-type"'));
+    assert.ok(html.includes('変更Inbox'));
+    assert.ok(html.includes('id="revision-list"'));
+    assert.ok(html.includes('id="revision-observation"'));
+    assert.ok(html.includes('id="revision-expected"'));
+    assert.ok(html.includes('id="revision-allowed"'));
+    assert.ok(html.includes('id="revision-forbidden"'));
+    assert.ok(html.includes('id="revision-acceptance"'));
+    assert.ok(html.includes('id="revision-questions"'));
+    assert.ok(html.includes('id="btn-save-revision"'));
+    assert.ok(html.includes('id="btn-copy-approved"'));
+    assert.ok(html.includes('revisionItems'));
     assert.ok(html.includes('/api/reload-token'));
 
     // 2. GET /api/animations & /api/live-reload
