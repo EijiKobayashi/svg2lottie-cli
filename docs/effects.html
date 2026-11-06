@@ -143,14 +143,23 @@
       background: radial-gradient(circle at center, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%),
         repeating-conic-gradient(rgba(255, 255, 255, 0.03) 0% 25%, transparent 0% 50%) 50% / 20px 20px;
       border-bottom: 1px solid var(--border);
+      overflow: hidden; /* オブジェクトの枠外はみ出しを完全防止 */
     }
     body.light .card-stage-container {
       background: radial-gradient(circle at center, #ffffff 0%, #f1f5f9 100%),
         repeating-conic-gradient(rgba(0, 0, 0, 0.03) 0% 25%, transparent 0% 50%) 50% / 20px 20px;
     }
+    /* ネオン管カードはLightモード時でも発光美を最大化するためダークステージを維持 */
+    .effect-card:has(#stage-effect-neon-glow) .card-stage-container,
+    #stage-effect-neon-glow-container {
+      background: radial-gradient(circle at center, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 1) 100%) !important;
+    }
     .card-stage {
-      width: 200px;
-      height: 200px;
+      width: 240px;
+      height: 240px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     body.invert .card-stage {
       filter: invert(1) brightness(1.6);
@@ -217,7 +226,7 @@
     }
   </style>
 </head>
-<body>
+<body class="light">
   <header>
     <div class="header-inner">
       <div class="title-group">
@@ -232,7 +241,7 @@
           <option value="0.5">0.5x (ハーフスロー)</option>
           <option value="0.25">0.25x (スーパースロー検収)</option>
         </select>
-        <button id="theme-btn" aria-label="ライト／ダークモード切替">☀️ Light</button>
+        <button id="theme-btn" aria-label="ライト／ダークモード切替">🌙 Dark</button>
         <button id="invert-btn" aria-label="色反転Day&Night確認">🌓 反転確認</button>
       </div>
     </div>

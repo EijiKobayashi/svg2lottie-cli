@@ -28,7 +28,8 @@ export function applyPopIn(layer, options = {}, ctx = {}) {
     cartoon = true,
     start = 0,
     end = 56,
-    jumpHeight = 28,
+    jumpHeight = 22,
+    baseScale = 52, // 枠内収容のための基準スケール（52% = 直径約100px）
   } = options;
 
   const totalFrames = layer.op || 120;
@@ -38,6 +39,12 @@ export function applyPopIn(layer, options = {}, ctx = {}) {
 
   // アンカーポイントを中心 [px, py, 0] に保証
   layer.ks.a = { a: 0, k: [px, py, 0] };
+
+  const sc = (x, y) => [
+    round4((x * baseScale) / 100),
+    round4((y * baseScale) / 100),
+    100,
+  ];
 
   if (cartoon) {
     const t0 = start;
@@ -55,45 +62,46 @@ export function applyPopIn(layer, options = {}, ctx = {}) {
     const tBreath2 = tSettle + 28;
     const tBreath3 = tSettle + 42;
 
+    // 体積保存則（X * Y = 10,000）を厳密に守ったピクサー調Squash & Stretch
     layer.ks.s = {
       a: 1,
       k: [
-        // 0fでも最初から姿が見えている（100%）
-        { t: 0, s: [100, 100, 100], i: EASE_IN_OUT, o: EASE_IN_OUT },
-        { t: t0, s: [100, 100, 100], i: EASE_IN_OUT, o: EASE_IN_OUT },
-        // 1. タメ (Anticipation): 地面にギュ〜ッと横に潰れて力を溜める
-        { t: tAnticipate, s: [142, 60, 100], i: EASE_OUT, o: EASE_IN },
-        // 2. 飛び出し (Stretch): ロケットのように縦長にビヨ〜ンと伸びる
-        { t: tJump, s: [62, 152, 100], i: EASE_IN_OUT, o: EASE_OUT },
-        // 3. 頂点 (Apex): 空中で一瞬ふわりと真円に戻る
-        { t: tPeak, s: [98, 102, 100], i: EASE_IN, o: EASE_OUT },
-        // 4. 着地 (Squash): ドスン！と着地してボヨンと横に広がる
-        { t: tLand, s: [140, 68, 100], i: BOUNCE_OUT, o: EASE_IN_OUT },
-        // 5. 反動 (Rebound): 跳ね返りで縦長にボヨン
-        { t: tRebound, s: [88, 118, 100], i: EASE_IN_OUT, o: EASE_IN_OUT },
+        // 0fでも最初から姿が見えている
+        { t: 0, s: sc(100, 100), i: EASE_IN_OUT, o: EASE_IN_OUT },
+        { t: t0, s: sc(100, 100), i: EASE_IN_OUT, o: EASE_IN_OUT },
+        // 1. タメ (Anticipation): 地面にギュ〜ッと横に潰れて力を溜める (133 * 75 ≈ 10,000)
+        { t: tAnticipate, s: sc(133, 75), i: EASE_OUT, o: EASE_IN },
+        // 2. 飛び出し (Stretch): ロケットのように縦長にビヨ〜ンと伸びる (72 * 138 ≈ 10,000)
+        { t: tJump, s: sc(72, 138), i: EASE_IN_OUT, o: EASE_OUT },
+        // 3. 頂点 (Apex): 空中で一瞬ふわりと真円近くに戻る (98 * 102 ≈ 10,000)
+        { t: tPeak, s: sc(98, 102), i: EASE_IN, o: EASE_OUT },
+        // 4. 着地 (Squash): ドスン！と着地してボヨンと横に広がる (135 * 74 ≈ 10,000)
+        { t: tLand, s: sc(135, 74), i: BOUNCE_OUT, o: EASE_IN_OUT },
+        // 5. 反動 (Rebound): 跳ね返りで縦長にボヨン (83 * 120 ≈ 10,000)
+        { t: tRebound, s: sc(83, 120), i: EASE_IN_OUT, o: EASE_IN_OUT },
         // 6. ぷるぷるゼリー振動 (Jiggle)
-        { t: tJiggle1, s: [108, 93, 100], i: EASE_IN_OUT, o: EASE_IN_OUT },
-        { t: tJiggle2, s: [96, 104, 100], i: EASE_IN_OUT, o: EASE_IN_OUT },
-        { t: tSettle, s: [100, 100, 100], i: EASE_IN_OUT, o: EASE_IN_OUT },
+        { t: tJiggle1, s: sc(106, 94), i: EASE_IN_OUT, o: EASE_IN_OUT },
+        { t: tJiggle2, s: sc(96, 104), i: EASE_IN_OUT, o: EASE_IN_OUT },
+        { t: tSettle, s: sc(100, 100), i: EASE_IN_OUT, o: EASE_IN_OUT },
         // 7. 呼吸アイドリング (Idle Breathing): 愛らしく息づく
-        { t: tBreath1, s: [104, 96, 100], i: EASE_IN_OUT, o: EASE_IN_OUT },
-        { t: tBreath2, s: [98, 102, 100], i: EASE_IN_OUT, o: EASE_IN_OUT },
-        { t: tBreath3, s: [103, 97, 100], i: EASE_IN_OUT, o: EASE_IN_OUT },
-        { t: totalFrames, s: [100, 100, 100] },
+        { t: tBreath1, s: sc(104, 96), i: EASE_IN_OUT, o: EASE_IN_OUT },
+        { t: tBreath2, s: sc(97, 103), i: EASE_IN_OUT, o: EASE_IN_OUT },
+        { t: tBreath3, s: sc(103, 97), i: EASE_IN_OUT, o: EASE_IN_OUT },
+        { t: totalFrames, s: sc(100, 100) },
       ],
     };
 
-    // 位置: タメ（沈み込み） ➔ 跳躍 ➔ 頂点 ➔ 着地 ➔ 定位置
+    // 位置: 沈み込み ➔ 跳躍 ➔ 頂点 ➔ 着地 ➔ 定位置（枠内に完全収容）
     layer.ks.p = {
       a: 1,
       k: [
         { t: 0, s: [px, py, 0], i: EASE_IN_OUT, o: EASE_IN_OUT },
         { t: t0, s: [px, py, 0], i: EASE_IN_OUT, o: EASE_IN_OUT },
-        { t: tAnticipate, s: [px, py + 8, 0], i: EASE_OUT, o: EASE_IN },
+        { t: tAnticipate, s: [px, py + 6, 0], i: EASE_OUT, o: EASE_IN },
         { t: tJump, s: [px, py - jumpHeight, 0], i: EASE_IN_OUT, o: EASE_OUT },
-        { t: tPeak, s: [px, py - jumpHeight - 4, 0], i: EASE_IN, o: EASE_OUT },
+        { t: tPeak, s: [px, py - jumpHeight - 2, 0], i: EASE_IN, o: EASE_OUT },
         { t: tLand, s: [px, py + 3, 0], i: BOUNCE_OUT, o: EASE_IN_OUT },
-        { t: tRebound, s: [px, py - 4, 0], i: EASE_IN_OUT, o: EASE_IN_OUT },
+        { t: tRebound, s: [px, py - 3, 0], i: EASE_IN_OUT, o: EASE_IN_OUT },
         { t: tSettle, s: [px, py, 0], i: EASE_IN_OUT, o: EASE_IN_OUT },
         { t: totalFrames, s: [px, py, 0] },
       ],

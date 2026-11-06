@@ -112,10 +112,10 @@ npx svg2lottie-cli preview [--dir <dir>] [--port <port>]
 | | `mask.mjs` | `applyMask(layer, options, ctx)` | 加算(`a`)・減算(`s`)・交差(`i`)・反転(`inv`)・ぼかし(`f`)・拡張(`x`)マスクの付与 |
 | | `ultra-key.mjs` | `applyUltraKey(layer, options, ctx)` | 指定キーカラー（グリーンスクリーン `#00ff00` 等）と許容距離内のシェイプを自動透過・除去 |
 | ④ **光学・Apple的UI** | `echo-glow-neon.mjs` | `applyEchoGlowNeon(layer, options, ctx)` | 時間遅延エコー残像レイヤー生成、ガウシアングロー発光、多層ネオン管ストローク生成 |
-| | `liquid-glass.mjs` | `applyLiquidGlass(layer, options, ctx)` | すりガラス・グラスプレート・Apple的リキッドグラス（フロストブラー＋スペキュラリム＋屈折シマー） |
-| ⑤ **物理・自然・破壊** | `glass-crack.mjs` | `applyGlassCrack(layer, options, ctx)` | 衝撃点からの放射状ひび割れライン（Trim Paths）＋破片シャード飛散レイヤー生成 |
-| | `fire.mjs` | `applyFire(layer, options, ctx)` | コア〜外炎の温度グラデーション揺らぎ＋上昇火の粉（エンバー）パーティクル生成 |
-| | `water.mjs` | `applyWater(layer, options, ctx)` | 水面リップル波紋リング拡大（`mode: 'ripple'`）および天井・蛇口からの水滴滴下・弾け（`mode: 'dripping'`）、スプラッシュレイヤー生成 |
+| | `liquid-glass.mjs` | `applyLiquidGlass(layer, options, ctx)` | 有機的液状変形（Liquid Blob）＋立体屈折ガラスプレート（フロストブラー＋スペキュラリム＋屈折シマー） |
+| ⑤ **物理・自然・破壊** | `glass-crack.mjs` | `applyGlassCrack(layer, options, ctx)` | 偏心衝撃点からのアシンメトリー・不規則クラックライン＋枠内破片シャード飛散レイヤー生成 |
+| | `fire.mjs` | `applyFire(layer, options, ctx)` | 点P空間準拠（根元固定アンカー、熱対流波送り、くびれ先端ちぎれ、外炎・内炎二層燃焼） |
+| | `water.mjs` | `applyWater(layer, options, ctx)` | 小ぶりで繊細な水面リップル波紋（`mode: 'ripple'`）および水滴滴下・弾け（`mode: 'dripping'`）、スプラッシュレイヤー生成 |
 | | `powder-scatter.mjs` | `applyPowderScatter(baseLottie, options)` | 頂点サンプリングから微細粒子レイヤー群を生成し、本体と同期して枠内飛散＆完全透過させる |
 
 ---

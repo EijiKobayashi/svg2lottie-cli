@@ -54,16 +54,18 @@ function buildFlamePathKeyframes(baseShape, totalFrames = 120, opts = {}) {
       // u: 炎の底面が 0.0、先端が 1.0
       const u = Math.max(0, Math.min(1, (maxY - vy) / height));
 
-      // 点P空間の波送り: 高さ u と 時間 timeAngle の進行波
-      // 波が下から上へ移動: phi = u * 2.4 * PI - timeAngle
-      const wavePhi = u * Math.PI * 2.4 - timeAngle;
+      // 点P空間準拠: 根元アンカーの完全固定 (u < 0.25 は振幅ゼロへ急速減衰)
+      const rootAnchor = Math.pow(u, 2.2);
 
-      // 振幅: 底面は地面に固定(小)、中腹〜上部で激しくうねる
-      const ampX = (u < 0.15 ? u * 12 : 2.5 + Math.sin(u * Math.PI * 0.9) * 7.5) * intensity;
+      // 点P空間の波送り: 下から上へ送られる熱対流波
+      const wavePhi = u * Math.PI * 2.8 - timeAngle;
+
+      // 振幅: 根元はゼロ固定、中腹〜先端でうねる
+      const ampX = rootAnchor * (4 + Math.sin(u * Math.PI * 0.95) * 7.5) * intensity;
       const dx = Math.sin(wavePhi) * ampX;
 
       // 縦方向の熱リフト: 上部ほど熱対流で引っ張られる
-      const liftY = -Math.pow(u, 1.4) * (4.5 + Math.cos(wavePhi) * 3.5) * intensity;
+      const liftY = -Math.pow(u, 1.8) * (3.0 + Math.cos(wavePhi) * 2.2) * intensity;
 
       // 中心からのスケール適用（内炎用）
       const scaledX = centerX + (vx + dx - centerX) * scale;
@@ -251,18 +253,18 @@ export function applyFire(layer, options = {}, ctx = {}) {
           k: [
             {
               t: tearStart,
-              s: [cx, cy - 36, 0],
+              s: [cx, cy - 30, 0],
               i: { x: [0.42, 0.42, 0.42], y: [0, 0, 0] },
               o: { x: [0.58, 0.58, 0.58], y: [1, 1, 1] },
             },
             {
               t: tearPinch,
-              s: [cx + (c % 2 === 0 ? 5 : -5), cy - 56, 0],
+              s: [cx + (c % 2 === 0 ? 4 : -4), cy - 46, 0],
               i: { x: [0.22, 0.22, 0.22], y: [1, 1, 1] },
               o: { x: [0.36, 0.36, 0.36], y: [1, 1, 1] },
             },
-            { t: tearEnd, s: [cx + (c % 2 === 0 ? 10 : -10), cy - 92, 0] },
-            { t: totalFrames, s: [cx, cy - 92, 0] },
+            { t: tearEnd, s: [cx + (c % 2 === 0 ? 8 : -8), cy - 64, 0] },
+            { t: totalFrames, s: [cx, cy - 64, 0] },
           ],
         },
         a: { a: 0, k: [0, 0, 0] },
@@ -322,10 +324,10 @@ export function applyFire(layer, options = {}, ctx = {}) {
     });
   }
 
-  // 4. 上昇する火の粉（Ember）パーティクル: 乱流の弧を描きながら舞い上がる
-  const spreadX = Math.max(16, w * 0.18);
-  const riseDist = Math.max(40, h * 0.42);
-  const dotSize = round4(Math.max(3.5, Math.min(w, h) * 0.026));
+  // 4. 上昇する火の粉（Ember）パーティクル: 枠内に収まるよう上昇距離を制御
+  const spreadX = Math.min(22, w * 0.16);
+  const riseDist = Math.min(54, h * 0.28);
+  const dotSize = round4(Math.max(3.2, Math.min(w, h) * 0.022));
 
   for (let i = 0; i < emberCount; i++) {
     const eStart = start + Math.round((i * (dur * 0.85)) / emberCount);

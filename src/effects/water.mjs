@@ -57,20 +57,20 @@ export function applyWater(layer, options = {}, ctx = {}) {
     const easeOutQuad = { x: [0.25, 0.25, 0.25], y: [1, 1, 1] };
     const easeInOut = { x: [0.35, 0.35, 0.35], y: [0.65, 0.65, 0.65] };
 
-    // スケール: 最初から天井に溜まっている（0fで可視）
+    // スケール: 小ぶりで上品な水滴サイズ（基準28% = 幅約35px）
     layer.ks.s = {
       a: 1,
       k: [
-        { t: 0, s: [70, 70, 100], i: easeInOut, o: easeInOut },
-        { t: t0, s: [70, 70, 100], i: easeOutQuad, o: easeOutQuad },
-        { t: tSwell, s: [102, 94, 100], i: easeInOut, o: easeInOut },
-        { t: tNeck, s: [62, 148, 100], i: easeInQuad, o: easeInQuad }, // 表面張力でくびれてビヨーンと伸びる
-        { t: tRelease, s: [80, 125, 100], i: easeInQuad, o: easeInQuad },
-        { t: tImpact - 2, s: [75, 135, 100], i: easeOutQuad, o: easeOutQuad },
-        { t: tImpact, s: [155, 30, 100] }, // 着水でペチャッと大潰れ
+        { t: 0, s: [24, 24, 100], i: easeInOut, o: easeInOut },
+        { t: t0, s: [24, 24, 100], i: easeOutQuad, o: easeOutQuad },
+        { t: tSwell, s: [34, 30, 100], i: easeInOut, o: easeInOut }, // ぷくっと小ぶりに膨らむ
+        { t: tNeck, s: [18, 46, 100], i: easeInQuad, o: easeInQuad }, // 表面張力でくびれて縦長に
+        { t: tRelease, s: [25, 38, 100], i: easeInQuad, o: easeInQuad },
+        { t: tImpact - 2, s: [22, 42, 100], i: easeOutQuad, o: easeOutQuad },
+        { t: tImpact, s: [48, 10, 100] }, // 着水でペチャッと潰れる
         { t: tImpact + 4, s: [0, 0, 100] },
         { t: totalFrames - 15, s: [0, 0, 100] },
-        { t: totalFrames, s: [70, 70, 100] },
+        { t: totalFrames, s: [24, 24, 100] },
       ],
     };
 
@@ -371,10 +371,10 @@ export function applyWater(layer, options = {}, ctx = {}) {
     layer.ks.s = {
       a: 1,
       k: [
-        { t: start, s: [85, 115, 100], i: easeInQuad, o: easeInQuad },
-        { t: impactTime - 2, s: [80, 125, 100], i: easeOutQuad, o: easeOutQuad },
-        { t: impactTime, s: [140, 40, 100] },
-        { t: totalFrames, s: [100, 100, 100] },
+        { t: start, s: [26, 32, 100], i: easeInQuad, o: easeInQuad },
+        { t: impactTime - 2, s: [22, 38, 100], i: easeOutQuad, o: easeOutQuad },
+        { t: impactTime, s: [44, 12, 100] },
+        { t: totalFrames, s: [26, 32, 100] },
       ],
     };
 
@@ -422,12 +422,12 @@ export function applyWater(layer, options = {}, ctx = {}) {
           k: [
             {
               t: rStart,
-              s: [15, 15, 100],
+              s: [10, 10, 100],
               i: { x: [0.16, 0.16, 0.16], y: [1, 1, 1] },
               o: { x: [0.36, 0.36, 0.36], y: [1, 1, 1] },
             },
-            { t: rEnd, s: [160, 160, 100] },
-            { t: totalFrames, s: [160, 160, 100] },
+            { t: rEnd, s: [105, 105, 100] },
+            { t: totalFrames, s: [105, 105, 100] },
           ],
         },
       },
