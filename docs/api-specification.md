@@ -98,6 +98,20 @@ npx svg2lottie-cli preview [--dir <dir>] [--port <port>]
 | `buildLottieFromStoryboard(config: StoryboardConfig, svgResolver: (svgPath: string) => string): LottieAnimation` | `StoryboardConfig` と `src/effects/` モジュール群を組み合わせて Lottie JSON を生成する。 |
 | `appendPowderEnding(baseLottie: LottieAnimation, config: StoryboardConfig, svgResolver: (svgPath: string) => string): LottieAnimation` | `powder-scatter.mjs` を呼び出し、粉飛散エンディング付きの派生 Lottie JSON を返す。 |
 
+### 2.6 `src/shape-modifiers.mjs`（Lottie ネイティブ・シェイプモディファイア API）
+AEシェイプレイヤー内の「追加（Add）」メニューに直結する、Lottie標準ネイティブ仕様のモディファイア生成エンジンです。
+
+| 関数シグネチャ | 説明 |
+|---|---|
+| `buildTrimPathsItem(cfg: object): LottieTrimPaths` | パスのトリミング (`ty: "tm"`) アイテムを生成。開始(`s`)・終了(`e`)・オフセット(`o`)・モード(`m`)。 |
+| `buildOffsetPathsItem(cfg: object): LottieOffsetPaths` | パスのオフセット (`ty: "op"`) アイテムを生成。オフセット量(`a`)・結合(`lj`)・マイター限界(`ml`)。 |
+| `buildMergePathsItem(cfg: object): LottieMergePaths` | パスの結合 (`ty: "mm"`) アイテムを生成。モード(`mm`: 1=Merge, 2=Add, 3=Subtract, 4=Intersect, 5=Exclude)。 |
+| `buildRepeaterItem(cfg: object): LottieRepeater` | リピーター (`ty: "rp"`) アイテムを生成。複製数(`c`)・オフセット(`o`)・トランスフォーム(`tr`)。 |
+| `buildRoundCornersItem(cfg: object): LottieRoundCorners` | 角を丸くする (`ty: "rd"`) アイテムを生成。角丸半径(`r`)（静的値またはキーフレーム）。 |
+| `buildGradientFillItem(cfg: object): LottieGradientFill` | グラデーション塗り (`ty: "gf"`) アイテムを生成。線形/放射状(`t`)・開始点(`s`)・終了点(`e`)・カラーストップ(`g`)。 |
+| `buildGradientStrokeItem(cfg: object): LottieGradientStroke` | グラデーション線 (`ty: "gs"`) アイテムを生成。線幅(`w`)・線形/放射状(`t`)・カラーストップ(`g`)。 |
+| `applyShapeModifiers(items: any[], layerCfg: object): any[]` | レイヤー定義に基づき、パスシェイプと塗りの間に適切な順序でモディファイアを注入・合成する。 |
+
 ---
 
 ## 3. キラーエフェクト・モジュール API (`src/effects/*.mjs`)
@@ -133,7 +147,8 @@ npx svg2lottie-cli preview [--dir <dir>] [--port <port>]
 
 | メソッド | パス | レスポンス | 説明 |
 |---|---|---|---|
-| `GET` | `/` または `/preview/index.html` | `200 text/html; charset=utf-8` | 検収プレビュー＆AI修正指示スタジオ HTML |
+| `GET` | `/` または `/preview/index.html` | `200 text/html; charset=utf-8` | 制作実績検収プレビュー＆AI修正指示スタジオ HTML |
+| `GET` | `/shapes` または `/shapes.html` | `200 text/html; charset=utf-8` | **基本エフェクト専用ショールーム＆検収ページ**（AEシェイプ機能6種: Trim, Offset, Merge, Repeater, Round Corners, Gradient の独立カード検収UI） |
 | `GET` | `/effects` または `/effects.html` | `200 text/html; charset=utf-8` | エフェクト専用カタログ・ショールーム HTML（全キラーエフェクト一覧） |
 | `GET` | `/api/animations` | `200 application/json` | `dist/` 内の `.json` ファイル一覧 `{ "files": ["..."] }` |
 | `GET` | `/api/live-reload` | `200 text/event-stream` | ホットリロード用 Server-Sent Events (SSE)。ファイル保存時に再読み込みイベントを配信 |

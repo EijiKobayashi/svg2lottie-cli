@@ -18,6 +18,7 @@ import {
   buildTrimStrokeLayer,
   applyPowderScatter,
 } from './effects/index.mjs';
+import { applyShapeModifiers } from './shape-modifiers.mjs';
 
 function safeHexToRgba(hex, fallbackRgba) {
   if (!hex) return fallbackRgba;
@@ -164,10 +165,37 @@ function buildShapeLayer(layerCfg, ind, defaultColorHex, durationFrames, canvasD
       if (!firstPrimaryShape) {
         firstPrimaryShape = sh;
       }
+      let ksProp = { a: 0, k: sh };
+      if (
+        layerCfg.mergePaths &&
+        (layerCfg.mergePaths.animateApproach || typeof layerCfg.mergePaths.distance === 'number')
+      ) {
+        const dist = layerCfg.mergePaths.distance ?? 60;
+        const midX = (canvasDims.width || 400) / 2;
+        const centerX = sh.v.reduce((sum, p) => sum + p[0], 0) / sh.v.length;
+        const dir = centerX < midX ? 1 : -1;
+        const dx = dir * dist;
+        const sh0 = sh;
+        const shMoved = {
+          c: sh.c,
+          v: sh.v.map(([x, y]) => [round4(x + dx), round4(y)]),
+          i: sh.i.map(([x, y]) => [x, y]),
+          o: sh.o.map(([x, y]) => [x, y]),
+        };
+        ksProp = {
+          a: 1,
+          k: [
+            { t: 0, s: [sh0], i: { x: [0.4], y: [1] }, o: { x: [0.2], y: [1] } },
+            { t: 45, s: [shMoved], i: { x: [0.4], y: [1] }, o: { x: [0.2], y: [1] } },
+            { t: 90, s: [sh0] },
+          ],
+        };
+      }
+
       const shItem = {
         ty: 'sh',
         nm: `Path ${idx + 1}-${subIdx + 1}`,
-        ks: { a: 0, k: sh },
+        ks: ksProp,
         _sourceFill: meta.fill,
       };
       flatShapeItems.push(shItem);
@@ -226,33 +254,52 @@ function buildShapeLayer(layerCfg, ind, defaultColorHex, durationFrames, canvasD
       })
     : { a: 0, k: [cx, cy, 0] };
 
+  // effects 配列内のシェイプモディファイア指定もマージ
+  const mergedCfg = { ...layerCfg };
+  if (Array.isArray(layerCfg.effects)) {
+    for (const ef of layerCfg.effects) {
+      if (ef.type === 'trim' && !mergedCfg.trim) mergedCfg.trim = ef;
+      else if (ef.type === 'offset-paths' && !mergedCfg.offsetPaths) mergedCfg.offsetPaths = ef;
+      else if (ef.type === 'merge-paths' && !mergedCfg.mergePaths) mergedCfg.mergePaths = ef;
+      else if (ef.type === 'repeater' && !mergedCfg.repeater) mergedCfg.repeater = ef;
+      else if (ef.type === 'round-corners' && !mergedCfg.roundCorners) mergedCfg.roundCorners = ef;
+      else if (ef.type === 'gradient-fill' && !mergedCfg.gradientFill) mergedCfg.gradientFill = ef;
+      else if (ef.type === 'gradient-stroke' && !mergedCfg.gradientStroke) mergedCfg.gradientStroke = ef;
+    }
+  }
+
+  const rawGroupItems = [
+    ...flatShapeItems,
+    {
+      ty: 'fl',
+      nm: 'Fill 1',
+      c: { a: 0, k: effectiveRgba },
+      o: { a: 0, k: 100 },
+      r: 1,
+    },
+    {
+      ty: 'tr',
+      p: { a: 0, k: [0, 0] },
+      a: { a: 0, k: [0, 0] },
+      s: { a: 0, k: [100, 100] },
+      r: { a: 0, k: 0 },
+      o: { a: 0, k: 100 },
+      sk: { a: 0, k: 0 },
+      sa: { a: 0, k: 0 },
+    },
+  ];
+
   const shapesArray =
     (preserveColors || staggerCfg) && partGroups.length > 0
-      ? partGroups
+      ? partGroups.map((pg) => ({
+          ...pg,
+          it: applyShapeModifiers(pg.it, mergedCfg),
+        }))
       : [
           {
             ty: 'gr',
             nm: layerCfg.id,
-            it: [
-              ...flatShapeItems,
-              {
-                ty: 'fl',
-                nm: 'Fill 1',
-                c: { a: 0, k: effectiveRgba },
-                o: { a: 0, k: 100 },
-                r: 1,
-              },
-              {
-                ty: 'tr',
-                p: { a: 0, k: [0, 0] },
-                a: { a: 0, k: [0, 0] },
-                s: { a: 0, k: [100, 100] },
-                r: { a: 0, k: 0 },
-                o: { a: 0, k: 100 },
-                sk: { a: 0, k: 0 },
-                sa: { a: 0, k: 0 },
-              },
-            ],
+            it: applyShapeModifiers(rawGroupItems, mergedCfg),
           },
         ];
 

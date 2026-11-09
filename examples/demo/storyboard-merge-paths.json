@@ -1,0 +1,41 @@
+{
+  "name": "shape-merge-paths",
+  "width": 400,
+  "height": 400,
+  "fps": 60,
+  "durationFrames": 90,
+  "loop": true,
+  "color": "#ec4899",
+  "markers": [
+    { "cm": "01-approach-merge", "tm": 0, "dr": 45 },
+    { "cm": "02-separate", "tm": 45, "dr": 45 }
+  ],
+  "layers": [
+    {
+      "id": "merge-circles-layer",
+      "svg": "svg/merge-circles.svg",
+      "targetId": "merge-group",
+      "inFrame": 0,
+      "outFrame": 90,
+      "color": "#ec4899",
+      "stroke": {
+        "color": "#ffffff",
+        "width": 6,
+        "lineCap": "round",
+        "lineJoin": "round"
+      },
+      "mergePaths": {
+        "mode": "add",
+        "animateApproach": true,
+        "distance": 60
+      },
+      "offsetPaths": {
+        "amount": -12,
+        "fromAmount": 0,
+        "startFrame": 0,
+        "endFrame": 45,
+        "lineJoin": "round"
+      }
+    }
+  ]
+}

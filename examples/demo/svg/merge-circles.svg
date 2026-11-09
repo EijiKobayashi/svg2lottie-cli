@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <g id="merge-group">
+    <path id="circle-left" d="M 120 135 A 65 65 0 1 1 119.9 135 Z" fill="#ec4899"/>
+    <path id="circle-right" d="M 280 135 A 65 65 0 1 1 279.9 135 Z" fill="#ec4899"/>
+  </g>
+</svg>

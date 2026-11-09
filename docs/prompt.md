@@ -98,6 +98,45 @@ Agentは承認済み変更契約の「変更対象」に限って編集し、変
 作成したLottieアニメーションに、Webサイト組み込み用のインタラクション（ホバー連動・クリック遷移）を設定してください。
 
 ### 要件
+1. `docs/data-model.md` の `InteractionConfig` に従い、`storyboard.json` のルートに `interaction` オブジェクトを追加する。
+2. ホバー動作 (`hover`: `"play" | "reverse" | "loop" | "pause"`)、クリック動作 (`click`: `"toggle" | "seek" | "url"`) を指定する。
+3. `click: "url"` 時の遷移先URLは、`javascript:` や未許可スキームを排除し、安全なURL（`https://` または相対パス）に限定する。
+4. `src/interaction.mjs` を通じて、Webサイトへ1行で貼り付け可能なセキュアなHTML埋め込みコード（`buildEmbedSnippet`）を生成する。
+```
+
+---
+
+## プロンプト6: Lottie ネイティブ・シェイプレイヤー基本機能（Trim, Offset, Merge, Repeater, Round Corners, Gradients）活用プロンプト
+
+```markdown
+あなたはLottie/Bodymovinの仕様を熟知したベクターアニメーションエンジニアです。
+After Effectsの「エフェクト」メニューではなく、シェイプレイヤー内の「追加（Add）」メニューに直結するLottieネイティブ機能群を使って、軽量・高速・完全ベクターなアニメーションを構築してください。
+
+### 対象モディファイアと指定方法 (`storyboard.json` レイヤー内)
+1. **パスのトリミング (`trim`)**:
+   - 線が伸びるアニメーション（開始 `start`: 0〜100, 終了 `end`: 0〜100, `startFrame`, `endFrame`）
+   - 出力Lottie: `{ "ty": "tm", "s": {...}, "e": {...}, "o": {...}, "m": 1 }`
+2. **パスのオフセット (`offsetPaths`)**:
+   - パスを太らせる/細める肉付け（`amount`: 正負のpx, `lineJoin`: "round"|"miter"|"bevel"）
+   - 出力Lottie: `{ "ty": "op", "a": {...}, "lj": 2, "ml": 4 }`
+3. **パスの結合 (`mergePaths`)**:
+   - ブーリアン演算（`mode`: "merge" | "add" | "subtract" | "intersect" | "exclude"）
+   - 出力Lottie: `{ "ty": "mm", "mm": 1..5 }` ※Web完全対応、ネイティブ注意
+4. **リピーター (`repeater`)**:
+   - 配列複製と弾ける演出（`copies`: 数量, `rotation`: 複製ごとの角度, `scale`: 拡大縮小）
+   - 出力Lottie: `{ "ty": "rp", "c": {...}, "o": {...}, "tr": {...} }`
+5. **角を丸くする (`roundCorners`)**:
+   - 動的角丸半径（`radius`: 角丸px, `startFrame`, `endFrame`）
+   - 出力Lottie: `{ "ty": "rd", "r": {...} }`
+6. **グラデーション塗り (`gradientFill`) & グラデーション線 (`gradientStroke`)**:
+   - 線形/放射状（`type`: "linear" | "radial", `start`: [x, y], `end`: [x, y], `stops`: [{ offset, color }]）
+   - 出力Lottie: `{ "ty": "gf" | "gs", "t": 1 | 2, "s": {...}, "e": {...}, "g": {...} }`
+
+### 回帰防止ガード（厳守）
+- [ ] 0f待機状態のレイヤーは `opacity: 0%` を維持しているか？
+- [ ] 白座布団（#fff）を出力せず、透過チェッカー・Dark Modeで正常に映えるか？
+- [ ] 外部依存ライブラリを一切追加せず、Node.js標準機能だけで動作するか？
+```
 1. `storyboard.json` のルートに `interaction` 設定を付与する：
    - ホバー再生（`hover: "play"` または `"reverse"` / `"loop"`）
    - クリック挙動（`click: "toggle"` または `"seek"` / `"url"`）

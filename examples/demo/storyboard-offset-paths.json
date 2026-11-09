@@ -1,0 +1,30 @@
+{
+  "name": "shape-offset-paths",
+  "width": 400,
+  "height": 400,
+  "fps": 60,
+  "durationFrames": 90,
+  "loop": true,
+  "color": "#f59e0b",
+  "markers": [
+    { "cm": "01-expand", "tm": 0, "dr": 45 },
+    { "cm": "02-contract", "tm": 45, "dr": 45 }
+  ],
+  "layers": [
+    {
+      "id": "offset-star",
+      "svg": "svg/offset-star.svg",
+      "targetId": "star-path",
+      "inFrame": 0,
+      "outFrame": 90,
+      "color": "#f59e0b",
+      "offsetPaths": {
+        "amount": 24,
+        "fromAmount": 2,
+        "startFrame": 0,
+        "endFrame": 45,
+        "lineJoin": "round"
+      }
+    }
+  ]
+}

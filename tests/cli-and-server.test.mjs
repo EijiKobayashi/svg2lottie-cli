@@ -144,8 +144,22 @@ test('Preview Server: セキュリティヘッダー・a11y属性・API・パス
     assert.ok(html.includes('id="btn-copy-approved"'));
     assert.ok(html.includes('revisionItems'));
     assert.ok(html.includes('/api/reload-token'));
+    assert.ok(html.includes('/shapes'));
 
-    // 2. GET /api/animations & /api/live-reload
+    // 2. GET /shapes 基本エフェクト専用ショールーム
+    const shapesRes = invokeHandler(handler, '/shapes');
+    assert.equal(shapesRes.status, 200);
+    assert.ok(shapesRes.headers.get('content-type').includes('text/html'));
+    const shapesHtml = shapesRes.text();
+    assert.ok(shapesHtml.includes('Trim Paths'));
+    assert.ok(shapesHtml.includes('Offset Paths'));
+    assert.ok(shapesHtml.includes('Merge Paths'));
+    assert.ok(shapesHtml.includes('Repeater'));
+    assert.ok(shapesHtml.includes('Round Corners'));
+    assert.ok(shapesHtml.includes('Gradient Fill'));
+    assert.ok(shapesHtml.includes('href="/"'));
+
+    // 3. GET /api/animations & /api/live-reload
     const apiRes = invokeHandler(handler, '/api/animations');
     assert.equal(apiRes.status, 200);
     const apiData = apiRes.json();
