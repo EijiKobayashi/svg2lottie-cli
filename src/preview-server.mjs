@@ -293,9 +293,46 @@ function buildPreviewStudioHtml() {
         scroll-behavior: auto !important;
       }
     }
+    .app-nav {
+      display: flex;
+      gap: 10px;
+      padding: 10px 16px;
+      background: var(--card);
+      border-bottom: 2px solid var(--border);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .nav-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-decoration: none;
+      color: var(--sub);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      transition: all 0.15s ease;
+    }
+    .nav-tab:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .nav-tab.active {
+      color: var(--accent-fg);
+      background: var(--accent);
+      border-color: var(--accent);
+    }
   </style>
 </head>
 <body>
+  <nav class="app-nav" aria-label="スタジオナビゲーション">
+    <a href="/" class="nav-tab active" aria-current="page">🎨 制作実績・検収スタジオ</a>
+    <a href="/shapes" class="nav-tab">⚡ 基本エフェクト (AEシェイプ機能)</a>
+    <a href="/effects" class="nav-tab">✨ エフェクト図鑑</a>
+  </nav>
   <nav class="steps" aria-label="検収手順">
     <div class="step current">1. 選択</div>
     <div class="step">2. 確認</div>
@@ -833,21 +870,58 @@ function buildPreviewStudioHtml() {
     });
 
     readState();
+    const SHAPE_LABELS = {
+      'shape-trim-paths.json': 'パスのトリミング (Trim Paths)',
+      'shape-offset-paths.json': 'パスのオフセット (Offset Paths)',
+      'shape-merge-paths.json': 'パスの結合 (Merge Paths)',
+      'shape-repeater.json': 'リピーター (Repeater)',
+      'shape-round-corners.json': '角を丸くする (Round Corners)',
+      'shape-gradient.json': 'グラデーション塗り/線 (Gradient Fill/Stroke)',
+    };
     fetch('/api/animations').then((r) => r.json()).then((data) => {
       availableFiles = data.files || [];
-      (data.files || []).forEach((f) => {
-        const o = document.createElement('option');
-        o.value = f;
-        o.textContent = f;
-        fileSelect.appendChild(o);
-      });
+      fileSelect.innerHTML = '';
+
+      const shapeFiles = availableFiles.filter((f) => f.startsWith('shape-'));
+      const showcaseFiles = availableFiles.filter((f) => !f.startsWith('shape-'));
+
+      if (shapeFiles.length > 0) {
+        const group = document.createElement('optgroup');
+        group.label = '✨ 基本エフェクト (AEシェイプ機能)';
+        shapeFiles.forEach((f) => {
+          const o = document.createElement('option');
+          o.value = f;
+          o.textContent = SHAPE_LABELS[f] ? (f + ' — ' + SHAPE_LABELS[f]) : f;
+          group.appendChild(o);
+        });
+        fileSelect.appendChild(group);
+      }
+
+      if (showcaseFiles.length > 0) {
+        const group = document.createElement('optgroup');
+        group.label = '🎨 制作実績・ショールーム';
+        showcaseFiles.forEach((f) => {
+          const o = document.createElement('option');
+          o.value = f;
+          o.textContent = f;
+          group.appendChild(o);
+        });
+        fileSelect.appendChild(group);
+      }
+
       updateProgress();
       if (workspaceState.currentFile && availableFiles.includes(workspaceState.currentFile)) {
         const saved = new Date(workspaceState.savedAt);
         resumeText.textContent = '前回は ' + workspaceState.currentFile + ' の ' + (workspaceState.frameByFile[workspaceState.currentFile] || 0) + 'f を確認していました（' + saved.toLocaleString() + '）';
         resumeBanner.classList.add('visible');
+        loadFile(workspaceState.currentFile);
+      } else {
+        const initialFile = shapeFiles[0] || availableFiles[0];
+        if (initialFile) {
+          fileSelect.value = initialFile;
+          loadFile(initialFile);
+        }
       }
-      if (data.files && data.files[0]) loadFile(data.files[0]);
     });
 
     const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -886,6 +960,612 @@ function buildPreviewStudioHtml() {
       } catch { /* 次の確認で再試行 */ }
     }, 1000);
     fileSelect.addEventListener('change', () => loadFile(fileSelect.value));
+  </script>
+</body>
+</html>`;
+}
+
+function buildShapeModifiersStudioHtml() {
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚡ 基本エフェクト (AEシェイプ機能ショールーム) — svg2lottie-cli</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --sub: #475569;
+      --border: #e2e8f0;
+      --accent: #0284c7;
+      --accent-fg: #ffffff;
+      --checker-a: #e2e8f0;
+      --checker-b: #ffffff;
+      --code-bg: #0f172a;
+      --code-fg: #38bdf8;
+    }
+    body.dark {
+      --bg: #0b1120;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --sub: #cbd5e1;
+      --border: #334155;
+      --accent: #38bdf8;
+      --checker-a: #1e293b;
+      --checker-b: #0f172a;
+      --code-bg: #020617;
+      --code-fg: #7dd3fc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .app-nav {
+      display: flex;
+      gap: 10px;
+      padding: 10px 20px;
+      background: var(--card);
+      border-bottom: 2px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .nav-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-decoration: none;
+      color: var(--sub);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      transition: all 0.15s ease;
+    }
+    .nav-tab:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .nav-tab.active {
+      color: var(--accent-fg);
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .hero {
+      padding: 24px 20px 16px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 1.6rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .hero p {
+      margin: 0;
+      color: var(--sub);
+      font-size: 0.95rem;
+    }
+    .global-toolbar {
+      max-width: 1280px;
+      margin: 0 auto 20px;
+      padding: 0 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    button {
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    button.primary {
+      background: var(--accent);
+      color: var(--accent-fg);
+      border-color: var(--accent);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 20px;
+      max-width: 1280px;
+      margin: 0 auto 60px;
+      padding: 0 20px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+    }
+    .card-header {
+      margin-bottom: 12px;
+    }
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 0 0 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .type-badge {
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-family: monospace;
+      font-weight: 700;
+    }
+    body.dark .type-badge {
+      background: #0369a1;
+      color: #e0f2fe;
+    }
+    .compat-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .compat-badge.ok {
+      background: #dcfce7;
+      color: #15803d;
+    }
+    .compat-badge.warn {
+      background: #fef3c7;
+      color: #b45309;
+    }
+    .card-desc {
+      font-size: 0.84rem;
+      color: var(--sub);
+      margin: 0 0 12px;
+      min-height: 40px;
+    }
+    .stage-container {
+      width: 100%;
+      height: 240px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-image:
+        linear-gradient(45deg, var(--checker-a) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--checker-a) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--checker-a) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--checker-a) 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+      background-color: var(--checker-b);
+    }
+    .stage-container.bg-dark {
+      background-image: none;
+      background-color: #0f172a;
+    }
+    .stage-container.bg-white {
+      background-image: none;
+      background-color: #ffffff;
+    }
+    .lottie-box {
+      width: 220px;
+      height: 220px;
+    }
+    body.invert .lottie-box {
+      filter: invert(1) brightness(1.8);
+    }
+    .card-controls {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 12px;
+    }
+    .frame-counter {
+      font-size: 0.8rem;
+      font-family: monospace;
+      color: var(--sub);
+      margin-left: auto;
+    }
+    .card-seek {
+      width: 100%;
+      margin-top: 8px;
+    }
+    details.code-details {
+      margin-top: 12px;
+      font-size: 0.8rem;
+    }
+    details.code-details summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    pre.code-block {
+      background: var(--code-bg);
+      color: var(--code-fg);
+      padding: 10px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 8px 0 0;
+      font-size: 0.75rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+  </style>
+</head>
+<body>
+  <nav class="app-nav" aria-label="スタジオナビゲーション">
+    <a href="/" class="nav-tab">🎨 制作実績・検収スタジオ</a>
+    <a href="/shapes" class="nav-tab active" aria-current="page">⚡ 基本エフェクト (AEシェイプ機能)</a>
+    <a href="/effects" class="nav-tab">✨ エフェクト図鑑</a>
+  </nav>
+
+  <header class="hero">
+    <h1>⚡ 基本エフェクト (AEシェイプ機能ショールーム)</h1>
+    <p>After Effectsのシェイプレイヤー「追加（Add）」メニュー直結。Web・iOS・AndroidすべてのLottie環境で最も高速・軽量・確実に動作する推奨基本機能群です。1エフェクトごとに丁寧に独立検収できます。</p>
+  </header>
+
+  <div class="global-toolbar" aria-label="ショールーム一括操作ツールバー">
+    <button type="button" id="btn-all-play" class="primary" aria-label="全エフェクト一括再生 / 一時停止">⏯ 全て再生 / 停止</button>
+    <button type="button" id="btn-global-dark" aria-label="ダークモード切替">🌙 Dark</button>
+    <button type="button" id="btn-global-invert" aria-label="Day and Night 色反転切替">🔄 Day&amp;Night反転</button>
+    <label for="bg-mode-select" style="font-size:0.85rem;margin-left:auto;color:var(--sub)">背景:</label>
+    <select id="bg-mode-select" aria-label="カード背景切替" style="font-size:0.85rem;padding:4px 8px;border-radius:6px;border:1px solid var(--border)">
+      <option value="checker" selected>透過チェッカー</option>
+      <option value="bg-dark">ダーク (#0f172a)</option>
+      <option value="bg-white">純白 (#ffffff)</option>
+    </select>
+  </div>
+
+  <main class="grid" id="shapes-grid" aria-label="基本エフェクト一覧カードグリッド">
+    <!-- 1. パスのトリミング -->
+    <article class="card" aria-label="パスのトリミング (Trim Paths)">
+      <div class="card-header">
+        <h2 class="card-title">1. パスのトリミング (Trim Paths) <span class="type-badge">ty: tm</span></h2>
+        <span class="compat-badge ok">全環境対応 (Web / iOS / Android)</span>
+        <p class="card-desc">塗り無し（fill: false）で線が伸び縮みしながら360度回転するマテリアル風ローディングスピナー。アイコン描画・スピナーに必須。</p>
+      </div>
+      <div class="stage-container">
+        <div id="stage-trim-paths" class="lottie-box" role="img" aria-label="Trim Paths ローディングアニメーション"></div>
+      </div>
+      <div class="card-controls">
+        <button type="button" class="btn-play-card" data-target="trim-paths" aria-label="Trim Paths 再生・停止">⏯ 再生/停止</button>
+        <button type="button" class="btn-prev-card" data-target="trim-paths" aria-label="1フレーム戻る">◀ 1f</button>
+        <button type="button" class="btn-next-card" data-target="trim-paths" aria-label="1フレーム進む">1f ▶</button>
+        <span class="frame-counter" id="fc-trim-paths">0 / 90f</span>
+      </div>
+      <input type="range" class="card-seek" id="seek-trim-paths" data-target="trim-paths" min="0" max="90" value="0" aria-label="Trim Paths シークバー" />
+      <details class="code-details">
+        <summary>Storyboard設定コード例</summary>
+        <pre class="code-block">"fill": false,
+"trim": {
+  "startKeyframes": [{ "frame": 0, "value": 0 }, { "frame": 45, "value": 0 }, { "frame": 90, "value": 75 }],
+  "endKeyframes": [{ "frame": 0, "value": 15 }, { "frame": 45, "value": 85 }, { "frame": 90, "value": 90 }],
+  "offsetKeyframes": [{ "frame": 0, "value": 0 }, { "frame": 90, "value": 360 }]
+},
+"effects": [{ "type": "zoom-slide-spin", "rotations": 2, "start": 0, "end": 90 }]</pre>
+      </details>
+    </article>
+
+    <!-- 2. パスのオフセット -->
+    <article class="card" aria-label="パスのオフセット (Offset Paths)">
+      <div class="card-header">
+        <h2 class="card-title">2. パスのオフセット (Offset Paths) <span class="type-badge">ty: op</span></h2>
+        <span class="compat-badge ok">全環境対応 (Web / iOS / Android)</span>
+        <p class="card-desc">パスを等距離に拡大・縮小して肉付け・複製する。線の太さ動的変化や波紋・等高線エフェクトに最適。</p>
+      </div>
+      <div class="stage-container">
+        <div id="stage-offset-paths" class="lottie-box" role="img" aria-label="Offset Paths アニメーション"></div>
+      </div>
+      <div class="card-controls">
+        <button type="button" class="btn-play-card" data-target="offset-paths" aria-label="Offset Paths 再生・停止">⏯ 再生/停止</button>
+        <button type="button" class="btn-prev-card" data-target="offset-paths" aria-label="1フレーム戻る">◀ 1f</button>
+        <button type="button" class="btn-next-card" data-target="offset-paths" aria-label="1フレーム進む">1f ▶</button>
+        <span class="frame-counter" id="fc-offset-paths">0 / 90f</span>
+      </div>
+      <input type="range" class="card-seek" id="seek-offset-paths" data-target="offset-paths" min="0" max="90" value="0" aria-label="Offset Paths シークバー" />
+      <details class="code-details">
+        <summary>Storyboard設定コード例</summary>
+        <pre class="code-block">"offsetPaths": {
+  "amount": 24,
+  "fromAmount": 2,
+  "startFrame": 0,
+  "endFrame": 45,
+  "lineJoin": "round"
+}</pre>
+      </details>
+    </article>
+
+    <!-- 3. パスの結合 -->
+    <article class="card" aria-label="パスの結合 (Merge Paths)">
+      <div class="card-header">
+        <h2 class="card-title">3. パスの結合 (Merge Paths) <span class="type-badge">ty: mm</span></h2>
+        <span class="compat-badge warn">Web(SVG)完全対応 / iOS・Android一部制限</span>
+        <p class="card-desc">左右の円が中央で接近・結合し、パスのオフセットをマイナス値にすることで円と円がなめらかな曲線で繋がるメタボール結合アニメーション。</p>
+      </div>
+      <div class="stage-container">
+        <div id="stage-merge-paths" class="lottie-box" role="img" aria-label="Merge Paths アニメーション"></div>
+      </div>
+      <div class="card-controls">
+        <button type="button" class="btn-play-card" data-target="merge-paths" aria-label="Merge Paths 再生・停止">⏯ 再生/停止</button>
+        <button type="button" class="btn-prev-card" data-target="merge-paths" aria-label="1フレーム戻る">◀ 1f</button>
+        <button type="button" class="btn-next-card" data-target="merge-paths" aria-label="1フレーム進む">1f ▶</button>
+        <span class="frame-counter" id="fc-merge-paths">0 / 90f</span>
+      </div>
+      <input type="range" class="card-seek" id="seek-merge-paths" data-target="merge-paths" min="0" max="90" value="0" aria-label="Merge Paths シークバー" />
+      <details class="code-details">
+        <summary>Storyboard設定コード例</summary>
+        <pre class="code-block">"mergePaths": {
+  "mode": "add",
+  "animateApproach": true,
+  "distance": 60
+},
+"offsetPaths": {
+  "amount": -12,
+  "fromAmount": 0,
+  "startFrame": 0,
+  "endFrame": 45
+}</pre>
+      </details>
+    </article>
+
+    <!-- 4. リピーター -->
+    <article class="card" aria-label="リピーター (Repeater)">
+      <div class="card-header">
+        <h2 class="card-title">4. リピーター (Repeater) <span class="type-badge">ty: rp</span></h2>
+        <span class="compat-badge ok">全環境対応 (Web / iOS / Android)</span>
+        <p class="card-desc">単一の星芒パーツが、時計回りに円状に2個・3個…と次々に8個まで配列複製（リピート）されていく動的アニメーション。</p>
+      </div>
+      <div class="stage-container">
+        <div id="stage-repeater" class="lottie-box" role="img" aria-label="Repeater アニメーション"></div>
+      </div>
+      <div class="card-controls">
+        <button type="button" class="btn-play-card" data-target="repeater" aria-label="Repeater 再生・停止">⏯ 再生/停止</button>
+        <button type="button" class="btn-prev-card" data-target="repeater" aria-label="1フレーム戻る">◀ 1f</button>
+        <button type="button" class="btn-next-card" data-target="repeater" aria-label="1フレーム進む">1f ▶</button>
+        <span class="frame-counter" id="fc-repeater">0 / 90f</span>
+      </div>
+      <input type="range" class="card-seek" id="seek-repeater" data-target="repeater" min="0" max="90" value="0" aria-label="Repeater シークバー" />
+      <details class="code-details">
+        <summary>Storyboard設定コード例</summary>
+        <pre class="code-block">"repeater": {
+  "fromCopies": 1,
+  "copies": 8,
+  "anchor": [200, 200],
+  "position": [0, 0],
+  "rotation": 45,
+  "fromScale": [60, 60],
+  "scale": [100, 100],
+  "startFrame": 0,
+  "endFrame": 45
+}</pre>
+      </details>
+    </article>
+
+    <!-- 5. 角を丸くする -->
+    <article class="card" aria-label="角を丸くする (Round Corners)">
+      <div class="card-header">
+        <h2 class="card-title">5. 角を丸くする (Round Corners) <span class="type-badge">ty: rd</span></h2>
+        <span class="compat-badge ok">全環境対応 (Web / iOS / Android)</span>
+        <p class="card-desc">多角形や鋭角パスの角丸半径(radius)を動的にコントロール。幾何学アニメーションに柔らかさを付与。</p>
+      </div>
+      <div class="stage-container">
+        <div id="stage-round-corners" class="lottie-box" role="img" aria-label="Round Corners アニメーション"></div>
+      </div>
+      <div class="card-controls">
+        <button type="button" class="btn-play-card" data-target="round-corners" aria-label="Round Corners 再生・停止">⏯ 再生/停止</button>
+        <button type="button" class="btn-prev-card" data-target="round-corners" aria-label="1フレーム戻る">◀ 1f</button>
+        <button type="button" class="btn-next-card" data-target="round-corners" aria-label="1フレーム進む">1f ▶</button>
+        <span class="frame-counter" id="fc-round-corners">0 / 90f</span>
+      </div>
+      <input type="range" class="card-seek" id="seek-round-corners" data-target="round-corners" min="0" max="90" value="0" aria-label="Round Corners シークバー" />
+      <details class="code-details">
+        <summary>Storyboard設定コード例</summary>
+        <pre class="code-block">"roundCorners": {
+  "radius": 42,
+  "fromRadius": 0,
+  "startFrame": 0,
+  "endFrame": 45
+}</pre>
+      </details>
+    </article>
+
+    <!-- 6. グラデーション塗り/線 -->
+    <article class="card" aria-label="グラデーション塗り/線 (Gradient Fill/Stroke)">
+      <div class="card-header">
+        <h2 class="card-title">6. グラデーション (Gradient Fill / Stroke) <span class="type-badge">ty: gf / gs</span></h2>
+        <span class="compat-badge ok">全環境対応 (Web / iOS / Android)</span>
+        <p class="card-desc">始点(fromStart)と終点(fromEnd)の動的移動により、ダイヤモンドの対角線上を光の帯が無限に流れ続けるシマー（光彩移動）アニメーション。</p>
+      </div>
+      <div class="stage-container">
+        <div id="stage-gradient" class="lottie-box" role="img" aria-label="Gradient Fill and Stroke アニメーション"></div>
+      </div>
+      <div class="card-controls">
+        <button type="button" class="btn-play-card" data-target="gradient" aria-label="Gradient 再生・停止">⏯ 再生/停止</button>
+        <button type="button" class="btn-prev-card" data-target="gradient" aria-label="1フレーム戻る">◀ 1f</button>
+        <button type="button" class="btn-next-card" data-target="gradient" aria-label="1フレーム進む">1f ▶</button>
+        <span class="frame-counter" id="fc-gradient">0 / 90f</span>
+      </div>
+      <input type="range" class="card-seek" id="seek-gradient" data-target="gradient" min="0" max="90" value="0" aria-label="Gradient シークバー" />
+      <details class="code-details">
+        <summary>Storyboard設定コード例</summary>
+        <pre class="code-block">"gradientFill": {
+  "type": "linear",
+  "fromStart": [-160, -160],
+  "start": [360, 360],
+  "fromEnd": [60, 60],
+  "end": [580, 580],
+  "startFrame": 0,
+  "endFrame": 90,
+  "stops": [...]
+}</pre>
+      </details>
+    </article>
+  </main>
+
+  <script>
+    const CONFIGS = [
+      { id: 'trim-paths', file: 'shape-trim-paths.json' },
+      { id: 'offset-paths', file: 'shape-offset-paths.json' },
+      { id: 'merge-paths', file: 'shape-merge-paths.json' },
+      { id: 'repeater', file: 'shape-repeater.json' },
+      { id: 'round-corners', file: 'shape-round-corners.json' },
+      { id: 'gradient', file: 'shape-gradient.json' },
+    ];
+
+    const instances = {};
+
+    CONFIGS.forEach((c) => {
+      const container = document.getElementById('stage-' + c.id);
+      const seek = document.getElementById('seek-' + c.id);
+      const fc = document.getElementById('fc-' + c.id);
+      if (!container) return;
+
+      const anim = lottie.loadAnimation({
+        container: container,
+        renderer: 'svg',
+        loop: true,
+        autoplay: false,
+        path: '/dist/' + c.file,
+      });
+
+      instances[c.id] = { anim: anim, isPlaying: false };
+
+      anim.addEventListener('DOMLoaded', () => {
+        const total = Math.round(anim.totalFrames);
+        if (seek) seek.max = total;
+        if (fc) fc.textContent = '0 / ' + total + 'f';
+        anim.goToAndStop(0, true);
+      });
+
+      anim.addEventListener('enterFrame', (e) => {
+        const cur = Math.round(e.currentTime);
+        const total = Math.round(anim.totalFrames);
+        if (seek) seek.value = cur;
+        if (fc) fc.textContent = cur + ' / ' + total + 'f';
+      });
+
+      if (seek) {
+        seek.addEventListener('input', () => {
+          anim.goToAndStop(parseInt(seek.value, 10), true);
+          instances[c.id].isPlaying = false;
+        });
+      }
+    });
+
+    document.querySelectorAll('.btn-play-card').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.target;
+        const entry = instances[target];
+        if (!entry) return;
+        if (entry.isPlaying) {
+          entry.anim.pause();
+          entry.isPlaying = false;
+        } else {
+          entry.anim.play();
+          entry.isPlaying = true;
+        }
+      });
+    });
+
+    document.querySelectorAll('.btn-prev-card').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.target;
+        const entry = instances[target];
+        if (!entry) return;
+        entry.anim.pause();
+        entry.isPlaying = false;
+        const cur = Math.max(0, Math.round(entry.anim.currentFrame) - 1);
+        entry.anim.goToAndStop(cur, true);
+      });
+    });
+
+    document.querySelectorAll('.btn-next-card').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.target;
+        const entry = instances[target];
+        if (!entry) return;
+        entry.anim.pause();
+        entry.isPlaying = false;
+        const cur = Math.min(Math.round(entry.anim.totalFrames), Math.round(entry.anim.currentFrame) + 1);
+        entry.anim.goToAndStop(cur, true);
+      });
+    });
+
+    let allPlaying = false;
+    const btnAllPlay = document.getElementById('btn-all-play');
+    if (btnAllPlay) {
+      btnAllPlay.addEventListener('click', () => {
+        allPlaying = !allPlaying;
+        Object.values(instances).forEach((entry) => {
+          if (allPlaying) {
+            entry.anim.play();
+            entry.isPlaying = true;
+          } else {
+            entry.anim.pause();
+            entry.isPlaying = false;
+          }
+        });
+      });
+    }
+
+    const btnDark = document.getElementById('btn-global-dark');
+    if (btnDark) {
+      btnDark.addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+      });
+    }
+
+    const btnInvert = document.getElementById('btn-global-invert');
+    if (btnInvert) {
+      btnInvert.addEventListener('click', () => {
+        document.body.classList.toggle('invert');
+      });
+    }
+
+    const bgSelect = document.getElementById('bg-mode-select');
+    if (bgSelect) {
+      bgSelect.addEventListener('change', () => {
+        const val = bgSelect.value;
+        document.querySelectorAll('.stage-container').forEach((el) => {
+          el.classList.remove('bg-dark', 'bg-white');
+          if (val !== 'checker') el.classList.add(val);
+        });
+      });
+    }
   </script>
 </body>
 </html>`;
@@ -1018,6 +1698,12 @@ export function createPreviewRequestHandler(options = {}) {
     if (decodedPathname === '/' || decodedPathname === '/preview/index.html') {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(buildPreviewStudioHtml());
+      return;
+    }
+
+    if (decodedPathname === '/shapes' || decodedPathname === '/shapes.html') {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(buildShapeModifiersStudioHtml());
       return;
     }
 

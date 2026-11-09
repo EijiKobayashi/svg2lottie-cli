@@ -186,17 +186,24 @@
 
     <!-- Shooting Script Parser & Lottie Builder Row -->
     <g transform="translate(22, 198)">
-      <rect width="198" height="74" rx="10" class="node-card" />
-      <text x="14" y="25" class="font-mono node-title">shooting-script.mjs</text>
-      <text x="14" y="44" class="font-sans node-sub">• 文字コンテ解析・雛形生成</text>
-      <text x="14" y="61" class="font-sans node-sub">• AI/Issue用 修正指示整形</text>
+      <rect width="130" height="74" rx="10" class="node-card" />
+      <text x="10" y="24" class="font-mono node-title" font-size="11">shooting-script</text>
+      <text x="10" y="44" class="font-sans node-sub" font-size="10">• 文字コンテ解析</text>
+      <text x="10" y="60" class="font-sans node-sub" font-size="10">• 修正指示整形</text>
     </g>
 
-    <g transform="translate(234, 198)">
-      <rect width="198" height="74" rx="10" class="node-card" stroke="#264f74" stroke-width="2" />
-      <text x="14" y="25" class="font-mono node-title">lottie-builder.mjs</text>
-      <text x="14" y="44" class="font-sans node-sub">• レイヤー・マーカー統合構築</text>
-      <text x="14" y="61" class="font-sans node-sub">• 完全透過・Day&amp;Night対応</text>
+    <g transform="translate(158, 198)">
+      <rect width="138" height="74" rx="10" class="node-card" stroke="#0284c7" stroke-width="1.8" />
+      <text x="10" y="24" class="font-mono node-title" font-size="11" fill="#0369a1">shape-modifiers</text>
+      <text x="10" y="44" class="font-sans node-sub" font-size="9.5">★ AE「追加」ネイティブ</text>
+      <text x="10" y="60" class="font-mono node-sub" font-size="9">Trim/Offset/Repeater...</text>
+    </g>
+
+    <g transform="translate(302, 198)">
+      <rect width="130" height="74" rx="10" class="node-card" stroke="#264f74" stroke-width="2" />
+      <text x="10" y="24" class="font-mono node-title" font-size="11">lottie-builder</text>
+      <text x="10" y="44" class="font-sans node-sub" font-size="10">• 統合構築エンジン</text>
+      <text x="10" y="60" class="font-sans node-sub" font-size="10">• 完全透過/反転対応</text>
     </g>
 
     <!-- Sub-group: Modular Killer Effects (src/effects/) -->

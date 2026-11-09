@@ -138,6 +138,118 @@ Webサイトや検収スタジオ上で、ユーザーのマウス操作・タ�
 | `move` | `MoveEffect` | - | ショートハンド: `slide-push-pull.mjs` による移動展開設定 |
 | `fadeIn` / `fadeOut` | `FadeEffect` | - | ショートハンド: `bleed-fade.mjs` によるフェードイン／アウト設定 |
 | `trimStroke` | `TrimStrokeEffect` | 条件付 | ショートハンド: `trim-stroke.mjs` による頂点・線幅・Trim Paths 設定 |
+| `trim` | `TrimPathsModifier` | - | **パスのトリミング** (`ty: "tm"`): 線の開始・終了・オフセットアニメーション |
+| `offsetPaths` | `OffsetPathsModifier` | - | **パスのオフセット** (`ty: "op"`): パスの拡大・縮小・肉付け |
+| `mergePaths` | `MergePathsModifier` | - | **パスの結合** (`ty: "mm"`): パス同士のAdd/Subtract/Intersectブーリアン |
+| `repeater` | `RepeaterModifier` | - | **リピーター** (`ty: "rp"`): シェイプの配列複製・回転・弾ける演出 |
+| `roundCorners` | `RoundCornersModifier` | - | **角を丸くする** (`ty: "rd"`): パス頂点の動的角丸半径 |
+| `gradientFill` | `GradientFillModifier` | - | **グラデーション塗り** (`ty: "gf"`): 線形/放射状グラデーション塗り |
+| `gradientStroke` | `GradientStrokeModifier` | - | **グラデーション線** (`ty: "gs"`): 線形/放射状グラデーション線 |
+
+### Lottie ネイティブ・シェイプモディファイア定義 (`ShapeModifiers`)
+
+AEのシェイプレイヤー「追加（Add）」メニューに対応する、Lottieの核となるネイティブ機能群です。
+
+#### 1. パスのトリミング (`TrimPathsModifier` / `ty: "tm"`)
+```json
+"trim": {
+  "startKeyframes": [{ "frame": 0, "value": 0 }, { "frame": 45, "value": 0 }, { "frame": 90, "value": 75 }],
+  "endKeyframes": [{ "frame": 0, "value": 15 }, { "frame": 45, "value": 85 }, { "frame": 90, "value": 90 }],
+  "offsetKeyframes": [{ "frame": 0, "value": 0 }, { "frame": 90, "value": 360 }],
+  "mode": "simultaneously"
+}
+```
+- `fill: false`: 塗りを停止し、線（Stroke）のみの美しいローディングスピナーを描画
+- `start` (`s`), `end` (`e`), `offset` (`o`): 単一補間または複数キーフレームによる動的制御
+- `mode` (`m`): `1`=同時にトリミング (`simultaneously`), `2`=個別にトリミング (`individually`)
+
+#### 2. パスのオフセット (`OffsetPathsModifier` / `ty: "op"`)
+```json
+"offsetPaths": {
+  "amount": 24,
+  "fromAmount": 2,
+  "lineJoin": "round",
+  "miterLimit": 4,
+  "startFrame": 0,
+  "endFrame": 45
+}
+```
+- `amount` (`a`): オフセット量（px、正の値で拡大・肉付け、負の値で縮小、キーフレーム指定可）
+- `lineJoin` (`lj`): 結合スタイル (`1`=miter, `2`=round, `3`=bevel、デフォルト: `round`)
+- `miterLimit` (`ml`): マイター限界（デフォルト: `4`）
+
+#### 3. パスの結合 (`MergePathsModifier` / `ty: "mm"`)
+```json
+"mergePaths": {
+  "mode": "add",
+  "animateApproach": true,
+  "distance": 60,
+  "filletRadius": 24
+}
+```
+- `mode` (`mm`): `1`=Merge, `2`=Add（合体）, `3`=Subtract（型抜き）, `4`=Intersect（交差）, `5`=Exclude（中マド除外）
+- 左右から中央へ接近した2つの円が重なり、結合部のくびれに滑らかなR（フィレットベジェ角丸）が動的に加わって合体・分離するアニメーションに対応。
+- ※ Web(SVG)プレイヤーで完全動作。iOS/Androidネイティブでは一部制限があるため注意。
+
+#### 4. リピーター (`RepeaterModifier` / `ty: "rp"`)
+```json
+"repeater": {
+  "copies": 8,
+  "fromCopies": 1,
+  "position": [0, 0],
+  "anchor": [0, 0],
+  "rotation": 45,
+  "startFrame": 0,
+  "endFrame": 45
+}
+```
+- `copies` (`c`): 複製数（動的キーフレームにより 1個から 8個へと次々に配列複製）
+- `transform` (`tr`): インスタンス間の相対増分（デルタ）。回転(`r`)・位置(`p`)・拡大縮小(`s`)により円状または直線状に整然と配列複製。
+
+#### 5. 角を丸くする (`RoundCornersModifier` / `ty: "rd"`)
+```json
+"roundCorners": {
+  "radius": 42,
+  "fromRadius": 0,
+  "startFrame": 0,
+  "endFrame": 45
+}
+```
+- `radius` (`r`): 角丸半径（px、デフォルト: `10`、キーフレーム指定可）
+
+#### 6. グラデーション塗り & 線 (`GradientFillModifier` / `ty: "gf"`, `GradientStrokeModifier` / `ty: "gs"`)
+```json
+"gradientFill": {
+  "type": "linear",
+  "fromStart": [-120, -120],
+  "start": [450, 450],
+  "fromEnd": [0, 0],
+  "end": [570, 570],
+  "startFrame": 0,
+  "endFrame": 90,
+  "stops": [
+    { "offset": 0, "color": "#06b6d4" },
+    { "offset": 0.5, "color": "#8b5cf6" },
+    { "offset": 1, "color": "#ec4899" }
+  ]
+}
+```
+- `s` (start), `e` (end): 始点・終点の動的キーフレームにより、光が無限に流れ続けるシマー効果を実現。
+  "type": "linear",
+  "start": [0, 0],
+  "end": [520, 0],
+  "stops": [
+    { "offset": 0, "color": "#38bdf8" },
+    { "offset": 1, "color": "#0284c7" }
+  ],
+  "opacity": 100
+}
+```
+- `type` (`t`): `1`=linear（線形）, `2`=radial（放射状）
+- `start` (`s`): 開始座標 `[x, y]`
+- `end` (`e`): 終了座標 `[x, y]`
+- `stops` (`g`): カラー分岐点配列 (`offset`: 0〜1, `color`: HEX文字列)
+- `width` (`w`): 線の場合の太さ（`gradientStroke` のみ）
 
 ### 17種のモジュラーエフェクト設定スキーマ (`EffectConfig`)
 

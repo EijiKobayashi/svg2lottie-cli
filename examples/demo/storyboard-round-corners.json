@@ -1,0 +1,29 @@
+{
+  "name": "shape-round-corners",
+  "width": 400,
+  "height": 400,
+  "fps": 60,
+  "durationFrames": 90,
+  "loop": true,
+  "color": "#8b5cf6",
+  "markers": [
+    { "cm": "01-round-soften", "tm": 0, "dr": 45 },
+    { "cm": "02-hold", "tm": 45, "dr": 45 }
+  ],
+  "layers": [
+    {
+      "id": "polygon-layer",
+      "svg": "svg/round-polygon.svg",
+      "targetId": "sharp-poly",
+      "inFrame": 0,
+      "outFrame": 90,
+      "color": "#8b5cf6",
+      "roundCorners": {
+        "radius": 42,
+        "fromRadius": 0,
+        "startFrame": 0,
+        "endFrame": 45
+      }
+    }
+  ]
+}
